@@ -1,10 +1,38 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
-<h1>Hello</h1>
-</body>
-</html>
+{% extends 'layouts/base.html' %}
+{% block title %}Elite-Hotel Home{% endblock %}
+
+{% block content %}
+<div style="font-size: smaller;">
+    <div class="navbar-body" style="height: fit-content;">
+        <form class="d-flex">
+            <div class="search-item">
+                <i class="fa-solid fa-magnifying-glass"></i> <span>ROOM NAME</span>
+                <input class=" me-2" type="text" style="width: 180px; outline: none; !important; border: none;"
+                       placeholder="Search">
+            </div>
+            <div class="search-item">
+                <p><i class="fa-regular fa-calendar"></i> Check in</p>
+                <input style="border: none; padding: 0; outline: none;" type="date">
+            </div>
+            <div class="search-item">
+                <p><i class="fa-regular fa-calendar"></i> Check out</p>
+                <input style="border: none; padding: 0; outline: none;" type="date">
+            </div>
+            <div class="search-item">
+                <div class="dropdown">
+                    <button type="button" class="btn dropdown-toggle" data-bs-toggle="dropdown">
+                        <i class="fa-solid fa-mattress-pillow"></i> <span class="room-type-name">Guests and Rooms</span>
+                    </button>
+                    <ul class="dropdown-menu room-type-dropdown">
+                        {% for rt in room_types %}
+                        <li><a class="dropdown-item" href="#">{{ rt.name }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            <button style="border-radius: 8px; width: 7rem;" class="btn btn-custom" type="button"><b>Search</b></button>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
