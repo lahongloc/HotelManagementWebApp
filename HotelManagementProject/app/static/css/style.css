@@ -66,3 +66,7 @@ p {
     background-color: #007cc2;
 }
 
+
+.dropdown-item:hover {
+    cursor: pointer;
+}
