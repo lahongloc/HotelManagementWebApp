@@ -9,6 +9,11 @@ def home():
     return render_template('index.html', room_types=room_types)
 
 
+@app.route('/booking')
+def booking():
+    return render_template('booking.html')
+
+
 @app.route('/api/search', methods=['POST'])
 def search():
     data = request.json

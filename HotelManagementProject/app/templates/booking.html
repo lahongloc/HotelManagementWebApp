@@ -1,0 +1,113 @@
+{% extends 'layouts/base.html' %}
+{% block title %}Elite-Hotel Booking{% endblock %}
+
+{% block content %}
+
+<div class="d-flex justify-content-end fst-italic step-fs" style="padding-top: 26px">
+    <span class="ps-2 pe-2 me-1 step-round">1</span>
+    Đặt - 2 Xem lại - 3 Thanh toán - 4 Gửi phiếu thanh toán
+</div>
+
+<h5 class="mt-4">Khách hàng</h5>
+<section class="mt-4 navbar-body" style="padding: 12px 20px;">
+    <div id="customer-box">
+        <div class="d-flex mb-2 customer-info" id="">
+            <label>
+                <span class="me-4">1</span>
+                <input placeholder="Tên khách hàng"/>
+            </label>
+            <span>
+                <button type="button" class="btn dropdown-toggle" data-bs-toggle="dropdown">
+                    Loại khách
+                </button>
+                <ul class="dropdown-menu ">
+                    <li class="dropdown-item">Nội địa</li>
+                    <li class="dropdown-item">Nước ngoài</li>
+                </ul>
+            </span>
+            <label>
+                <input placeholder="CMND/CCCD"/>
+            </label>
+            <label>
+                <input placeholder="Địa chỉ"/>
+            </label>
+        </div>
+        <div class="d-flex justify-content-end mt-2 btn-box">
+            <button onClick="addNewCustomer()" class="btn btn-custom "><b>Thêm khách hàng</b></button>
+        </div>
+    </div>
+</section>
+
+<h5 class="mt-5">Đặt phòng khách sạn</h5>
+<section class="mt-4 navbar-body d-flex" style="padding: 12px 20px;">
+    <div class="search-item">
+        <label for="kw">
+            <span> <i class="fa-solid fa-magnifying-glass"></i> Room Name</span>
+            <input id="kw" class=" me-2" type="text" style="width: 180px; outline: none; !important; border: none;"
+                   placeholder="Search">
+        </label>
+    </div>
+    <div class="search-item">
+        <p><i class="fa-regular fa-calendar"></i> Check in</p>
+        <input id="check_in_date" style="border: none; padding: 0; outline: none;" type="date">
+    </div>
+    <div class="search-item">
+        <p><i class="fa-regular fa-calendar"></i> Check out</p>
+        <input id="check_out_date" style="border: none; padding: 0; outline: none;" type="date">
+    </div>
+    <div class="search-item">
+        <div class="dropdown">
+            <button type="button" class="btn dropdown-toggle" data-bs-toggle="dropdown">
+                <i class="fa-solid fa-mattress-pillow"></i> <span class="room-type-name">Guests and Rooms</span>
+            </button>
+            <ul class="dropdown-menu room-type-dropdown">
+                {% for rt in room_types %}
+                <li id="{{ rt.id }}" class="dropdown-item room-type">{{ rt.name }}</li>
+                <!--                        <li><a id="{{ rt.id }}" class="dropdown-item">{{ rt.name }}</a></li>-->
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    <button onclick="search()" style="border-radius: 8px; width: 7rem;" class="btn btn-custom" type="button">
+        <b>Search</b>
+    </button>
+</section>
+
+<h5 class="mt-5">Các phòng đã chọn</h5>
+<section class="mt-4 navbar-body d-flex" style="padding: 12px 20px;">
+    <div class="d-flex">
+        <span>(x1)</span>
+        <img alt=""
+             src="https://ik.imagekit.io/tvlk/apr-asset/dgXfoyh24ryQLRcGq00cIdKHRmotrWLNlvG-TxlcLxGkiDwaUSggleJNPRgIHCX6/hotel/asset/10025235-aef700914b1430ff8defadafeebd93d2.jpeg?_src=imagekit&tr=c-at_max,h-456,q-40,w-256"
+             style="width: 60px;
+                    height: 40px;
+                    object-fit: contain"
+        />
+        <p>Phòng 2 Giường Đơn Superior</p>
+        <span>490.018 VND</span>
+        <span style="margin-right: 16px; padding: 4px; color: #f15a5a; cursor:pointer">
+            <i class="fa-solid fa-x"></i>
+        </span>
+    </div>
+
+    <div class="d-flex" style="margin-top: 10px">
+        <span>(x1)</span>
+        <img alt=""
+             src="https://ik.imagekit.io/tvlk/apr-asset/dgXfoyh24ryQLRcGq00cIdKHRmotrWLNlvG-TxlcLxGkiDwaUSggleJNPRgIHCX6/hotel/asset/10025235-aef700914b1430ff8defadafeebd93d2.jpeg?_src=imagekit&tr=c-at_max,h-456,q-40,w-256"
+             style="width: 60px;
+                    height: 40px;
+                    object-fit: contain"
+        />
+        <p>Phòng 2 Giường Đơn Superior</p>
+        <span>490.018 VND</span>
+        <span style="margin-right: 16px; padding: 4px; color: #f15a5a; cursor:pointer">
+            <i class="fa-solid fa-x"></i>
+        </span>
+    </div>
+</section>
+
+<div class="d-flex justify-content-end mt-4 mb-5 btn-box">
+    <button onClick="addNewCustomer()" class="btn btn-custom "><b>Tiếp tục</b></button>
+</div>
+
+{% endblock %}

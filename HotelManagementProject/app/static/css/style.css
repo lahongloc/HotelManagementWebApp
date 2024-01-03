@@ -1,6 +1,17 @@
 * {
     font-family: apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol";
 }
+
+:root {
+    --light-blue: #45afee;
+    --grey: #6e6d6d;
+}
+
+input {
+    border: none;
+    outline: none;
+}
+
 .bg-header {
     color: red;
 }
@@ -70,3 +81,14 @@ p {
 .dropdown-item:hover {
     cursor: pointer;
 }
+
+.step-round {
+    background-color: var(--light-blue);
+    color: #fff;
+    border-radius: 50%;
+}
+.step-fs {
+    font-size: 0.875rem;
+    color: var(--grey);
+}
+

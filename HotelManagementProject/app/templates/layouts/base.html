@@ -19,12 +19,12 @@
     {% block js%} {% endblock %}
 </head>
 <body>
-<nav class="bg-header nav-border" style="width: 100% !important; height: 70px;">
+<nav class="bg-header nav-border fixed-top" style="width: 100% !important; height: 70px;background-color: #fff">
     {% block header %}
     {% include 'layouts/header.html' %}
     {% endblock %}
 </nav>
-<div class="container" style="width: 70%; margin: 0 auto; margin-top: 3rem;">
+<div class="container" style="width: 70%; margin: 0 auto; margin-top: 70px;">
     {% block content %}{% endblock %}
     {% block footer %}
     {% include 'layouts/footer.html' %}
