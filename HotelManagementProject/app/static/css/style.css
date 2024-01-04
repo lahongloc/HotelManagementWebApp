@@ -62,6 +62,7 @@ p {
 }
 
 .btn-custom {
+    border-radius: 8px;
     color: #fff;
     background-color: #007cc2;
 }
@@ -69,4 +70,35 @@ p {
 
 .dropdown-item:hover {
     cursor: pointer;
+}
+
+.rooms {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+}
+
+.view-detail {
+    width: 30%;
+    height: 80%;
+    border: 1px dashed rgb(219 221 225);
+    margin: 0.5rem;
+    border-radius: 10px;
+    padding: 3.5% 2%;
+    background-color: rgb(241 248 234);
+}
+
+.view-detail > p {
+    font-size: smaller;
+}
+
+.view-detail-btn:hover {
+    color: #fff;
+}
+
+.view-detail-btn:hover  i {
+    display: inline-block !important;
+    margin-left: 5px !important;
+    transition: margin-left 0.5s;
 }

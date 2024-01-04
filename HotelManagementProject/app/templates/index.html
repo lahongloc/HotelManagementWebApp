@@ -25,15 +25,42 @@
                     </button>
                     <ul class="dropdown-menu room-type-dropdown">
                         {% for rt in room_types %}
-                        <li id="{{ rt.id }}" class="dropdown-item room-type">{{ rt.name }}</li>
-<!--                        <li><a id="{{ rt.id }}" class="dropdown-item">{{ rt.name }}</a></li>-->
+                        <li onclick="takeRoomType(this)" id="{{ rt.id }}" class="dropdown-item room-type">{{ rt.name
+                            }}
+                        </li>
+                        <!--                        <li><a id="{{ rt.id }}" class="dropdown-item">{{ rt.name }}</a></li>-->
                         {% endfor %}
                     </ul>
                 </div>
             </div>
-            <button onclick="search()" style="border-radius: 8px; width: 7rem;" class="btn btn-custom" type="button"><b>Search</b></button>
+            <button onclick="search()" style="width: 7rem;" class="btn btn-custom" type="button"><b>Search</b>
+            </button>
         </form>
     </div>
 </div>
+{% for r in rooms_info %}
+<div class="rooms mt-5" style="border-radius: 15px; overflow: hidden;">
+    <a style="margin: 0; padding: 0;" class="navbar-brand" href="{{ url_for('home') }}">
+        <img style="margin: 0.25rem; border-radius: 10px; padding: 0; height: 100%" width="350" src="{{ url_for('static', filename=r.image) }}" alt="">
+    </a>
+    <div class="room-info" style="line-height: 35px">
+        <h4 class="room-name">
+            <b>{{ r.name }} - {{ r.room_type }}</b>
+        </h4>
+        <p><i class="fa-regular fa-circle-check"></i> Available</p>
 
+        <p class="booked"><i class="fa-regular fa-credit-card"></i> 1028 times booked</p>
+        <p class="review-times"><i class="fa-regular fa-star"></i> Best booking - 25 reviews</p>
+    </div>
+
+    <div class="view-detail">
+        <p><b>Enjoy your time with Elite-Hotel</b></p>
+        <p class="mt-1"><i class="fa-solid fa-check"></i> Free cancellation <i class="fa-solid fa-check"></i> Breakfast
+            included</p>
+        <br>
+        <h5 style="display: inline-block; margin-right: 45px;"><b>{{ "{:,.1f}".format(r.price) }} VND</b></h5><br>
+        <a style="background-color: green;" href="{{ url_for('room_details', room_id=r.id) }}" class="view-detail-btn btn btn-custom mt-2"><b>View detail <i class="fa-solid fa-arrow-right"></i></b></a>
+    </div>
+</div>
+{% endfor %}
 {% endblock %}
