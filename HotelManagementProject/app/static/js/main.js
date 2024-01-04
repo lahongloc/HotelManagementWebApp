@@ -23,15 +23,3 @@ const search = () => {
         .catch(err => console.error(err))
 }
 
-const addNewCustomer = () => {
-    const customerContainer = document.getElementById("customer-box");
-
-    let newCusInfo = document.createElement('div');
-    newCusInfo.className = 'customer-info d-flex mb-2 ';
-
-    let originalCusInfo = document.querySelector('.customer-info');
-    console.log(originalCusInfo)
-    newCusInfo.innerHTML = originalCusInfo.innerHTML;
-
-    customerContainer.insertBefore(newCusInfo, customerContainer.lastElementChild);
-}

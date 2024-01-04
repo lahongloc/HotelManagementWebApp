@@ -11,26 +11,30 @@
 <h5 class="mt-4">Khách hàng</h5>
 <section class="mt-4 navbar-body" style="padding: 12px 20px;">
     <div id="customer-box">
-        <div class="d-flex mb-2 customer-info" id="">
+        <div class="d-flex mb-2 customer-info">
             <label>
-                <span class="me-4">1</span>
+                <span class="me-4 order">1</span>
                 <input placeholder="Tên khách hàng"/>
             </label>
             <span>
-                <button type="button" class="btn dropdown-toggle" data-bs-toggle="dropdown">
+                <button type="button" class="btn dropdown-toggle customer-type-name" data-bs-toggle="dropdown">
                     Loại khách
                 </button>
-                <ul class="dropdown-menu ">
-                    <li class="dropdown-item">Nội địa</li>
-                    <li class="dropdown-item">Nước ngoài</li>
+                <ul class="dropdown-menu">
+                    <li class="dropdown-item customer-type">Nội địa</li>
+                    <li class="dropdown-item customer-type">Nước ngoài</li>
                 </ul>
             </span>
             <label>
-                <input placeholder="CMND/CCCD"/>
+                <input type="number" placeholder="CMND/CCCD"/>
             </label>
             <label>
                 <input placeholder="Địa chỉ"/>
             </label>
+            <span onClick="removeCustomerInfo(event)"
+                  style="margin-right: 16px; padding: 4px; color: #f15a5a; cursor:pointer">
+                <i class="fa-solid fa-x"></i>
+            </span>
         </div>
         <div class="d-flex justify-content-end mt-2 btn-box">
             <button onClick="addNewCustomer()" class="btn btn-custom "><b>Thêm khách hàng</b></button>
@@ -63,7 +67,6 @@
             <ul class="dropdown-menu room-type-dropdown">
                 {% for rt in room_types %}
                 <li id="{{ rt.id }}" class="dropdown-item room-type">{{ rt.name }}</li>
-                <!--                        <li><a id="{{ rt.id }}" class="dropdown-item">{{ rt.name }}</a></li>-->
                 {% endfor %}
             </ul>
         </div>
@@ -76,7 +79,15 @@
 <h5 class="mt-5">Các phòng đã chọn</h5>
 <section class="mt-4 navbar-body d-flex" style="padding: 12px 20px;">
     <div class="d-flex">
-        <span>(x1)</span>
+        <span>
+            <span style="margin-right: 6px; padding: 4px; color: #47e03dab; cursor:pointer">
+                <i class="fa-solid fa-plus"></i>
+            </span>
+            <span>(x1)</span>
+            <span style="margin-left: 6px; padding: 4px; color: #f15a5a; cursor:pointer">
+                <i class="fa-solid fa-minus"></i>
+            </span>
+        </span>
         <img alt=""
              src="https://ik.imagekit.io/tvlk/apr-asset/dgXfoyh24ryQLRcGq00cIdKHRmotrWLNlvG-TxlcLxGkiDwaUSggleJNPRgIHCX6/hotel/asset/10025235-aef700914b1430ff8defadafeebd93d2.jpeg?_src=imagekit&tr=c-at_max,h-456,q-40,w-256"
              style="width: 60px;
@@ -85,13 +96,18 @@
         />
         <p>Phòng 2 Giường Đơn Superior</p>
         <span>490.018 VND</span>
-        <span style="margin-right: 16px; padding: 4px; color: #f15a5a; cursor:pointer">
-            <i class="fa-solid fa-x"></i>
-        </span>
     </div>
 
     <div class="d-flex" style="margin-top: 10px">
-        <span>(x1)</span>
+        <span>
+            <span style="margin-right: 6px; padding: 4px; color: #47e03dab; cursor:pointer">
+                <i class="fa-solid fa-plus"></i>
+            </span>
+            <span>(x1)</span>
+            <span style="margin-left: 6px; padding: 4px; color: #f15a5a; cursor:pointer">
+                <i class="fa-solid fa-minus"></i>
+            </span>
+        </span>
         <img alt=""
              src="https://ik.imagekit.io/tvlk/apr-asset/dgXfoyh24ryQLRcGq00cIdKHRmotrWLNlvG-TxlcLxGkiDwaUSggleJNPRgIHCX6/hotel/asset/10025235-aef700914b1430ff8defadafeebd93d2.jpeg?_src=imagekit&tr=c-at_max,h-456,q-40,w-256"
              style="width: 60px;
@@ -100,9 +116,6 @@
         />
         <p>Phòng 2 Giường Đơn Superior</p>
         <span>490.018 VND</span>
-        <span style="margin-right: 16px; padding: 4px; color: #f15a5a; cursor:pointer">
-            <i class="fa-solid fa-x"></i>
-        </span>
     </div>
 </section>
 
