@@ -2,6 +2,7 @@ from app import app, db
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Enum, DateTime, Float
 from sqlalchemy.orm import Relationship
 from enum import Enum as CommonEnum
+from flask_login import UserMixin
 
 
 class UserRole(CommonEnum):
@@ -11,22 +12,17 @@ class UserRole(CommonEnum):
     CUSTOMER = 4
 
 
-class CustomerEnum(CommonEnum):
-    DOMESTIC = 1
-    FOREIGN = 2
-
-
 class BaseModel(db.Model):
     __abstract__ = True
     id = Column(Integer, nullable=False, autoincrement=True, primary_key=True)
 
 
-class User(BaseModel):
+class User(BaseModel, UserMixin):
     name = Column(String(50), nullable=False)
-    username = Column(String(50), nullable=False)
+    username = Column(String(50), nullable=False, unique=True)
     password = Column(String(50), nullable=False)
-    email = Column(String(50))
-    phone = Column(String(50), nullable=False)
+    email = Column(String(50), unique=True)
+    phone = Column(String(50), nullable=False, unique=True)
 
 
 class Administrator(db.Model):
@@ -49,7 +45,7 @@ class Receptionist(db.Model):
 
 
 class CustomerType(BaseModel):
-    type = Column(Enum(CustomerEnum), default=CustomerEnum.FOREIGN)
+    type = Column(String(50), default='DOMESTIC')
     customers = Relationship('Customer', backref='customer_type', lazy=True)
 
     def __str__(self):
@@ -170,13 +166,18 @@ if __name__ == "__main__":
         # userAdmin = User(name='Loc', username='locla123', password='123', email='loc@gmail.com', phone='0334454203')
         # db.session.add(userAdmin)
         # db.session.commit()
-
+        #
         # admin1 = Administrator(id=1)
         # db.session.add(admin1)
         # db.session.commit()
+        #
+        # rr1 = RoomRegulation(room_type_id=1, admin_id=1, room_quantity=10, capacity=1, price=500000)
+        # rr2 = RoomRegulation(room_type_id=2, admin_id=1, room_quantity=15, capacity=2, price=1500000)
+        # rr3 = RoomRegulation(room_type_id=3, admin_id=1, room_quantity=17, capacity=3, price=2000000)
+        # db.session.add_all([rr1, rr2, rr3])
+        # db.session.commit()
 
-        rr1 = RoomRegulation(room_type_id=1, admin_id=1, room_quantity=10, capacity=1, price=500000)
-        rr2 = RoomRegulation(room_type_id=2, admin_id=1, room_quantity=15, capacity=2, price=1500000)
-        rr3 = RoomRegulation(room_type_id=3, admin_id=1, room_quantity=17, capacity=3, price=2000000)
-        db.session.add_all([rr1, rr2, rr3])
+        ct1 = CustomerType()
+        ct2 = CustomerType(type='FOREIGN')
+        db.session.add_all([ct1, ct2])
         db.session.commit()

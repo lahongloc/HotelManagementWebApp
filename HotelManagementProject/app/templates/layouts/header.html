@@ -1,36 +1,53 @@
-    <nav class="navbar navbar-expand-sm bg-header navbar-dark fixed-top center-tag" style="width: 70%; font-size: smaller; background-color: #fff; position: relative;">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="{{ url_for('home') }}">
-                <img width="100" src="{{ url_for('static', filename='images/logo2.png') }}" alt="">
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#collapsibleNavbar">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="collapsibleNavbar">
-                <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <a class="nav-link" href=""><i class="fa-regular fa-heart"></i> Favorite</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href=""><i class="fa-regular fa-circle-user"></i> Log in</a>
-                    </li>
+<nav class="navbar navbar-expand-sm bg-header navbar-dark fixed-top center-tag" style="width: 70%; font-size: smaller">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="{{ url_for('home') }}">
+            <img width="100" src="{{ url_for('static', filename='images/logo2.png') }}" alt="">
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#collapsibleNavbar">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="collapsibleNavbar">
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" href=""><i class="fa-regular fa-heart"></i> Favorite</a>
+                </li>
+                {% if current_user.is_authenticated %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('home') }}"><i class="fa-regular fa-circle-user"></i>
+                        {{ current_user.username }}
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('user_signout') }}"><i class="fa-regular fa-circle-user"></i>
+                        Sign out</a>
+                </li>
+                {% else %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('user_register') }}"><i
+                            class="fa-regular fa-circle-user"></i> Register</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('user_signin') }}"><i
+                            class="fa-regular fa-circle-user"></i> Log in</a>
+                </li>
+                {% endif %}
 
-                    <li class="nav-item dropdown" style="margin: 0">
-                        <a class="nav-link dropdown-toggle" href="#" role="button"
-                           data-bs-toggle="dropdown">Menu</a>
-                        <ul class="dropdown-menu">
-                            <li>
-                                <a class="dropdown-item" href="">a</a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="">b</a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="">c</a>
-                            </li>
-                        </ul>
-                    </li>
-                </ul>
-            </div>
+                <li class="nav-item dropdown" style="margin: 0">
+                    <a class="nav-link dropdown-toggle" href="#" role="button"
+                       data-bs-toggle="dropdown">Menu</a>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <a class="dropdown-item" href="">a</a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="">b</a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="">c</a>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
         </div>
-    </nav>
+    </div>
+</nav>

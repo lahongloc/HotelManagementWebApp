@@ -1,0 +1,50 @@
+{% extends 'layouts/base.html' %}
+{% block title %}User Register{% endblock %}
+
+{% block content %}
+<h1 style="text-align: center; color: red; font-weight: bold;">REGISTER PAGE</h1>
+{% if err_msg %}
+<div class="alert alert-danger">
+    <h4>{{ err_msg }}</h4>
+</div>
+{% endif %}
+
+<form action="{{ url_for('user_register') }}" method="POST">
+    <div id="countryForm">
+        <label><b>Choose Customer Type:</b></label>
+        <br>
+        {% for rc in role_cus %}
+        <input style="margin: 5px;" class="cus_type" type="radio" name="customer_type" id="" value="{{ rc }}"
+               {% if loop.first %}checked{% endif %}> {{ rc }}
+        {% endfor %}
+    </div>
+
+    <div class="form-group">
+        <label for="name">Name:</label>
+        <input type="text" name="name" class="form-control" placeholder="Input Name" id="name" required>
+    </div>
+    <div class="form-group">
+        <label for="username">Username:</label>
+        <input type="text" name="username" class="form-control" placeholder="Input Username" id="username" required>
+    </div>
+    <div class="form-group">
+        <label for="password">Password:</label>
+        <input type="password" name="password" class="form-control" placeholder="Input Password" id="password" required>
+    </div>
+    <div class="form-group">
+        <label for="confirm">Confirm Password:</label>
+        <input type="password" name="confirm" class="form-control" placeholder="Input Confirm Password" id="confirm"
+               required>
+    </div>
+    <div class="form-group">
+        <label for="email">Email:</label>
+        <input type="email" name="email" class="form-control" placeholder="Input Email" id="email">
+    </div>
+    <div class="form-group">
+        <label for="phone">Phone:</label>
+        <input type="number" name="phone" class="form-control" placeholder="Input Phone Number" id="phone" required>
+    </div>
+    <input type="submit" class="form-control btn btn-primary mt-2" value="Register">
+</form>
+
+{% endblock %}

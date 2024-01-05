@@ -6,3 +6,11 @@ roomTypes.forEach((item, index) => {
     })
 })
 
+cus_types = document.getElementsByClassName('cus_type')
+cus_types.forEach((item, index) => {
+       console.log(item)
+//    if(item.value == 'DOMESTIC') {
+//        item.checked = true
+//    }
+})
+
