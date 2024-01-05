@@ -20,10 +20,7 @@ def add_user(customer_type=None, name=None, username=None, password=None, phone=
     if customer_type and name and username and password and phone:
         password = str(hashlib.md5(password.strip().encode('utf-8')).hexdigest())
         with app.app_context():
-            # print('add user - pre')
-            # if email is None:
-            #     email = ''
-            user = User(name=name, username=username, password=password, email=kwargs.get('email'), phone=phone)
+            user = User(name=name, username=username, gender=kwargs.get('gender'), password=password, email=kwargs.get('email'), phone=phone, avatar=kwargs.get('avatar'))
             db.session.add(user)
             db.session.commit()
             # print('add user - done')

@@ -1,6 +1,7 @@
 from app import app, dao, login, utils
 from flask import render_template, request, redirect, url_for, jsonify
 from flask_login import login_user, logout_user
+import cloudinary.uploader
 
 
 @app.route('/')
@@ -22,22 +23,27 @@ def user_register():
         username = request.form.get('username')
         password = request.form.get('password')
         confirm = request.form.get('confirm')
-        print(password, confirm)
         email = request.form.get('email')
         phone = request.form.get('phone')
+        gender = request.form.get('gender') == "Man"
+        avatar_path = None
 
         if password.strip().__eq__(confirm.strip()):
             try:
-                print(password, confirm + ' 1')
+                avatar = request.files.get('avatar')
+                if avatar:
+                    res = cloudinary.uploader.upload(avatar)
+                    avatar_path = res['secure_url']
+
                 utils.add_user(customer_type=customer_type,
                                name=name,
+                               gender=gender,
                                username=username,
                                password=password,
                                email=email,
-                               phone=phone)
+                               phone=phone,
+                               avatar=avatar_path)
                 err_msg = ''
-                print(password, confirm + ' done')
-                # return redirect(url_for('user_signin'), err_msg=err_msg)
                 return render_template('login.html')
             except Exception as ex:
                 if '1062' in (str(ex)):

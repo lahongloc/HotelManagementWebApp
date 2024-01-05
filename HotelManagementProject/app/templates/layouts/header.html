@@ -13,13 +13,29 @@
                 </li>
                 {% if current_user.is_authenticated %}
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('home') }}"><i class="fa-regular fa-circle-user"></i>
+                    <a id="profile-user" style="height: 40px; size: 40px;" class="nav-link text-danger" href="{{ url_for('user_register') }}">
+                        {% if current_user.avatar %}
+                        <img width="25px" height="25px" src="{{ current_user.avatar }}" alt="current_user.name">
+                        {% else %}
+                        {% if current_user.gender == True %}
+                        <img width="25px" height="25px"
+                             src="https://cdn.pixabay.com/photo/2020/07/14/13/07/icon-5404125_1280.png"
+                             alt="{{ current_user.name }}">
+                        {% else %}
+                        <img width="25px" height="25px"
+                             src="https://cdn.pixabay.com/photo/2020/07/14/13/06/icon-5404123_1280.png"
+                             alt="{{ current_user.name }}">
+                        {% endif %}
+                        {% endif %}
                         {{ current_user.username }}
                     </a>
                 </li>
+
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('user_signout') }}"><i class="fa-regular fa-circle-user"></i>
-                        Sign out</a>
+                    <a class="nav-link font-italic" id="sign-out-color" href="{{ url_for('user_signout') }}">
+                        <i class="fa fa-sign-out" style="color: red;"></i>
+                        Sign Out
+                    </a>
                 </li>
                 {% else %}
                 <li class="nav-item">

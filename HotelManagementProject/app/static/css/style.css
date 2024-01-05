@@ -1,6 +1,11 @@
 * {
     font-family: apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol";
 }
+#sign-out-color {
+    color: red !important;
+    text-shadow: 0px 1px 1px red;
+}
+
 .bg-header {
     color: red;
 }
@@ -97,7 +102,7 @@ p {
     color: #fff;
 }
 
-.view-detail-btn:hover  i {
+.view-detail-btn:hover {
     display: inline-block !important;
     margin-left: 5px !important;
     transition: margin-left 0.5s;
