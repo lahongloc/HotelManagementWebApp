@@ -1,6 +1,6 @@
 from app import app, dao, login, utils
 from flask import render_template, request, redirect, url_for, jsonify
-from flask_login import login_user, logout_user
+from flask_login import login_user, logout_user, current_user
 import cloudinary.uploader
 
 
@@ -82,7 +82,7 @@ def user_signout():
 
 @login.user_loader
 def user_load(user_id):
-    return utils.get_user_by_id(user_id)
+    return utils.get_user_by_id(user_id=user_id)
 
 
 @app.route('/api/search', methods=['POST'])
@@ -100,7 +100,13 @@ def room_details(room_id):
 @app.route("/booking-room/<room_id>")
 def room_booking(room_id):
     room = dao.get_rooms_info(room_id=room_id)
-    return render_template('booking.html', room=room)
+    customer_type = dao.get_customer_type()
+    role_cus = dao.get_customer_role()
+
+    return render_template('booking.html',
+                           room=room,
+                           customer_type=customer_type,
+                           role_cus=role_cus)
 
 
 if __name__ == "__main__":

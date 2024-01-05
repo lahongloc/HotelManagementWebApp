@@ -1,7 +1,17 @@
 import hashlib
 
+from flask_login import current_user
+
 from app.models import *
 from app import app
+
+
+def get_customer_type():
+    with app.app_context():
+        customer_type = db.session.query(Customer.id, CustomerType.type) \
+            .join(Customer, Customer.customer_type_id.__eq__(CustomerType.id))
+        customer_type = customer_type.filter(Customer.id.__eq__(current_user.id)).first()
+    return customer_type.type
 
 
 def get_room_types():
@@ -10,7 +20,7 @@ def get_room_types():
         return room_types
 
 
-def get_user_by_id(id=None):
+def get_user_by_id(user_id=None):
     with app.app_context():
         user = User.query.get(id)
         return user
@@ -26,7 +36,8 @@ def get_rooms_info(room_id=None):
     with app.app_context():
         rooms_info = db.session.query(Room.name, Room.id, Room.image, RoomType.name.label('room_type'),
                                       RoomRegulation.price,
-                                      RoomRegulation.room_quantity) \
+                                      RoomRegulation.room_quantity,
+                                      RoomRegulation.capacity) \
             .join(Room, Room.room_type_id.__eq__(RoomType.id)) \
             .join(RoomRegulation, RoomRegulation.room_type_id.__eq__(RoomType.id))
 
