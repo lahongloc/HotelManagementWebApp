@@ -1,62 +1,9 @@
 {% extends 'layouts/base.html' %} {% block title %}Booking room - Elite-Hotel{%
 endblock %} {% block content %}
 <div class="row">
-    <div class="col-md-5 col-xs-12">
-        <form method="POST" class="form-group booking-info">
-            {% if current_user.is_authenticated %}
-            <div class="first-customer customer">
-                <label><b>CUSTOMER 1</b></label>
-
-                <label style="display: block" class="mt-1" for="cus1">Name</label>
-                <input
-                        name="customerName1"
-                        id="cus1"
-                        type="text"
-                        class="form-control mt-2"
-                        value="{{ current_user.name }}"
-                        readonly
-                />
-
-                <label style="display: block" class="mt-2" for="cus1-type"
-                >Customer Type</label
-                >
-                <select class="form-control mt-2" name="customerType1" id="cus1-type">
-                    <option>{{ customer_type }}</option>
-                </select>
-            </div>
-            <div class="rest-customer"></div>
-
-            <label class="mt-3" for="checkin"><b><i>Choose checkin time</i></b></label>
-            <input id="checkin" type="datetime-local" name="checkin" class="form-control">
-            <label for="checkout"><b><i>Choose checkout time</i></b></label>
-            <input id="checkout" type="datetime-local" name="checkout" class="form-control mt-2">
-            {% if room.capacity > 1 %}
-            <input
-                    onclick="addCustomer({{ room.capacity }}, {{ role_cus }})"
-                    type="button"
-                    class="btn btn-custom"
-                    value="+ Add customer"
-            />
-            {% endif %}
-
-            <input
-                    style="margin-bottom: 3rem"
-                    type="submit"
-                    class="form-group mt-3 btn btn-custom"
-                    value="Book room"
-            />
-        </form>
-    </div>
-    <div class="col-md-7 col-xs-12">
+    <div class="col-md-6 col-xs-12" style="margin-right: 3rem;">
         <!--        <h3>{{room.name}} with Elite-Hotel best services</h3>-->
-        <p style="color: green" class="mt-5">
-            <i>
-                For <b>{{ room.name }}</b>, there is
-                <b>{{ room.room_type }}</b> available. Please ensure you select the
-                appropriate room based on your requirements. We hope you have a
-                wonderful time at Elite-Hotel!
-            </i>
-        </p>
+
         <div
                 class="img mt-2"
                 style="
@@ -75,7 +22,97 @@ endblock %} {% block content %}
                     alt=""
             />
         </div>
+        <div class="price">
+            <p class="mt-2" style="font-size: larger; color: red;"><i class="fa-solid fa-dong-sign"></i> <i>{{
+                "{:,.1f}".format(room.price) }}/<b>2 persons</b></i></p>
+            <p style="color: green" class="mt-3">
+                <i>
+                    For <b>{{ room.name }}</b>, there is
+                    <b>{{ room.room_type }}</b> available. Please ensure you select the
+                    appropriate room based on your requirements. We hope you have a
+                    wonderful time at Elite-Hotel!
+                </i>
+            </p>
+
+        </div>
     </div>
+    <div class="col-md-5 col-xs-12">
+        <form method="POST" class="form-group booking-info">
+            {% if current_user.is_authenticated %}
+            <div class="first-customer customer">
+                <label><b>CUSTOMER 1</b></label>
+
+                <label style="display: block" class="mt-1" for="cus1">Name</label>
+                <input
+                        name="customerName1"
+                        id="cus1"
+                        type="text"
+                        class="form-control mt-2"
+                        value="{{ current_user.name }}"
+                        readonly
+                />
+
+                <label style="display: block" class="mt-1" for="idNum1"
+                >Identification number</label
+                >
+                <input
+                        name="customerIdNum1"
+                        id="idNum1"
+                        type="number"
+                        class="form-control mt-2"
+                        value="{{ current_user.identification }}"
+                        readonly
+                />
+
+                <label style="display: block" class="mt-2" for="cus1-type"
+                >Customer Type</label
+                >
+                <select class="form-control mt-2" name="customerType1" id="cus1-type">
+                    <option>{{ customer_type }}</option>
+                </select>
+            </div>
+            <div class="rest-customer">
+
+            </div>
+            {% if room.capacity > 1 %}
+            <input
+                    style="margin-left: 67.5%;"
+                    onclick="addCustomer({{ room.capacity }}, {{ role_cus }})"
+                    type="button"
+                    class="addCustomer-btn btn btn-custom mt-3"
+                    value="+ Add customer"
+            />
+            {% endif %}
+
+            <label style="display: block" class="mt-3" for="checkin"
+            ><b><i>Choose checkin time</i></b></label
+            >
+            <input
+                    id="checkin"
+                    type="datetime-local"
+                    name="checkin"
+                    class="form-control"
+            />
+            <label class="mt-2" for="checkout"
+            ><b><i>Choose checkout time</i></b></label
+            >
+            <input
+                    id="checkout"
+                    type="datetime-local"
+                    name="checkout"
+                    class="form-control"
+            />
+
+
+            <input
+                    style="margin-bottom: 3rem; margin-left: 75%;"
+                    type="submit"
+                    class="form-group mt-3 btn btn-custom"
+                    value="Book room"
+            />
+        </form>
+    </div>
+
 </div>
 
 {% else %}
@@ -88,8 +125,10 @@ endblock %} {% block content %}
     count = 1;
 
     const deleteCustomer = (obj) => {
-      count--
+      count--;
+      document.querySelector('.addCustomer-btn').style.display = 'block'
       const divParent = obj.parentNode.parentNode.id;
+      
       for (
         var i = 0;
         i < document.querySelectorAll("div.rest-customer > div").length;
@@ -101,7 +140,7 @@ endblock %} {% block content %}
           document.querySelectorAll("div.rest-customer > div")[i].remove();
         }
       }
-      render_index()
+      render_index();
     };
 
     const addCustomer = (capacity, roleCus) => {
@@ -111,38 +150,56 @@ endblock %} {% block content %}
         var addedCustomer = document.createElement("div");
         addedCustomer.id = `nth${count}-customer`;
         addedCustomer.innerHTML = `<div class='customer'>
-                              <div onclick='deleteCustomer(this)' class='remove'><i style='font-size: 24px; color: red;' class="fa-solid fa-xmark"></i></div>
+                                <div onclick='deleteCustomer(this)' class='remove'><i style='font-size: 24px; color: red;' class="fa-solid fa-xmark"></i></div>
 
-                              <label style="display: block" class="mt-3"><b>CUSTOMER <span class='index'>${count}</span></b></label>
+                                <label style="display: block" class="mt-3"><b>CUSTOMER <span class='index'>${count}</span></b></label>
 
-                              <label style="display: block;" class="mt-1" for="cus${count}">Name</label>
+                                <label style="display: block;" class="mt-1" for="cus${count}">Name</label>
 
-                              <input name="customerName${count}" id="cus${count}" type="text" class="form-control mt-2 name">
+                                <input name="customerName${count}" id="cus${count}" type="text" class="form-control mt-2 name">
 
-                              <label style="display: block;" class="mt-2" for="cus${count}-type">Customer Type</label>
+                                <label style="display: block" class="mt-1" for="idNum${count}">Identification number</label>
+                                <input
+                                        name="customerIdNum${count}"
+                                        id="idNum${count}"
+                                        type="number"
+                                        class="form-control mt-2 idNum"
+                                />
 
-                              <select class="form-control mt-2 customer-type" name="customerType${count}" id="cus${count}-type">
+                                <label style="display: block;" class="mt-2" for="cus${count}-type">Customer Type</label>
 
-                                  {% for r in role_cus %}
-                                  <option>{{ r }}</option>
-                                  {% endfor %}
-                              </select>
-                          </div>`;
+                                <select class="form-control mt-2 customer-type" name="customerType${count}" id="cus${count}-type">
 
-        document.querySelector(
-          "div.rest-customer"
-        ).appendChild(addedCustomer)
+                                    {% for r in role_cus %}
+                                    <option>{{ r }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>`;
+
+        document.querySelector("div.rest-customer").appendChild(addedCustomer);
       }
+      if(count === capacity) {
+        document.querySelector('.addCustomer-btn').style.display = 'none'
+      }
+      
     };
 
     const render_index = () => {
-        addedCustomer = document.querySelectorAll('div.rest-customer > div')
-        console.log(addedCustomer)
-        for(var i = 2; i < addedCustomer.length + 2; i++) {
-          document.querySelector('div.rest-customer > div .index').innerText = `${i}`
-          document.querySelector('div.rest-customer > div .name').name = `customerName${i}`
-          document.querySelector('div.rest-customer > div .customer-type').name = `customerType${i}`
-        }
-    }
+      addedCustomer = document.querySelectorAll("div.rest-customer > div");
+      
+      for (var i = 2; i <= addedCustomer.length + 1; i++) {
+        document.querySelectorAll('div.rest-customer > div .idNum')[i-2].name = `customerIdNum${i}`
+
+        document.querySelectorAll("div.rest-customer > div .index")[i-2].innerText = `${i}`;
+
+       
+
+        document.querySelectorAll("div.rest-customer > div .name")[i-2].name = `customerName${i}`;
+        document.querySelectorAll("div.rest-customer > div .customer-type")[i-2].name = `customerType${i}`;
+        
+      }
+      console.log(addedCustomer)
+    };
+
 </script>
 {% endblock %}

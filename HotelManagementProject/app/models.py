@@ -19,12 +19,13 @@ class BaseModel(db.Model):
 
 class User(BaseModel, UserMixin):
     name = Column(String(50), nullable=False)
+    identification = Column(String(15), nullable=False)
     username = Column(String(50), nullable=False, unique=True)
     password = Column(String(50), nullable=False)
-    email = Column(String(50), unique=True)
+    email = Column(String(50), unique=True, nullable=False)
     phone = Column(String(50), nullable=False, unique=True)
     avatar = Column(String(100))
-    gender = Column(Boolean, default=True) #True = 1 is 'Man'
+    gender = Column(Boolean, default=True)  # True = 1 is 'Man'
 
 
 class Administrator(db.Model):
@@ -142,6 +143,7 @@ class RoomRegulation(db.Model):
 
 
 class CustomerTypeRegulation(BaseModel):
+    rate = Column(Float, default=1.0, nullable=False)
     admin_id = Column(Integer, ForeignKey(Administrator.id), nullable=False)
     customer_type_id = Column(Integer, ForeignKey(CustomerType.id), nullable=False)
 
@@ -151,9 +153,9 @@ if __name__ == "__main__":
         # db.drop_all()
         # db.create_all()
 
-        # rt1 = RoomType(name='1 Guest, 1 Bed')
-        # rt2 = RoomType(name='2 Guest, 2 Bed')
-        # rt3 = RoomType(name='3 Guest, 2 Bed')
+        # rt1 = RoomType(name='SINGLE BEDROOM')
+        # rt2 = RoomType(name='TWIN BEDROOM')
+        # rt3 = RoomType(name='DOUBLE BEDROOM')
         # db.session.add_all([rt1, rt2, rt3])
         # db.session.commit()
 
@@ -166,26 +168,36 @@ if __name__ == "__main__":
         # db.session.commit()
 
         # import hashlib
-        # userAdmin = User(name='Loc',
+        # user1 = User(name='Loc',
+        #                  identification='192137035',
         #                  username='locla123',
         #                  password=str(hashlib.md5('123'.encode('utf-8')).hexdigest()),
         #                  avatar = 'https://cdn.pixabay.com/photo/2020/07/14/13/07/icon-5404125_1280.png',
         #                  email='loc@gmail.com',
         #                  phone='0334454203')
-        # db.session.add(userAdmin)
+        # db.session.add(user1)
         # db.session.commit()
 
-        # admin1 = Administrator(id=1)
+        # admin1 = Administrator(id=2)
         # db.session.add(admin1)
         # db.session.commit()
 
-        # rr1 = RoomRegulation(room_type_id=1, admin_id=1, room_quantity=10, capacity=1, price=500000)
-        # rr2 = RoomRegulation(room_type_id=2, admin_id=1, room_quantity=15, capacity=2, price=1500000)
-        # rr3 = RoomRegulation(room_type_id=3, admin_id=1, room_quantity=17, capacity=3, price=2000000)
+        # ct1 = CustomerType()
+        # ct2 = CustomerType(type='FOREIGN')
+        # db.session.add_all([ct1, ct2])
+        # db.session.commit()
+
+        ctr1 = CustomerTypeRegulation(admin_id=2, customer_type_id=1)
+        ctr2 = CustomerTypeRegulation(admin_id=2, customer_type_id=2, rate=1.5)
+        db.session.add_all([ctr1, ctr2])
+        db.session.commit()
+
+        # cus1 = Customer(id=1, customer_type_id=2)
+        # db.session.add(cus1)
+        # db.session.commit()
+
+        # rr1 = RoomRegulation(room_type_id=1, admin_id=2, room_quantity=10, capacity=3, price=500000)
+        # rr2 = RoomRegulation(room_type_id=2, admin_id=2, room_quantity=15, capacity=3, price=1500000)
+        # rr3 = RoomRegulation(room_type_id=3, admin_id=2, room_quantity=17, capacity=3, price=2000000)
         # db.session.add_all([rr1, rr2, rr3])
         # db.session.commit()
-        #
-        ct1 = CustomerType()
-        ct2 = CustomerType(type='FOREIGN')
-        db.session.add_all([ct1, ct2])
-        db.session.commit()

@@ -26,6 +26,7 @@ def user_register():
         email = request.form.get('email')
         phone = request.form.get('phone')
         gender = request.form.get('gender') == "Man"
+        id_num = request.form.get('idNum')
         avatar_path = None
 
         if password.strip().__eq__(confirm.strip()):
@@ -42,7 +43,8 @@ def user_register():
                                password=password,
                                email=email,
                                phone=phone,
-                               avatar=avatar_path)
+                               avatar=avatar_path,
+                               id_num=id_num)
                 err_msg = ''
                 return render_template('login.html')
             except Exception as ex:
@@ -104,6 +106,7 @@ def room_booking(room_id):
     customer_type = dao.get_customer_type()
     role_cus = dao.get_customer_role()
 
+
     if request.method.__eq__('POST'):
         reservation_info = {room_id: {
             'users': {},
@@ -119,12 +122,11 @@ def room_booking(room_id):
         for i in customer_info:
             user[i] = request.form.get(i)
             count += 1
-            if count == 2:
+            if count == 3:
                 count = 0
                 user_counter += 1
                 reservation_info[room_id]['users'][f'user{user_counter}'] = user
                 user = {}
-
         print(utils.calculate_total_reservation_price(reservation_info=reservation_info, room_id=room_id))
 
     return render_template('booking.html',

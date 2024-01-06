@@ -16,12 +16,12 @@ def get_user_by_id(user_id):
     return User.query.get(user_id)
 
 
-def add_user(customer_type=None, name=None, username=None, password=None, phone=None, **kwargs):
-    if customer_type and name and username and password and phone:
+def add_user(customer_type=None, name=None, username=None, password=None, phone=None, id_num=None, **kwargs):
+    if customer_type and name and username and password and phone and id_num:
         password = str(hashlib.md5(password.strip().encode('utf-8')).hexdigest())
         with app.app_context():
             user = User(name=name, username=username, gender=kwargs.get('gender'), password=password,
-                        email=kwargs.get('email'), phone=phone, avatar=kwargs.get('avatar'))
+                        email=kwargs.get('email'), phone=phone, avatar=kwargs.get('avatar'), identification=id_num)
             db.session.add(user)
             db.session.commit()
             # print('add user - done')
