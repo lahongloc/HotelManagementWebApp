@@ -206,7 +206,7 @@ def room_booking(room_id):
                            total_price=total_price)
 
 
-@app.routegit ('/reservation-paying')
+@app.route('/reservation-paying')
 def pay_for_reservation():
     room_id = str(request.args.get('room_id'))
     return render_template('payReservation.html', room_id=room_id)

@@ -1,7 +1,7 @@
 import hashlib
 
 from app import db, dao, app, login
-from app.models import *
+from app.models import User, CustomerType, Room, RoomRegulation, RoomType, Customer
 
 
 def check_login(username, password):
@@ -45,14 +45,14 @@ def get_user_by_phone(phone):
     return User.query.get(phone)
 
 
-def add_user(customer_type=None, name=None, username=None, password=None, phone=None, **kwargs):
-    if customer_type and name and username and password and phone:
-        password = str(hashlib.md5(password.strip().encode('utf-8')).hexdigest())
-        with app.app_context():
-            user = User(name=name, username=username, gender=kwargs.get('gender'), password=password,
-                        email=kwargs.get('email'), phone=phone, avatar=kwargs.get('avatar'))
-
-            # print('add user_type - done')
+# def add_user(customer_type=None, name=None, username=None, password=None, phone=None, **kwargs):
+#     if customer_type and name and username and password and phone:
+#         password = str(hashlib.md5(password.strip().encode('utf-8')).hexdigest())
+#         with app.app_context():
+#             user = User(name=name, username=username, gender=kwargs.get('gender'), password=password,
+#                         email=kwargs.get('email'), phone=phone, avatar=kwargs.get('avatar'))
+#
+#             # print('add user_type - done')
 
 
 def calculate_total_reservation_price(reservation_info=None, room_id=None):

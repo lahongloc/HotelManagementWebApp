@@ -148,8 +148,8 @@ class CustomerTypeRegulation(BaseModel):
     customer_type_id = Column(Integer, ForeignKey(CustomerType.id), nullable=False)
 
 
-# if __name__ == "__main__":
-#     with app.app_context():
+if __name__ == "__main__":
+    with app.app_context():
         # db.drop_all()
         # db.create_all()
 
