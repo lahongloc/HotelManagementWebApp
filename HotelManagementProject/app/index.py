@@ -1,6 +1,6 @@
 from app import app, dao, login, utils
 from flask import render_template, request, redirect, url_for, jsonify
-from flask_login import login_user, logout_user, current_user
+from flask_login import login_user, logout_user, current_user, AnonymousUserMixin
 import cloudinary.uploader
 
 
@@ -97,11 +97,35 @@ def room_details(room_id):
     return render_template('roomDetail.html', room=room)
 
 
-@app.route("/booking-room/<room_id>")
+@app.route("/booking-room/<room_id>", methods=['post', 'get'])
 def room_booking(room_id):
     room = dao.get_rooms_info(room_id=room_id)
+
     customer_type = dao.get_customer_type()
     role_cus = dao.get_customer_role()
+
+    if request.method.__eq__('POST'):
+        reservation_info = {room_id: {
+            'users': {},
+            'total_price': 0.0
+        }}
+
+        user = {}
+        count = 0
+        user_counter = 0
+        customer_info = request.form.to_dict()
+        customer_info.popitem()
+        customer_info.popitem()
+        for i in customer_info:
+            user[i] = request.form.get(i)
+            count += 1
+            if count == 2:
+                count = 0
+                user_counter += 1
+                reservation_info[room_id]['users'][f'user{user_counter}'] = user
+                user = {}
+
+        print(utils.calculate_total_reservation_price(reservation_info=reservation_info, room_id=room_id))
 
     return render_template('booking.html',
                            room=room,

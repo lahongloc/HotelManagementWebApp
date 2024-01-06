@@ -1,17 +1,18 @@
 import hashlib
 
-from flask_login import current_user
+from flask_login import current_user, AnonymousUserMixin
 
 from app.models import *
 from app import app
 
 
 def get_customer_type():
-    with app.app_context():
-        customer_type = db.session.query(Customer.id, CustomerType.type) \
-            .join(Customer, Customer.customer_type_id.__eq__(CustomerType.id))
-        customer_type = customer_type.filter(Customer.id.__eq__(current_user.id)).first()
-    return customer_type.type
+    if current_user.is_authenticated:
+        with app.app_context():
+            customer_type = db.session.query(Customer.id, CustomerType.type) \
+                .join(Customer, Customer.customer_type_id.__eq__(CustomerType.id))
+            customer_type = customer_type.filter(Customer.id.__eq__(current_user.id)).first()
+            return customer_type.type
 
 
 def get_room_types():
