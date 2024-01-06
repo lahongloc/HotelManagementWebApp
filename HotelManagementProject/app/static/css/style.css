@@ -107,3 +107,7 @@ p {
     margin-left: 5px !important;
     transition: margin-left 0.5s;
 }
+
+.form-group {
+    padding: 5px;
+}
