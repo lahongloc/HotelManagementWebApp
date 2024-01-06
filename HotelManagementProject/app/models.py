@@ -148,8 +148,8 @@ class CustomerTypeRegulation(BaseModel):
     customer_type_id = Column(Integer, ForeignKey(CustomerType.id), nullable=False)
 
 
-if __name__ == "__main__":
-    with app.app_context():
+# if __name__ == "__main__":
+#     with app.app_context():
         # db.drop_all()
         # db.create_all()
 
@@ -200,4 +200,9 @@ if __name__ == "__main__":
         # rr2 = RoomRegulation(room_type_id=2, admin_id=2, room_quantity=15, capacity=3, price=1500000)
         # rr3 = RoomRegulation(room_type_id=3, admin_id=2, room_quantity=17, capacity=3, price=2000000)
         # db.session.add_all([rr1, rr2, rr3])
+        # db.session.commit()
+
+        # ct1 = CustomerType()
+        # ct2 = CustomerType(type='FOREIGN')
+        # db.session.add_all([ct1, ct2])
         # db.session.commit()

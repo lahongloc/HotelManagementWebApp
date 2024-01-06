@@ -31,7 +31,28 @@ def add_user(customer_type=None, name=None, username=None, password=None, phone=
                     customer = Customer(id=user.id, customer_type_id=ct.id)
                     db.session.add(customer)
                     db.session.commit()
-                    # print('add user_type - done')
+
+
+def get_user_by_username(username):
+    return User.query.filter(User.username.__eq__(username.strip())).first()
+
+
+def get_user_by_email(email):
+    return User.query.get(email)
+
+
+def get_user_by_phone(phone):
+    return User.query.get(phone)
+
+
+def add_user(customer_type=None, name=None, username=None, password=None, phone=None, **kwargs):
+    if customer_type and name and username and password and phone:
+        password = str(hashlib.md5(password.strip().encode('utf-8')).hexdigest())
+        with app.app_context():
+            user = User(name=name, username=username, gender=kwargs.get('gender'), password=password,
+                        email=kwargs.get('email'), phone=phone, avatar=kwargs.get('avatar'))
+
+            # print('add user_type - done')
 
 
 def calculate_total_reservation_price(reservation_info=None, room_id=None):

@@ -1,6 +1,9 @@
+import hashlib
+import random
+
 from app import app, dao, login, utils
 from flask import render_template, request, redirect, url_for, jsonify, session
-from flask_login import login_user, logout_user, current_user, AnonymousUserMixin
+from flask_login import login_user, logout_user, current_user
 import cloudinary.uploader
 
 
@@ -74,6 +77,72 @@ def user_signin():
             err_msg = 'Username or Password is incorrect!!!'
 
     return render_template('login.html', err_msg=err_msg)
+
+
+@app.route('/forgot-password', methods=['get', 'post'])
+def user_reset_password():
+    notice = ''
+    err_msg = ''
+    done_otp = ''
+    if request.method.__eq__('POST'):
+        username = request.form.get('username')
+
+        user = utils.get_user_by_username(username)
+
+        if user:
+            session['send_otp'] = send_otp(user)
+            session['username'] = username
+            print(session['send_otp'])
+            print(session['username'])
+
+            return render_template("forgotPassword.html", code_otp=session['send_otp'], done_otp='1')
+        else:
+            err_msg = 'Username not found, please try again!!'
+
+    return render_template('forgotPassword.html', err_msg=err_msg)
+
+
+def send_otp(user):
+    otp_send = str(random.randint(100000, 999999))
+
+    subject = "Password Reset Request for Your Dau Cung Duoc Hotel Account"
+
+    message = "OTP Code: " + otp_send
+
+    dao.send_gmail(user.email, subject, message)
+
+    return otp_send
+
+
+@app.route('/forgot-password1', methods=['get', 'post'])
+def user_confirm_password():
+    err_msg = ''
+    if request.method.__eq__('POST'):
+        otp = str(request.form.get('otp'))
+        password = request.form.get('password')
+        confirm = request.form.get('confirm')
+
+        try:
+            if otp.__eq__(session['send_otp']):
+                if str(password).strip().__eq__(str(confirm).strip()):
+                    u = utils.get_user_by_username(session['username'])
+                    u.password = str(hashlib.md5(str(password).encode('utf-8')).hexdigest())
+                    db.session.add(u)
+                    db.session.commit()
+                    return render_template('login.html', change_pass='Password changed successfully!!!')
+
+                else:
+                    return render_template("forgotPassword.html",
+                                    err_msg='Confirmed password is MISMATCH!',
+                                    done_otp='1')
+            else:
+                return render_template("forgotPassword.html",
+                                       err_msg='OTP code is incorrect!',
+                                       done_otp='1')
+        except Exception as ex:
+            err_msg = str(ex)
+
+    return render_template('forgotPassword.html', err_msg=err_msg)
 
 
 @app.route('/user-logout')

@@ -5,6 +5,8 @@ from flask_login import current_user, AnonymousUserMixin
 from app.models import *
 from app import app
 
+import smtplib
+
 
 def get_customer_type():
     if current_user.is_authenticated:
@@ -69,3 +71,26 @@ def auth_user(username, password):
 
     return User.query.filter(User.username.__eq__(username.strip()),
                              User.password.__eq__(password)).first()
+
+
+## --- SMTP Gmail --- ###
+def send_gmail(receive_email=None, subject=None, message=None):
+    if receive_email and subject and message:
+        email = 'kitj317@gmail.com'
+        receive_email = str(receive_email)
+
+        subject = str(subject)
+        message = str(message)
+
+        text = f"Subject: {subject}\n\n{message}"
+
+        server = smtplib.SMTP("smtp.gmail.com", 587)
+        server.starttls()
+
+        server.login(email, "jczp aylv xjzn ufje")
+
+        server.sendmail(email, receive_email, text)
+
+        print("Email has been sent to " + receive_email)
+    else:
+        print('Empty email???')

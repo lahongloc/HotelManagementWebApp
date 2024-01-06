@@ -124,3 +124,6 @@ p {
     right: 1rem;
     top: 1rem;
 }
+.form-group {
+    padding: 5px;
+}

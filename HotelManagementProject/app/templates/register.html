@@ -2,15 +2,15 @@
 {% block title %}User Register{% endblock %}
 
 {% block content %}
-<h1 style="text-align: center; color: red; font-weight: bold;">REGISTER PAGE</h1>
+<h1 style="text-align: center; color: red; font-weight: bold;">REGISTER</h1>
 {% if err_msg %}
 <div class="alert alert-danger">
     <h4>{{ err_msg }}</h4>
 </div>
 {% endif %}
 
-<form action="{{ url_for('user_register') }}" method="POST" enctype="multipart/form-data">
-    <div>
+<form style="width: 50%; margin: 0 auto; margin-top: 3rem;" action="{{ url_for('user_register') }}" method="POST" enctype="multipart/form-data">
+    <div class="form-group">
         <label><b>Choose Customer Type:</b></label>
         <br>
         {% for rc in role_cus %}
@@ -31,9 +31,10 @@
 
     <div>
         <label><b>Choose Gender</b></label>
+        <label>Choose Gender:</label>
         <br>
-        <input style="margin: 5px;" type="radio" name="gender" value="Man" checked/> MAN
-        <input style="margin: 5px;" type="radio" name="gender" value="Woman"/> WOMAN
+        <input style="margin: 5px; accent-color: #1E90FF;" type="radio" name="gender" value="Man" checked/> <span style="color: #1E90FF;"><i class="fa-solid fa-person"></i> Male</span>
+        <input style="margin-left: 10px; accent-color: #FF1493;" type="radio" name="gender" value="Woman"/> <span style="color: #FF1493;"><i class="fa-solid fa-person-dress"></i> Female</span>
     </div>
 
     <div class="form-group">
@@ -54,7 +55,7 @@
 
     <div class="form-group">
         <label for="email">Email</label>
-        <input type="email" name="email" class="form-control" placeholder="Input Email" id="email">
+        <input type="email" name="email" class="form-control" placeholder="Input Email" id="email" required>
     </div>
 
     <div class="form-group">
