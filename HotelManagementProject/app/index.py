@@ -1,5 +1,5 @@
 from app import app, dao, login, utils
-from flask import render_template, request, redirect, url_for, jsonify
+from flask import render_template, request, redirect, url_for, jsonify, session
 from flask_login import login_user, logout_user, current_user, AnonymousUserMixin
 import cloudinary.uploader
 
@@ -105,8 +105,7 @@ def room_booking(room_id):
 
     customer_type = dao.get_customer_type()
     role_cus = dao.get_customer_role()
-
-
+    total_price = None
     if request.method.__eq__('POST'):
         reservation_info = {room_id: {
             'users': {},
@@ -127,12 +126,28 @@ def room_booking(room_id):
                 user_counter += 1
                 reservation_info[room_id]['users'][f'user{user_counter}'] = user
                 user = {}
-        print(utils.calculate_total_reservation_price(reservation_info=reservation_info, room_id=room_id))
+        session['reservation_info'] = utils.calculate_total_reservation_price(reservation_info=reservation_info,
+                                                                              room_id=room_id)
+        return redirect(url_for('pay_for_reservation', room_id=room_id))
 
     return render_template('booking.html',
                            room=room,
                            customer_type=customer_type,
-                           role_cus=role_cus)
+                           role_cus=role_cus,
+                           total_price=total_price)
+
+
+@app.routegit ('/reservation-paying')
+def pay_for_reservation():
+    room_id = str(request.args.get('room_id'))
+    return render_template('payReservation.html', room_id=room_id)
+
+
+@app.context_processor
+def common_response():
+    return {
+        'reservation_info': session.get('reservation_info')
+    }
 
 
 if __name__ == "__main__":

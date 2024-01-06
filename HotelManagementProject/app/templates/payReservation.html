@@ -1,0 +1,7 @@
+{% extends 'layouts/base.html' %}
+{% block title %}Paying for reservation{% endblock %}
+{% block content %}
+<h1>paying page!</h1>
+<h2>{{ session.get('reservation_info')[room_id].total_price }}</h2>
+
+{% endblock %}

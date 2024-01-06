@@ -5,17 +5,22 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="938c03bd-9e31-4f66-bb53-cab130ef2c79" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/app/templates/payReservation.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/index.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/index.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/templates/booking.html" beforeDir="false" afterPath="$PROJECT_DIR$/app/templates/booking.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/templates/register.html" beforeDir="false" afterPath="$PROJECT_DIR$/app/templates/register.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/utils.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="HTML File" />
+      </list>
+    </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
@@ -31,6 +36,7 @@
   </component>
   <component name="PropertiesComponent">{
   &quot;keyToString&quot;: {
+    &quot;DefaultHtmlFileTemplate&quot;: &quot;HTML File&quot;,
     &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;git-widget-placeholder&quot;: &quot;update&quot;
