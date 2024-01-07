@@ -11,10 +11,10 @@ import smtplib
 def get_customer_type():
     if current_user.is_authenticated:
         with app.app_context():
-            customer_type = db.session.query(Customer.id, CustomerType.type) \
+            customer_info = db.session.query(Customer.id, Customer.name, CustomerType.type) \
                 .join(Customer, Customer.customer_type_id.__eq__(CustomerType.id))
-            customer_type = customer_type.filter(Customer.id.__eq__(current_user.id)).first()
-            return customer_type.type
+            customer_info = customer_info.filter(Customer.id.__eq__(current_user.id)).first()
+            return customer_info
 
 
 def get_room_types():

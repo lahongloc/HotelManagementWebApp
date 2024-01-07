@@ -20,7 +20,7 @@ def add_user(customer_type=None, name=None, username=None, password=None, phone=
     if customer_type and name and username and password and phone and id_num:
         password = str(hashlib.md5(password.strip().encode('utf-8')).hexdigest())
         with app.app_context():
-            user = User(name=name, username=username, gender=kwargs.get('gender'), password=password,
+            user = User(username=username, gender=kwargs.get('gender'), password=password,
                         email=kwargs.get('email'), phone=phone, avatar=kwargs.get('avatar'), identification=id_num)
             db.session.add(user)
             db.session.commit()
@@ -28,7 +28,7 @@ def add_user(customer_type=None, name=None, username=None, password=None, phone=
 
             for ct in CustomerType.query.all():
                 if customer_type.strip().__eq__(ct.type.strip()):
-                    customer = Customer(id=user.id, customer_type_id=ct.id)
+                    customer = Customer(id=user.id, name=name, customer_type_id=ct.id)
                     db.session.add(customer)
                     db.session.commit()
 

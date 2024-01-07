@@ -18,10 +18,10 @@ class BaseModel(db.Model):
 
 
 class User(BaseModel, UserMixin):
-    name = Column(String(50), nullable=False)
     identification = Column(String(15), nullable=False)
     username = Column(String(50), nullable=False, unique=True)
     password = Column(String(50), nullable=False)
+    role = Column(Enum(UserRole), nullable=False, default=UserRole.CUSTOMER)
     email = Column(String(50), unique=True, nullable=False)
     phone = Column(String(50), nullable=False, unique=True)
     avatar = Column(String(100))
@@ -30,19 +30,19 @@ class User(BaseModel, UserMixin):
 
 class Administrator(db.Model):
     id = Column(Integer, ForeignKey(User.id), nullable=False, primary_key=True)
-    role = Column(Enum(UserRole), default=UserRole.ADMIN)
+    name = Column(String(50), nullable=False)
 
 
 class ServiceStaff(db.Model):
     id = Column(Integer, ForeignKey(User.id), nullable=False, primary_key=True)
-    role = Column(Enum(UserRole), default=UserRole.SERVICE_STAFF)
+    name = Column(String(50), nullable=False)
     service_records = Relationship('ServiceRecord', backref='service_staff', lazy=True)
     problem_records = Relationship('ProblemRecord', backref='service_staff', lazy=True)
 
 
 class Receptionist(db.Model):
     id = Column(Integer, ForeignKey(User.id), nullable=False, primary_key=True)
-    role = Column(Enum(UserRole), default=UserRole.RECEPTIONIST)
+    name = Column(String(50), nullable=False)
     reservations = Relationship('Reservation', backref='receptionist', lazy=True)
     room_rentals = Relationship('RoomRental', backref='receptionist', lazy=True)
 
@@ -57,7 +57,7 @@ class CustomerType(BaseModel):
 
 class Customer(db.Model):
     id = Column(Integer, ForeignKey(User.id), nullable=False, primary_key=True)
-    role = Column(Enum(UserRole), default=UserRole.CUSTOMER)
+    name = Column(String(50), nullable=False)
     customer_type_id = Column(Integer, ForeignKey(CustomerType.id), nullable=False)
     reservations = Relationship('Reservation', backref='customer', lazy=True)
     room_rentals = Relationship('RoomRental', backref='customer', lazy=True)
@@ -168,17 +168,19 @@ if __name__ == "__main__":
         # db.session.commit()
 
         # import hashlib
-        # user1 = User(name='Loc',
-        #                  identification='192137035',
-        #                  username='locla123',
-        #                  password=str(hashlib.md5('123'.encode('utf-8')).hexdigest()),
-        #                  avatar = 'https://cdn.pixabay.com/photo/2020/07/14/13/07/icon-5404125_1280.png',
-        #                  email='loc@gmail.com',
-        #                  phone='0334454203')
+        #
+        # user1 = User(
+        #     role=UserRole.ADMIN,
+        #     identification='192137035',
+        #     username='locla123',
+        #     password=str(hashlib.md5('123'.encode('utf-8')).hexdigest()),
+        #     avatar='https://cdn.pixabay.com/photo/2020/07/14/13/07/icon-5404125_1280.png',
+        #     email='loc@gmail.com',
+        #     phone='0334454203')
         # db.session.add(user1)
         # db.session.commit()
 
-        # admin1 = Administrator(id=2)
+        # admin1 = Administrator(id=1, name='La Hồng Lộc')
         # db.session.add(admin1)
         # db.session.commit()
 
@@ -186,23 +188,19 @@ if __name__ == "__main__":
         # ct2 = CustomerType(type='FOREIGN')
         # db.session.add_all([ct1, ct2])
         # db.session.commit()
-
-        ctr1 = CustomerTypeRegulation(admin_id=2, customer_type_id=1)
-        ctr2 = CustomerTypeRegulation(admin_id=2, customer_type_id=2, rate=1.5)
-        db.session.add_all([ctr1, ctr2])
-        db.session.commit()
-
-        # cus1 = Customer(id=1, customer_type_id=2)
-        # db.session.add(cus1)
+        #
+        # ctr1 = CustomerTypeRegulation(admin_id=1, customer_type_id=1)
+        # ctr2 = CustomerTypeRegulation(admin_id=1, customer_type_id=2, rate=1.5)
+        # db.session.add_all([ctr1, ctr2])
         # db.session.commit()
 
-        # rr1 = RoomRegulation(room_type_id=1, admin_id=2, room_quantity=10, capacity=3, price=500000)
-        # rr2 = RoomRegulation(room_type_id=2, admin_id=2, room_quantity=15, capacity=3, price=1500000)
-        # rr3 = RoomRegulation(room_type_id=3, admin_id=2, room_quantity=17, capacity=3, price=2000000)
+        # rr1 = RoomRegulation(room_type_id=1, admin_id=1, room_quantity=10, capacity=3, price=500000)
+        # rr2 = RoomRegulation(room_type_id=2, admin_id=1, room_quantity=15, capacity=3, price=1500000)
+        # rr3 = RoomRegulation(room_type_id=3, admin_id=1, room_quantity=17, capacity=3, price=2000000)
         # db.session.add_all([rr1, rr2, rr3])
         # db.session.commit()
 
-        # ct1 = CustomerType()
-        # ct2 = CustomerType(type='FOREIGN')
-        # db.session.add_all([ct1, ct2])
-        # db.session.commit()
+        ct1 = CustomerType()
+        ct2 = CustomerType(type='FOREIGN')
+        db.session.add_all([ct1, ct2])
+        db.session.commit()

@@ -5,6 +5,7 @@ from app import app, dao, login, utils
 from flask import render_template, request, redirect, url_for, jsonify, session
 from flask_login import login_user, logout_user, current_user
 import cloudinary.uploader
+from app.models import UserRole
 
 
 @app.route('/')
@@ -72,7 +73,10 @@ def user_signin():
         user = utils.check_login(username=username, password=password)
         if user:
             login_user(user=user)
-            return redirect(url_for('home'))
+            if current_user.role == UserRole.CUSTOMER:
+                return redirect(url_for('home'))
+            if current_user.role == UserRole.ADMIN:
+                return redirect('/admin')
         else:
             err_msg = 'Username or Password is incorrect!!!'
 
@@ -133,8 +137,8 @@ def user_confirm_password():
 
                 else:
                     return render_template("forgotPassword.html",
-                                    err_msg='Confirmed password is MISMATCH!',
-                                    done_otp='1')
+                                           err_msg='Confirmed password is MISMATCH!',
+                                           done_otp='1')
             else:
                 return render_template("forgotPassword.html",
                                        err_msg='OTP code is incorrect!',
@@ -172,8 +176,9 @@ def room_details(room_id):
 def room_booking(room_id):
     room = dao.get_rooms_info(room_id=room_id)
 
-    customer_type = dao.get_customer_type()
+    customer_info = dao.get_customer_type()
     role_cus = dao.get_customer_role()
+
     total_price = None
     if request.method.__eq__('POST'):
         reservation_info = {room_id: {
@@ -201,7 +206,7 @@ def room_booking(room_id):
 
     return render_template('booking.html',
                            room=room,
-                           customer_type=customer_type,
+                           customer_info=customer_info,
                            role_cus=role_cus,
                            total_price=total_price)
 

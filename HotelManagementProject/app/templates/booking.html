@@ -45,7 +45,7 @@ endblock %} {% block content %}
                         id="cus1"
                         type="text"
                         class="form-control mt-2"
-                        value="{{ current_user.name }}"
+                        value="{{ customer_info.name }}"
                         readonly
                 />
 
@@ -65,7 +65,7 @@ endblock %} {% block content %}
                 >Customer Type</label
                 >
                 <select class="form-control mt-2" name="customerType1" id="cus1-type">
-                    <option>{{ customer_type }}</option>
+                    <option>{{ customer_info.type }}</option>
                 </select>
             </div>
             <div class="rest-customer">
