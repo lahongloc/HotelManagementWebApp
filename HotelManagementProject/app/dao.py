@@ -99,11 +99,12 @@ def send_gmail(receive_email=None, subject=None, message=None):
 
 
 def add_customers(customers=None, room_id=None, checkin_time=None, checkout_time=None, total_price=None):
-    try:
-        if customers and room_id and checkin_time and checkout_time and total_price:
-            added_customers_ids = []
-            added_reservation_id = None
-            # add reservation
+    added_customers_ids = []
+    added_reservation_id = None
+    if customers and room_id and checkin_time and checkout_time and total_price:
+
+        # add reservation
+        try:
             if current_user.role.__eq__(UserRole.CUSTOMER):
                 checkin_time = datetime.strptime(str(checkin_time), "%Y-%m-%dT%H:%M")
                 checkout_time = datetime.strptime(str(checkout_time), "%Y-%m-%dT%H:%M")
@@ -115,31 +116,36 @@ def add_customers(customers=None, room_id=None, checkin_time=None, checkout_time
                     db.session.add(r)
                     db.session.commit()
                     added_reservation_id = r.id
+        except Exception as ex:
+            print(str(ex))
 
-            # add customers paying for the reservation into db
-            for i in range(2, len(customers) + 1):
-                cus_type = 1
-                if customers[str(i)]['customerType'] == 'FOREIGN':
-                    cus_type = 2
-                with app.app_context():
-                    c = Customer(name=customers[str(i)]['customerName'],
-                                 identification=customers[str(i)]['customerIdNum'], customer_type_id=cus_type)
-                    db.session.add(c)
-                    db.session.commit()
-                    added_customers_ids.append(c.customer_id)
-
-            # add reservation details
-            current_user_rd = ReservationDetail(customer_id=get_customer_info().customer_id,
-                                                reservation_id=added_reservation_id)
-            db.session.add(current_user_rd)
-            db.session.commit()
-            for cus_id in added_customers_ids:
-                rd = ReservationDetail(customer_id=cus_id, reservation_id=added_reservation_id)
-                db.session.add(rd)
+    # add customers paying for the reservation
+    try:
+        for i in range(2, len(customers) + 1):
+            cus_type = 1
+            if customers[str(i)]['customerType'] == 'FOREIGN':
+                cus_type = 2
+            with app.app_context():
+                c = Customer(name=customers[str(i)]['customerName'],
+                             identification=customers[str(i)]['customerIdNum'], customer_type_id=cus_type)
+                db.session.add(c)
                 db.session.commit()
+                added_customers_ids.append(c.customer_id)
+    except Exception as ex:
+        print(str(ex))
+
+    # add reservation details
+    try:
+        current_user_rd = ReservationDetail(customer_id=get_customer_info().customer_id,
+                                            reservation_id=added_reservation_id)
+        db.session.add(current_user_rd)
+        db.session.commit()
+        for cus_id in added_customers_ids:
+            rd = ReservationDetail(customer_id=cus_id, reservation_id=added_reservation_id)
+            db.session.add(rd)
+            db.session.commit()
 
             return True
     except Exception as ex:
         print(str(ex))
 
-# def add_reservation():
