@@ -34,7 +34,7 @@ endblock %} {% block content %}
         </div>
     </div>
     <div class="col-md-5 col-xs-12">
-        <form method="POST" class="form-group booking-info">
+        <form method="POST" class="form-group booking-info" onsubmit="submitForm(event)">
             {% if current_user.is_authenticated %}
             <div class="first-customer customer">
                 <label><b>CUSTOMER 1</b></label>
@@ -90,6 +90,7 @@ endblock %} {% block content %}
                     name="checkin"
                     class="form-control"
                     required
+                    onblur="validateDateTime()"
             />
             <label class="mt-2" for="checkout"
             ><b><i>Choose checkout time</i></b></label
@@ -100,6 +101,7 @@ endblock %} {% block content %}
                     name="checkout"
                     class="form-control"
                     required
+                    onblur="validateDateTime()"
             />
 
 

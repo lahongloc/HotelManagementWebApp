@@ -1,7 +1,8 @@
 import hashlib
+from datetime import datetime
 
 from app import db, dao, app, login
-from app.models import User, CustomerType, Room, RoomRegulation, RoomType, Customer
+from app.models import User, CustomerType, Room, RoomRegulation, RoomType, Customer, Reservation
 
 
 def check_login(username, password):
@@ -79,3 +80,17 @@ def calculate_total_reservation_price(reservation_info=None, room_id=None):
 
             reservation_info[room_id]['total_price'] = total_price
             return reservation_info
+
+
+def check_reservation(checkin_time=None, checkout_time=None, room_id=None):
+    if checkin_time and checkout_time and room_id:
+        is_valid = True
+        with app.app_context():
+            reservation = db.session.query(Reservation.checkin_date, Reservation.checkout_date).filter(
+                Reservation.room_id.__eq__(room_id)).all()
+            for dt in reservation:
+                if (dt[0] <= checkin_time <= dt[1]) or (dt[0] <= checkout_time <= dt[1]) or (
+                        dt[0] >= checkin_time and dt[1] <= checkout_time):
+                    is_valid = False
+
+        return is_valid

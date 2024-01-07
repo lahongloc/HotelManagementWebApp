@@ -1,10 +1,12 @@
 import hashlib
 import random
+from datetime import datetime
 
 from app import app, dao, login, utils
 from flask import render_template, request, redirect, url_for, jsonify, session
 from flask_login import login_user, logout_user, current_user
 import cloudinary.uploader
+import requests
 from app.models import UserRole
 
 
@@ -202,9 +204,14 @@ def room_booking(room_id):
                 user_counter += 1
                 reservation_info[room_id]['users'][user_counter] = user
                 user = {}
-        session['reservation_info'] = utils.calculate_total_reservation_price(reservation_info=reservation_info,
-                                                                              room_id=room_id)
-        return redirect(url_for('pay_for_reservation', room_id=room_id))
+
+        checkin_time = datetime.strptime(str(reservation_info[str(room_id)]['checkin_time']), "%Y-%m-%dT%H:%M")
+        checkout_time = datetime.strptime(str(reservation_info[str(room_id)]['checkout_time']), "%Y-%m-%dT%H:%M")
+        is_valid = utils.check_reservation(checkin_time=checkin_time, checkout_time=checkout_time, room_id=room_id)
+        if is_valid:
+            session['reservation_info'] = utils.calculate_total_reservation_price(reservation_info=reservation_info,
+                                                                                  room_id=room_id)
+            return redirect(url_for('pay_for_reservation', room_id=room_id))
 
     return render_template('booking.html',
                            room=room,
@@ -231,10 +238,10 @@ def api_of_reservation_pay():
         total_price = data.get('reservationInfo')[str(data['room_id'])]['total_price']
 
         is_paid = dao.add_customers(customers=customers,
-                          room_id=data['room_id'],
-                          checkin_time=checkin_time,
-                          checkout_time=checkout_time,
-                          total_price=total_price)
+                                    room_id=data['room_id'],
+                                    checkin_time=checkin_time,
+                                    checkout_time=checkout_time,
+                                    total_price=total_price)
         if not is_paid:
             code = 400
     except Exception as ex:
