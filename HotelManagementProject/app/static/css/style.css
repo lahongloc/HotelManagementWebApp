@@ -127,3 +127,7 @@ p {
 .form-group {
     padding: 5px;
 }
+
+.reservation-check-table, th, tr, td {
+    border: 1px solid black;
+}

@@ -21,14 +21,14 @@ def add_user(customer_type=None, name=None, username=None, password=None, phone=
         password = str(hashlib.md5(password.strip().encode('utf-8')).hexdigest())
         with app.app_context():
             user = User(username=username, gender=kwargs.get('gender'), password=password,
-                        email=kwargs.get('email'), phone=phone, avatar=kwargs.get('avatar'), identification=id_num)
+                        email=kwargs.get('email'), phone=phone, avatar=kwargs.get('avatar'))
             db.session.add(user)
             db.session.commit()
             # print('add user - done')
 
             for ct in CustomerType.query.all():
                 if customer_type.strip().__eq__(ct.type.strip()):
-                    customer = Customer(id=user.id, name=name, customer_type_id=ct.id)
+                    customer = Customer(id=user.id, name=name, customer_type_id=ct.id, identification=id_num)
                     db.session.add(customer)
                     db.session.commit()
 
@@ -62,7 +62,7 @@ def calculate_total_reservation_price(reservation_info=None, room_id=None):
         num_customers = len(customers)
         num_foreign_customers = 0
         for i in range(1, len(customers) + 1):
-            if customers[f'user{i}'][f'customerType{i}'] == 'FOREIGN':
+            if customers[i]['customerType'] == 'FOREIGN':
                 num_foreign_customers += 1
 
         with app.app_context():

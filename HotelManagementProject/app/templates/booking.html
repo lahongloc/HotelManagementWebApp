@@ -21,8 +21,8 @@ endblock %} {% block content %}
             />
         </div>
         <div class="price">
-            <p class="mt-2" style="font-size: larger; color: red;"><i class="fa-solid fa-dong-sign"></i> <i>{{
-                "{:,.1f}".format(room.price) }}/<b>2 persons</b></i></p>
+            <p class="mt-2" style="font-size: larger; color: red;"> <i>{{
+                "{:,.1f}".format(room.price) }} <i class="fa-solid fa-dong-sign"></i>/<b>2 persons</b></i></p>
             <p style="color: green" class="mt-3">
                 <i>
                     For <b>{{ room.name }}</b>, there is
@@ -57,7 +57,7 @@ endblock %} {% block content %}
                         id="idNum1"
                         type="number"
                         class="form-control mt-2"
-                        value="{{ current_user.identification }}"
+                        value="{{ customer_info.identification }}"
                         readonly
                 />
 
@@ -89,6 +89,7 @@ endblock %} {% block content %}
                     type="datetime-local"
                     name="checkin"
                     class="form-control"
+                    required
             />
             <label class="mt-2" for="checkout"
             ><b><i>Choose checkout time</i></b></label
@@ -98,6 +99,7 @@ endblock %} {% block content %}
                     type="datetime-local"
                     name="checkout"
                     class="form-control"
+                    required
             />
 
 
@@ -153,7 +155,7 @@ endblock %} {% block content %}
 
                                 <label style="display: block;" class="mt-1" for="cus${count}">Name</label>
 
-                                <input name="customerName${count}" id="cus${count}" type="text" class="form-control mt-2 name">
+                                <input name="customerName${count}" id="cus${count}" type="text" class="form-control mt-2 name" required>
 
                                 <label style="display: block" class="mt-1" for="idNum${count}">Identification number</label>
                                 <input

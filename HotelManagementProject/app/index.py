@@ -176,14 +176,16 @@ def room_details(room_id):
 def room_booking(room_id):
     room = dao.get_rooms_info(room_id=room_id)
 
-    customer_info = dao.get_customer_type()
+    customer_info = dao.get_customer_info()
     role_cus = dao.get_customer_role()
 
     total_price = None
     if request.method.__eq__('POST'):
         reservation_info = {room_id: {
             'users': {},
-            'total_price': 0.0
+            'total_price': 0.0,
+            'checkin_time': request.form.get('checkin'),
+            'checkout_time': request.form.get('checkout')
         }}
 
         user = {}
@@ -193,12 +195,12 @@ def room_booking(room_id):
         customer_info.popitem()
         customer_info.popitem()
         for i in customer_info:
-            user[i] = request.form.get(i)
+            user[str(i)[:-1]] = request.form.get(i)
             count += 1
             if count == 3:
                 count = 0
                 user_counter += 1
-                reservation_info[room_id]['users'][f'user{user_counter}'] = user
+                reservation_info[room_id]['users'][user_counter] = user
                 user = {}
         session['reservation_info'] = utils.calculate_total_reservation_price(reservation_info=reservation_info,
                                                                               room_id=room_id)
@@ -214,7 +216,32 @@ def room_booking(room_id):
 @app.route('/reservation-paying')
 def pay_for_reservation():
     room_id = str(request.args.get('room_id'))
-    return render_template('payReservation.html', room_id=room_id)
+    room_info = dao.get_rooms_info(room_id=room_id)
+    return render_template('payReservation.html', room_info=room_info, room_id=room_id)
+
+
+@app.route('/api/reservation-paying', methods=['POST'])
+def api_of_reservation_pay():
+    data = request.json
+    code = 200
+    try:
+        customers = data.get('reservationInfo')[str(data['room_id'])]['users']
+        checkin_time = data.get('reservationInfo')[str(data['room_id'])]['checkin_time']
+        checkout_time = data.get('reservationInfo')[str(data['room_id'])]['checkout_time']
+        total_price = data.get('reservationInfo')[str(data['room_id'])]['total_price']
+
+        is_paid = dao.add_customers(customers=customers,
+                          room_id=data['room_id'],
+                          checkin_time=checkin_time,
+                          checkout_time=checkout_time,
+                          total_price=total_price)
+        if not is_paid:
+            code = 400
+    except Exception as ex:
+        code = 400
+    return jsonify({
+        'code': code
+    })
 
 
 @app.context_processor

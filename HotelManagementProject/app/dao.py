@@ -1,4 +1,5 @@
 import hashlib
+from datetime import datetime
 
 from flask_login import current_user, AnonymousUserMixin
 
@@ -8,10 +9,11 @@ from app import app
 import smtplib
 
 
-def get_customer_type():
+def get_customer_info():
     if current_user.is_authenticated:
         with app.app_context():
-            customer_info = db.session.query(Customer.id, Customer.name, CustomerType.type) \
+            customer_info = db.session.query(Customer.id, Customer.customer_id, Customer.identification, Customer.name,
+                                             CustomerType.type) \
                 .join(Customer, Customer.customer_type_id.__eq__(CustomerType.id))
             customer_info = customer_info.filter(Customer.id.__eq__(current_user.id)).first()
             return customer_info
@@ -94,3 +96,50 @@ def send_gmail(receive_email=None, subject=None, message=None):
         print("Email has been sent to " + receive_email)
     else:
         print('Empty email???')
+
+
+def add_customers(customers=None, room_id=None, checkin_time=None, checkout_time=None, total_price=None):
+    try:
+        if customers and room_id and checkin_time and checkout_time and total_price:
+            added_customers_ids = []
+            added_reservation_id = None
+            # add reservation
+            if current_user.role.__eq__(UserRole.CUSTOMER):
+                checkin_time = datetime.strptime(str(checkin_time), "%Y-%m-%dT%H:%M")
+                checkout_time = datetime.strptime(str(checkout_time), "%Y-%m-%dT%H:%M")
+                with app.app_context():
+                    r = Reservation(customer_id=get_customer_info().customer_id, room_id=room_id,
+                                    checkin_date=checkin_time,
+                                    checkout_date=checkout_time,
+                                    total_price=total_price)
+                    db.session.add(r)
+                    db.session.commit()
+                    added_reservation_id = r.id
+
+            # add customers paying for the reservation into db
+            for i in range(2, len(customers) + 1):
+                cus_type = 1
+                if customers[str(i)]['customerType'] == 'FOREIGN':
+                    cus_type = 2
+                with app.app_context():
+                    c = Customer(name=customers[str(i)]['customerName'],
+                                 identification=customers[str(i)]['customerIdNum'], customer_type_id=cus_type)
+                    db.session.add(c)
+                    db.session.commit()
+                    added_customers_ids.append(c.customer_id)
+
+            # add reservation details
+            current_user_rd = ReservationDetail(customer_id=get_customer_info().customer_id,
+                                                reservation_id=added_reservation_id)
+            db.session.add(current_user_rd)
+            db.session.commit()
+            for cus_id in added_customers_ids:
+                rd = ReservationDetail(customer_id=cus_id, reservation_id=added_reservation_id)
+                db.session.add(rd)
+                db.session.commit()
+
+            return True
+    except Exception as ex:
+        print(str(ex))
+
+# def add_reservation():
