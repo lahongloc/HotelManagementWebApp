@@ -13,7 +13,7 @@
                 </li>
                 {% if current_user.is_authenticated %}
                 <li class="nav-item">
-                    <a id="profile-user" style="height: 40px; size: 40px;" class="nav-link text-danger" href="{{ url_for('user_register') }}">
+                    <a id="profile-user" style="height: 40px; size: 40px;" class="nav-link text-danger" href="{{ url_for('personal_page') }}">
                         {% if current_user.avatar %}
                         <img width="25px" height="25px" src="{{ current_user.avatar }}" alt="current_user.name">
                         {% else %}

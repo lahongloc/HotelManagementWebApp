@@ -6,7 +6,6 @@ from app import app, dao, login, utils
 from flask import render_template, request, redirect, url_for, jsonify, session
 from flask_login import login_user, logout_user, current_user
 import cloudinary.uploader
-from app.models import UserRole
 
 
 @app.route('/')
@@ -50,8 +49,8 @@ def user_register():
                                phone=phone,
                                avatar=avatar_path,
                                id_num=id_num)
-                err_msg = ''
-                return render_template('login.html')
+                return render_template('login.html',
+                                       done_register='Registration successful, please log in to experience!')
             except Exception as ex:
                 if '1062' in (str(ex)):
                     err_msg = 'Username, email or phone already existed!'
@@ -149,6 +148,51 @@ def user_confirm_password():
             err_msg = str(ex)
 
     return render_template('forgotPassword.html', err_msg=err_msg)
+
+
+@app.route('/personal-page', methods=['get', 'post'])
+def personal_page():
+    err_msg = ''
+    avatar_path = None
+    try:
+        if request.method.__eq__('POST'):
+            username = request.form.get('username')
+            name = request.form.get('name')
+            email = request.form.get('email')
+            avatar = request.files.get('avatar')
+            gender = request.form.get('gender') == "Man"
+            phone = request.form.get('phone')
+            identification = request.form.get('identification')
+            if avatar:
+                res = cloudinary.uploader.upload(avatar)
+                avatar_path = res['secure_url']
+            u = utils.get_user_by_username(current_user.username)
+
+            u.gender = gender
+            if email:
+                u.email = email
+            if avatar:
+                u.avatar = avatar_path
+            if phone:
+                u.phone = phone
+
+            c = utils.get_customer_by_user()
+
+            if name:
+                c.name = name
+            if identification:
+                c.identification = identification
+
+            db.session.add_all([u, c])
+            db.session.commit()
+            return render_template('personalPage.html', full_user_info=dao.get_full_user_info())
+        else:
+            full_user_info = dao.get_full_user_info()
+            return render_template('personalPage.html', full_user_info=full_user_info)
+    except Exception as ex:
+        err_msg = str(ex)
+
+    return render_template('personalPage.html', err_msg=err_msg, full_user_info=dao.get_full_user_info())
 
 
 @app.route('/user-logout')

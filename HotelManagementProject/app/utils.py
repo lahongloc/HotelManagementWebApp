@@ -1,6 +1,8 @@
 import hashlib
 from datetime import datetime
 
+from flask_login import current_user
+
 from app import db, dao, app, login
 from app.models import User, CustomerType, Room, RoomRegulation, RoomType, Customer, Reservation, CustomerTypeRegulation
 
@@ -15,6 +17,14 @@ def check_login(username, password):
 
 def get_user_by_id(user_id):
     return User.query.get(user_id)
+
+
+def get_customer_by_user():
+    if current_user:
+        with app.app_context():
+            c = Customer.query.join(User, User.id == Customer.id)
+            c = c.filter(Customer.id.__eq__(current_user.id)).first()
+            return c
 
 
 def add_user(customer_type=None, name=None, username=None, password=None, phone=None, id_num=None, **kwargs):

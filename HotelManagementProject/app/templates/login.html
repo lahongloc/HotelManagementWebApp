@@ -15,6 +15,12 @@
 </div>
 {% endif %}
 
+{% if done_register %}
+<div class="alert alert-primary">
+    <h4>{{ done_register }}</h4>
+</div>
+{% endif %}
+
 <form style="width: 50%; margin: 0 auto; margin-top: 3rem;" method="post" action="{{ url_for('user_signin') }}">
     <div class="form-group" style="padding-bottom: 10px;">
         <label for="username"><i class="fa-solid fa-user"></i> Username:</label>

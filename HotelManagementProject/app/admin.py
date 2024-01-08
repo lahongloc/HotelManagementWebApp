@@ -17,7 +17,7 @@ class LogoutView(BaseView):
     @expose('/')
     def index(self):
         logout_user()
-        return redirect('/admin')
+        return redirect('/')
 
     def is_accessible(self):
         return current_user.is_authenticated
@@ -68,8 +68,8 @@ admin = Admin(app=app,
 
 class MyRoomRegulation(AuthenticatedModelView):
     column_searchable_list = ['room_type_id']
-    column_filters = ['room_type_id', 'room_quantity', 'capacity', 'price']
-    column_editable_list = ['room_quantity', 'capacity', 'price']
+    column_filters = ['room_type_id', 'room_quantity', 'capacity', 'price', 'surcharge']
+    column_editable_list = ['room_quantity', 'capacity', 'price', 'surcharge']
     can_export = True
     can_view_details = True
     column_display_pk = True
@@ -78,9 +78,10 @@ class MyRoomRegulation(AuthenticatedModelView):
         'room_type_id': 'Mã Loại phòng',
         'room_quantity': 'Số lượng phòng tối đa',
         'price': 'Đơn giá',
-        'capacity': 'Số lượng khách tối đa'
+        'capacity': 'Số lượng khách tối đa',
+        'surcharge': 'Phụ thu theo số lượng khách'
     }
-    column_list = ['admin_id', 'room_type_id', 'room_quantity', 'capacity', 'price']
+    column_list = ['admin_id', 'room_type_id', 'room_quantity', 'capacity', 'price', 'surcharge']
 
 
 class MyCustomerTypeRegulation(AuthenticatedModelView):

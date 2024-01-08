@@ -1,0 +1,221 @@
+{% extends 'layouts/base.html' %}
+{% block title %}Personal Page{% endblock %}
+
+{% block content %}
+
+{% if err_msg %}
+<div class="alert alert-danger">
+    <h4>{{ err_msg }}</h4>
+</div>
+{% endif %}
+
+<form style="width: 100%; margin: 0 auto; margin-top: 3rem;" action="{{ url_for('personal_page') }}" method="POST"
+   enctype="multipart/form-data">
+   <div class="container rounded bg-white mt-5 mb-5">
+      <div class="row" style="width: auto; height: auto;">
+         <div class="col-md-5 border-right">
+            <div class="d-flex flex-column align-items-center text-center p-3 py-5">
+               {% if full_user_info.avatar %}
+               <img class="rounded-circle mt-5" width="150px" height="150px"
+                  src="{{ full_user_info.avatar }}"
+                  alt="{{ current_user.name }}">
+               {% else %}
+               {% if current_user.gender == True %}
+               <img class="rounded-circle mt-5" width="150px" height="150px"
+                  src="https://cdn.pixabay.com/photo/2020/07/14/13/07/icon-5404125_1280.png"
+                  alt="{{ current_user.name }}">
+               {% else %}
+               <img class="rounded-circle mt-5" width="150px" height="150px"
+                  src="https://cdn.pixabay.com/photo/2020/07/14/13/06/icon-5404123_1280.png"
+                  alt="{{ current_user.name }}">
+               {% endif %}
+               {% endif %}
+
+               <span
+                  class="font-weight-bold">{{ full_user_info.name }}</span>
+               <span style="width: auto; text-align: center;" class="text-black-50"><input value="{{ current_user.email }}"
+                  style="border: 0px; width: 202px; text-align: center;" type="text" placeholder="{{ current_user.email }}"
+                  name="email"></span>
+               <span> </span>
+            </div>
+         </div>
+         <div class="col-md-5 border-right">
+            <div style="padding_bottom: 5px !important; padding-top: 3rem !important" class="p-3">
+               <div style="justify-content: center !important; color: red;" class="d-flex justify-content-between align-items-center mb-3">
+                  <h4 class="text-right">Profile Settings</h4>
+               </div>
+               <div class="row mt-3">
+                  <div class="col-md-12"><label class="labels">Name</label><input value="{{ full_user_info.name }}"
+                          type="text" class="form-control"
+                     placeholder="{{ full_user_info.name }}"
+                     name="name"></div>
+               </div>
+               <div class="row mt-3">
+                  <div class="col-md-12"><label class="labels">Username</label><input value="{{ full_user_info.username }}"
+                          type="text"
+                     class="form-control"
+                     placeholder="{{ full_user_info.username }}"
+                     name="username" disabled>
+                  </div>
+                  <span class="col-md-12" style="margin: 0px; padding-top: 8px; text-align: right;">
+                  <a href="{{ url_for('user_reset_password') }}">Forgot Password</a>
+                  </span>
+                  <div class="col-md-12"><label class="labels">Avatar</label>
+                     <input type="file" value="{{ full_user_info.avatar }}" name="avatar" class="form-control" placeholder="Choose Avatar" id="avatar">
+                  </div>
+                  {% if full_user_info.gender == 1%}
+                  <div style="margin-top: 8px; margin-bottom: 8px;" class="col-md-12"><label class="labels">Gender</label><br>
+                     <input
+                        style="margin: 5px; accent-color: #1E90FF;" type="radio" name="gender" value="Man"
+                        checked/> <span style="color: #1E90FF;"><i class="fa-solid fa-person"></i> Male</span>
+                     <input
+                        style="margin-left: 10px; accent-color: #FF1493;" type="radio" name="gender"
+                        value="Woman"/> <span style="color: #FF1493;"><i class="fa-solid fa-person-dress"></i> Female</span>
+                  </div>
+               </div>
+               {% else %}
+               <div style="margin-top: 8px; margin-bottom: 8px;" class="col-md-12"><label class="labels">Gender</label><br>
+                  <input
+                     style="margin: 5px; accent-color: #1E90FF;" type="radio" name="gender" value="Man"
+                     /> <span style="color: #1E90FF;"><i class="fa-solid fa-person"></i> Male</span>
+                  <input
+                     style="margin-left: 10px; accent-color: #FF1493;" type="radio" name="gender"
+                     value="Woman" checked/> <span style="color: #FF1493;"><i class="fa-solid fa-person-dress"></i> Female</span>
+               </div>
+               {% endif %}
+               <div class="col-md-12"><label class="labels">Phone</label><input value="{{ full_user_info.phone }}" type="text"
+                  class="form-control"
+                  placeholder="{{ full_user_info.phone }}"
+                  name="phone"></div>
+               <div style="margin-top: 8px; margin-bottom: 5px;" class="col-md-12"><label class="labels">Identification</label><input value="{{ full_user_info.identification }}" type="text"
+                  class="form-control"
+                  placeholder="{{ full_user_info.identification }}"
+                  name="identification"></div>
+               {% if full_user_info.type == "DOMESTIC"%}
+               <div style="margin-top: 8px; margin-bottom: 8px;" class="col-md-12"><label class="labels">Customer Type:</label><br>
+                  <span style="color: #DD0000;"><i class="fas fa-flag"></i> {{ full_user_info.type }}</span>
+<!--                  <input disabled-->
+<!--                     style="margin-left: 10px; accent-color: #808000;" type="radio" name="type"-->
+<!--                     value="FOREIGN"/> <span style="color: #808000;"><i class="fas fa-globe-americas"></i> FOREIGN</span>-->
+               </div>
+            </div>
+            {% else %}
+            <div style="margin-top: 8px; margin-bottom: 8px;" class="col-md-12"><label class="labels">Customer Type:</label><br>
+<!--               <input disabled-->
+<!--                  style="margin: 5px; accent-color: #DD0000;" type="radio" name="type" value="DOMESTIC"-->
+<!--                  /> <span style="color: #DD0000;"><i class="fas fa-flag"></i> DOMESTIC</span>-->
+               <span style="color: #808000;"><i class="fas fa-globe-americas"></i> {{ full_user_info.type }}</span>
+            </div>
+            {% endif %}
+<!--            comment -->
+            <div class="text-center">
+               <button class="btn btn-primary profile-button" type="submit">Save Profile</button>
+            </div>
+         </div>
+      </div>
+   </div>
+   </div>
+   </div>
+   </div>
+</form>
+
+<!--<form style="width: 100%; margin: 0 auto; margin-top: 3rem;" action="{{ url_for('personal_page') }}" method="POST"-->
+<!--      enctype="multipart/form-data">-->
+<!--    <div class="container rounded bg-white mt-5 mb-5">-->
+<!--        <div class="row" style="width: auto; height: auto;">-->
+<!--            <div class="col-md-5 border-right">-->
+<!--                <div class="d-flex flex-column align-items-center text-center p-3 py-5">-->
+<!--                    {% if current_user.gender == True %}-->
+<!--                    <img class="rounded-circle mt-5" width="150px"-->
+<!--                         src="https://cdn.pixabay.com/photo/2020/07/14/13/07/icon-5404125_1280.png"-->
+<!--                         alt="{{ current_user.name }}">-->
+<!--                    {% else %}-->
+<!--                    <img class="rounded-circle mt-5" width="150px"-->
+<!--                         src="https://cdn.pixabay.com/photo/2020/07/14/13/06/icon-5404123_1280.png"-->
+<!--                         alt="{{ current_user.name }}">-->
+<!--                    {% endif %}-->
+<!--                    <span-->
+<!--                            class="font-weight-bold">{{ full_user_info.name }}</span>-->
+<!--                    <span style="width: auto; text-align: center;" class="text-black-50"><input-->
+<!--                            style="border: 0px; width: 202px; text-align: center;" type="text" placeholder="{{ current_user.email }}"-->
+<!--                            name="email"></span>-->
+<!--                    <span> </span></div>-->
+<!--            </div>-->
+<!--            <div class="col-md-5 border-right">-->
+<!--                <div class="p-3 py-5">-->
+<!--                    <div class="d-flex justify-content-between align-items-center mb-3">-->
+<!--                        <h4 class="text-right">Profile Settings</h4>-->
+<!--                    </div>-->
+<!--                    <div class="row mt-3">-->
+<!--                        <div class="col-md-12"><label class="labels">Name</label><input type="text" class="form-control"-->
+<!--                                                                                        placeholder="{{ full_user_info.name }}"-->
+<!--                                                                                        name="name"></div>-->
+<!--                    </div>-->
+<!--                    <div class="row mt-3">-->
+<!--                        <div class="col-md-12"><label class="labels">Username</label><input type="text"-->
+<!--                                                                                            class="form-control"-->
+<!--                                                                                            placeholder="{{ full_user_info.username }}"-->
+<!--                                                                                            name="username" disabled>-->
+<!--                        </div>-->
+<!--                        <span class="col-md-12" style="margin: 0px; padding-top: 8px; text-align: right;">-->
+<!--                            <a href="{{ url_for('user_reset_password') }}">Forgot Password</a>-->
+<!--                        </span>-->
+<!--                        {% if full_user_info.gender == 1%}-->
+<!--                        <div style="margin-top: 8px; margin-bottom: 8px;" class="col-md-12"><label class="labels">Gender</label><br>-->
+<!--                            <input-->
+<!--                                    style="margin: 5px; accent-color: #1E90FF;" type="radio" name="gender" value="Man"-->
+<!--                                    checked/> <span style="color: #1E90FF;"><i class="fa-solid fa-person"></i> Male</span>-->
+<!--                        <input-->
+<!--                                style="margin-left: 10px; accent-color: #FF1493;" type="radio" name="gender"-->
+<!--                                value="Woman"/> <span style="color: #FF1493;"><i class="fa-solid fa-person-dress"></i> Female</span>-->
+<!--                        </div></div>-->
+<!--                    {% else %}-->
+<!--                    <div style="margin-top: 8px; margin-bottom: 8px;" class="col-md-12"><label class="labels">Gender</label><br>-->
+<!--                            <input-->
+<!--                                    style="margin: 5px; accent-color: #1E90FF;" type="radio" name="gender" value="Man"-->
+<!--                                    /> <span style="color: #1E90FF;"><i class="fa-solid fa-person"></i> Male</span>-->
+<!--                        <input-->
+<!--                                style="margin-left: 10px; accent-color: #FF1493;" type="radio" name="gender"-->
+<!--                                value="Woman" checked/> <span style="color: #FF1493;"><i class="fa-solid fa-person-dress"></i> Female</span>-->
+<!--                        </div>-->
+<!--                    {% endif %}-->
+<!--                        <div class="col-md-12"><label class="labels">Phone</label><input type="text"-->
+<!--                                                                                         class="form-control"-->
+<!--                                                                                         placeholder="{{ full_user_info.phone }}"-->
+<!--                                                                                         name="phone"></div>-->
+<!--                        <div style="margin-top: 8px; margin-bottom: 5px;" class="col-md-12"><label class="labels">Identification</label><input type="text"-->
+<!--                                                                                              class="form-control"-->
+<!--                                                                                              placeholder="{{ full_user_info.identification }}"-->
+<!--                                                                                              name="identification"></div>-->
+<!--                    {% if full_user_info.type == "DOMESTIC"%}-->
+<!--                        <div style="margin-top: 8px; margin-bottom: 8px;" class="col-md-12"><label class="labels">Customer Type:</label><br>-->
+<!--                            <input-->
+<!--                                    style="margin: 5px; accent-color: #DD0000;" type="radio" name="type" value="{{ full_user_info.type }}"-->
+<!--                                    checked/> <span style="color: #DD0000;"><i class="fas fa-flag"></i> {{ full_user_info.type }}</span>-->
+<!--                        <input-->
+<!--                                style="margin-left: 10px; accent-color: #808000;" type="radio" name="type"-->
+<!--                                value="FOREIGN"/> <span style="color: #808000;"><i class="fas fa-globe-americas"></i> FOREIGN</span>-->
+<!--                        </div></div>-->
+<!--                    {% else %}-->
+<!--                    <div style="margin-top: 8px; margin-bottom: 8px;" class="col-md-12"><label class="labels">Customer Type:</label><br>-->
+<!--                            <input-->
+<!--                                    style="margin: 5px; accent-color: #DD0000;" type="radio" name="type" value="DOMESTIC"-->
+<!--                                    /> <span style="color: #DD0000;"><i class="fas fa-flag"></i> DOMESTIC</span>-->
+<!--                        <input-->
+<!--                                style="margin-left: 10px; accent-color: #808000;" type="radio" name="type"-->
+<!--                                value="{{ full_user_info.type }}" checked/> <span style="color: #808000;"><i class="fas fa-globe-americas"></i> {{ full_user_info.type }}</span>-->
+<!--                    </div>-->
+<!--                    {% endif %}-->
+
+<!--                    <div class=" text-center">-->
+<!--                        <button class="btn btn-primary profile-button" type="button">Save Profile</button>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--            </div>-->
+<!--        </div>-->
+<!--    </div>-->
+<!--    </div>-->
+<!--    </div>-->
+<!--</form>-->
+
+{% endblock %}

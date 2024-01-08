@@ -273,9 +273,25 @@ const checkCusType = (obj) => {
         }
       })
       .catch(err => console.error(err))
-
 }
 
+const validateDateTime = () => {
+    const checkinTime = new Date(document.getElementById('checkin').value)
+    const checkoutTime = new Date(document.getElementById('checkout').value)
+    var timeDifference = Math.abs(checkoutTime - checkinTime)
+    var days = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
+
+    if(checkoutTime <= checkinTime) {
+        alert("Checkout time must be after checkin time!");
+        document.getElementById('checkin').value = ''
+        document.getElementById('checkout').value = ''
+    }
+    if(days > {{ room.distance }}) {
+        alert(`Check-in date must not exceed {{ room.distance }} days from booking!`);
+        document.getElementById('checkin').value = ''
+        document.getElementById('checkout').value = ''
+    }
+}
 
 </script>
 {% endblock %}
