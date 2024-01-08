@@ -108,6 +108,40 @@ p {
     transition: margin-left 0.5s;
 }
 
+
+.customer {
+    box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
+    border-radius: 12px;
+    padding: 1rem;
+    margin-top: 0.5rem;
+    position: relative;
+}
+
+.customer > .remove {
+    cursor: pointer;
+    display: inline-block;
+    position: absolute;
+    right: 1rem;
+    top: 1rem;
+}
 .form-group {
     padding: 5px;
+}
+
+.reservation-check-table, th, tr, td {
+    border: 1px solid black;
+}
+
+.auto-fill {
+    display: inline-block;
+    box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+    padding: 0.35rem;
+    border-radius: 10px;
+    margin-left: 8.5rem;
+    cursor: pointer;
+}
+
+.auto-fill:active {
+    background-color: #967e4d;
+    color: white;
 }

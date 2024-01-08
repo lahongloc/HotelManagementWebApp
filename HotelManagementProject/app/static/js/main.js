@@ -83,3 +83,26 @@ const UserRegister = () => {
 }
 
 // xử lý forgot password
+
+// pay the reservation
+const payForReservation = (room_id, reservationInfo) => {
+    if(confirm('Pay 30% for this room reservation?') === true){
+        fetch('/api/reservation-paying', {
+            method: 'POST',
+            body: JSON.stringify({
+                room_id,
+                reservationInfo
+            }),
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(res => res.json())
+            .then(data => {
+                console.log(data)
+            })
+            .catch(err => console.error(err))
+
+    }
+
+}

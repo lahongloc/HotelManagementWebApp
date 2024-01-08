@@ -1,10 +1,13 @@
 import hashlib
 import random
+from datetime import datetime
 
 from app import app, dao, login, utils
 from flask import render_template, request, redirect, url_for, jsonify, session
 from flask_login import login_user, logout_user, current_user
 import cloudinary.uploader
+import requests
+from app.models import UserRole
 
 
 @app.route('/')
@@ -29,6 +32,7 @@ def user_register():
         email = request.form.get('email')
         phone = request.form.get('phone')
         gender = request.form.get('gender') == "Man"
+        id_num = request.form.get('idNum')
         avatar_path = None
 
         if password.strip().__eq__(confirm.strip()):
@@ -45,7 +49,8 @@ def user_register():
                                password=password,
                                email=email,
                                phone=phone,
-                               avatar=avatar_path)
+                               avatar=avatar_path,
+                               id_num=id_num)
                 err_msg = ''
                 return render_template('login.html')
             except Exception as ex:
@@ -70,7 +75,11 @@ def user_signin():
         user = utils.check_login(username=username, password=password)
         if user:
             login_user(user=user)
-            return redirect(url_for('home'))
+
+            if current_user.role == UserRole.ADMIN:
+                return redirect('/admin')
+            else:
+                return redirect(url_for('home'))
         else:
             err_msg = 'Username or Password is incorrect!!!'
 
@@ -131,8 +140,8 @@ def user_confirm_password():
 
                 else:
                     return render_template("forgotPassword.html",
-                                    err_msg='Confirmed password is MISMATCH!',
-                                    done_otp='1')
+                                           err_msg='Confirmed password is MISMATCH!',
+                                           done_otp='1')
             else:
                 return render_template("forgotPassword.html",
                                        err_msg='OTP code is incorrect!',
@@ -166,16 +175,88 @@ def room_details(room_id):
     return render_template('roomDetail.html', room=room)
 
 
-@app.route("/booking-room/<room_id>")
+@app.route("/booking-room/<room_id>", methods=['post', 'get'])
 def room_booking(room_id):
     room = dao.get_rooms_info(room_id=room_id)
-    customer_type = dao.get_customer_type()
+
+    customer_info = dao.get_customer_info()
     role_cus = dao.get_customer_role()
+
+    total_price = None
+    if request.method.__eq__('POST'):
+        reservation_info = {room_id: {
+            'users': {},
+            'total_price': 0.0,
+            'checkin_time': request.form.get('checkin'),
+            'checkout_time': request.form.get('checkout')
+        }}
+
+        user = {}
+        count = 0
+        user_counter = 0
+        customer_info = request.form.to_dict()
+        customer_info.popitem()
+        customer_info.popitem()
+        for i in customer_info:
+            user[str(i)[:-1]] = request.form.get(i)
+            count += 1
+            if count == 3:
+                count = 0
+                user_counter += 1
+                reservation_info[room_id]['users'][user_counter] = user
+                user = {}
+
+        checkin_time = datetime.strptime(str(reservation_info[str(room_id)]['checkin_time']), "%Y-%m-%dT%H:%M")
+        checkout_time = datetime.strptime(str(reservation_info[str(room_id)]['checkout_time']), "%Y-%m-%dT%H:%M")
+        is_valid = utils.check_reservation(checkin_time=checkin_time, checkout_time=checkout_time, room_id=room_id)
+        if is_valid:
+            session['reservation_info'] = utils.calculate_total_reservation_price(reservation_info=reservation_info,
+                                                                                  room_id=room_id)
+            return redirect(url_for('pay_for_reservation', room_id=room_id))
 
     return render_template('booking.html',
                            room=room,
-                           customer_type=customer_type,
-                           role_cus=role_cus)
+                           customer_info=customer_info,
+                           role_cus=role_cus,
+                           total_price=total_price)
+
+
+@app.route('/reservation-paying')
+def pay_for_reservation():
+    room_id = str(request.args.get('room_id'))
+    room_info = dao.get_rooms_info(room_id=room_id)
+    return render_template('payReservation.html', room_info=room_info, room_id=room_id)
+
+
+@app.route('/api/reservation-paying', methods=['POST'])
+def api_of_reservation_pay():
+    data = request.json
+    code = 200
+    try:
+        customers = data.get('reservationInfo')[str(data['room_id'])]['users']
+        checkin_time = data.get('reservationInfo')[str(data['room_id'])]['checkin_time']
+        checkout_time = data.get('reservationInfo')[str(data['room_id'])]['checkout_time']
+        total_price = data.get('reservationInfo')[str(data['room_id'])]['total_price']
+
+        is_paid = dao.add_customers(customers=customers,
+                                    room_id=data['room_id'],
+                                    checkin_time=checkin_time,
+                                    checkout_time=checkout_time,
+                                    total_price=total_price)
+        if not is_paid:
+            code = 400
+    except Exception as ex:
+        code = 400
+    return jsonify({
+        'code': code
+    })
+
+
+@app.context_processor
+def common_response():
+    return {
+        'reservation_info': session.get('reservation_info')
+    }
 
 
 if __name__ == "__main__":
