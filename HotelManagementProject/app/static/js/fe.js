@@ -23,9 +23,3 @@ const flash = () => {
   }, 1500)
 }
 
-
-const autoFill = (name, id, type) => {
-    document.getElementById('cus1').value = name
-    document.getElementById('idNum1').value = id
-    document.getElementById('cus1-type').value = type
-}

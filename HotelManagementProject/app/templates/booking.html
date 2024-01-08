@@ -1,7 +1,12 @@
 {% extends 'layouts/base.html' %} {% block title %}Booking room - Elite-Hotel{%
 endblock %} {% block content %}
+{% if err_msg %}
+<div class="alert alert-danger">
+    <h4>{{ err_msg }}</h4>
+</div>
+{% endif %}
 <div class="row">
-    <div class="col-md-6 col-xs-12" style="margin-right: 3rem;">
+    <div class="col-md-6 col-xs-12" style="margin-right: 5.66rem;">
         <div
                 class="img mt-2"
                 style="
@@ -36,22 +41,28 @@ endblock %} {% block content %}
     <div class="col-md-5 col-xs-12">
         <form method="POST" class="form-group booking-info">
             {% if current_user.is_authenticated %}
-            <div class="first-customer customer">
+            <div class="first-customer customer" id="firstCus">
 
                 <label><b>CUSTOMER 1</b></label>
                 {% if current_user.role|string == 'UserRole.CUSTOMER' %}
-                <span onclick="autoFill('{{ customer_info.name }}', '{{ customer_info.identification }}', '{{ customer_info.type }}' )"
-                      class="auto-fill animate__animated">User your profile</span>
+                <!--                <span onclick="autoFill('{{ customer_info.name }}', '{{ customer_info.identification }}', '{{ customer_info.type }}' )"-->
+                <!--                      class="auto-fill animate__animated">User your profile</span>-->
+
+                <label  class="switch">
+                    <input type="checkbox" class="checkbox">
+                    <span style="margin-right: 0.5rem;">Use your profile</span>
+                    <div onclick="autoFill('{{ customer_info.name }}', '{{ customer_info.identification }}', '{{ customer_info.type }}' )" style="display: inline-block;" class="slider"></div>
+                </label>
                 {% endif %}
 
                 <label style="display: block" class="mt-1" for="cus1">Name</label>
                 <input
-                        onfocus="flash()"
                         name="customerName1"
                         id="cus1"
                         type="text"
-                        class="form-control mt-2"
+                        class="form-control mt-2 name"
                         required
+
                 />
 
                 <label style="display: block" class="mt-1" for="idNum1"
@@ -62,12 +73,13 @@ endblock %} {% block content %}
                         id="idNum1"
                         type="number"
                         class="form-control mt-2"
+                        onblur="checkCusType(this)"
                 />
 
                 <label style="display: block" class="mt-2" for="cus1-type"
                 >Customer Type</label
                 >
-                <select class="form-control mt-2" name="customerType1" id="cus1-type">
+                <select class="form-control mt-2 customer-type" name="customerType1" id="cus1-type">
                     {% for r in role_cus %}
                     <option>{{ r }}</option>
                     {% endfor %}
@@ -155,7 +167,7 @@ endblock %} {% block content %}
 
         var addedCustomer = document.createElement("div");
         addedCustomer.id = `nth${count}-customer`;
-        addedCustomer.innerHTML = `<div class='customer'>
+        addedCustomer.innerHTML = `<div class='customer' id="cusInfo${count}"">
                                 <div onclick='deleteCustomer(this)' class='remove'><i style='font-size: 24px; color: red;' class="fa-solid fa-xmark"></i></div>
 
                                 <label style="display: block" class="mt-3"><b>CUSTOMER <span class='index'>${count}</span></b></label>
@@ -170,6 +182,7 @@ endblock %} {% block content %}
                                         id="idNum${count}"
                                         type="number"
                                         class="form-control mt-2 idNum"
+                                        onblur="checkCusType(this)"
                                 />
 
                                 <label style="display: block;" class="mt-2" for="cus${count}-type">Customer Type</label>
@@ -206,6 +219,63 @@ endblock %} {% block content %}
       }
       console.log(addedCustomer)
     };
+
+    const autoFill = (name, id, type) => {
+    nameInput = document.getElementById('cus1')
+    idInput = document.getElementById('idNum1')
+    typeInput = document.getElementById('cus1-type')
+
+    if(!document.querySelector('.checkbox').checked) {
+        if(nameInput.value !== name || idInput.value !== idInput || typeInput.value !== type) {
+            nameInput.value = name
+            idInput.value = id
+            typeInput.value = type
+
+            nameInput.readOnly = true
+            idInput.readOnly = true
+            typeInput.innerHTML = `<option>${type}</option>`
+        }
+    }
+     else {
+            nameInput.value = ''
+            idInput.value = ''
+            typeInput.value = ''
+
+            nameInput.readOnly = false
+            idInput.readOnly = false
+            typeInput.innerHTML = `{% for r in role_cus %}
+                                    <option>{{ r }}</option>
+                                    {% endfor %}`
+        }
+}
+
+const checkCusType = (obj) => {
+    fetch('/api/check-cus-type', {
+        method: 'POST',
+        body: JSON.stringify({
+          'identification': obj.value
+        }),
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+      .then(res => res.json())
+      .then(data => {
+        if(data.code === 200) {
+            document.querySelector(`#${obj.parentNode.id} > .customer-type`).innerHTML = `<option>${data.cusType}</option>`
+            document.querySelector(`#${obj.parentNode.id} > .name`).value = data.cusName
+            document.querySelector(`#${obj.parentNode.id} > .name`).readOnly = true
+        } else {
+          document.querySelector(`#${obj.parentNode.id} > .customer-type`).innerHTML = `{% for r in role_cus %}
+                                                                                          <option>{{ r }}</option>
+                                                                                        {% endfor %}`
+          document.querySelector(`#${obj.parentNode.id} > .name`).readOnly = false                                                               
+        }
+      })
+      .catch(err => console.error(err))
+
+}
+
 
 </script>
 {% endblock %}

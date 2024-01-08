@@ -98,3 +98,15 @@ def check_reservation(checkin_time=None, checkout_time=None, room_id=None):
                     is_valid = False
 
         return is_valid
+
+
+def get_cus_type_by_identification(identification=None):
+    if identification:
+        with app.app_context():
+            cus_type = db.session.query(Customer.identification, Customer.name, Customer.customer_id, CustomerType.type) \
+                .join(CustomerType, CustomerType.id.__eq__(Customer.customer_type_id)) \
+                .filter(Customer.identification.__eq__(identification.strip())).first()
+            if cus_type:
+                return cus_type
+
+

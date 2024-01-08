@@ -176,6 +176,7 @@ def room_details(room_id):
 
 @app.route("/booking-room/<room_id>", methods=['post', 'get'])
 def room_booking(room_id):
+    err_msg = ''
     room = dao.get_rooms_info(room_id=room_id)
 
     customer_info = dao.get_customer_info()
@@ -193,10 +194,10 @@ def room_booking(room_id):
         user = {}
         count = 0
         user_counter = 0
-        customer_info = request.form.to_dict()
-        customer_info.popitem()
-        customer_info.popitem()
-        for i in customer_info:
+        customers_list = request.form.to_dict()
+        customers_list.popitem()
+        customers_list.popitem()
+        for i in customers_list:
             user[str(i)[:-1]] = request.form.get(i)
             count += 1
             if count == 3:
@@ -212,12 +213,15 @@ def room_booking(room_id):
             session['reservation_info'] = utils.calculate_total_reservation_price(reservation_info=reservation_info,
                                                                                   room_id=room_id)
             return redirect(url_for('pay_for_reservation', room_id=room_id))
+        else:
+            err_msg = 'This time is not available for this room. Please choose another time period!'
 
     return render_template('booking.html',
                            room=room,
                            customer_info=customer_info,
                            role_cus=role_cus,
-                           total_price=total_price)
+                           total_price=total_price,
+                           err_msg=err_msg)
 
 
 @app.route('/reservation-paying')
@@ -245,10 +249,36 @@ def api_of_reservation_pay():
         if not is_paid:
             code = 400
     except Exception as ex:
+        print(str(ex))
         code = 400
     return jsonify({
         'code': code
     })
+
+
+@app.route('/api/check-cus-type', methods=['POST'])
+def handle_check_cus_type():
+    try:
+        data = request.json
+        cus_info = None
+        err_msg = 200
+        try:
+            cus_info = utils.get_cus_type_by_identification(identification=str(data.get('identification')))
+        except Exception as ex:
+            print(str(ex))
+            err_msg = 400
+        if not cus_info:
+            err_msg = 400
+        return jsonify({
+            'cusType': cus_info.type,
+            'cusName': cus_info.name,
+            'code': err_msg
+        })
+    except Exception as ex:
+        print(str(ex))
+        return jsonify({
+            'code': 400
+        })
 
 
 @app.context_processor

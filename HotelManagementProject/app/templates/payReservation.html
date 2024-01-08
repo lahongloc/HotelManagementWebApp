@@ -14,7 +14,7 @@
     </thead>
 </table>
 <table class="table reservation-check-table">
-    
+
     <thead>
         <th>Order</th>
         <th style="width: 25%;">Customer</th>
@@ -34,11 +34,11 @@
         {% endfor %}
     </tbody>
 
-    
+
 </table>
 <div>
     <h4 class="mt-2" style="font-size: larger; color: red;">
-        <b>TOTAL PRICE:</b> 
+        <b>TOTAL PRICE:</b>
         <i>{{ session.get('reservation_info')[room_id].total_price }} <i class="fa-solid fa-dong-sign"></i> </i>
     </h4>
 </div>
