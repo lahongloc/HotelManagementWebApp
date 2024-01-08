@@ -131,3 +131,17 @@ p {
 .reservation-check-table, th, tr, td {
     border: 1px solid black;
 }
+
+.auto-fill {
+    display: inline-block;
+    box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+    padding: 0.35rem;
+    border-radius: 10px;
+    margin-left: 8.5rem;
+    cursor: pointer;
+}
+
+.auto-fill:active {
+    background-color: #967e4d;
+    color: white;
+}

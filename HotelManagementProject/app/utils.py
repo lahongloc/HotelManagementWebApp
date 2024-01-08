@@ -2,7 +2,7 @@ import hashlib
 from datetime import datetime
 
 from app import db, dao, app, login
-from app.models import User, CustomerType, Room, RoomRegulation, RoomType, Customer, Reservation
+from app.models import User, CustomerType, Room, RoomRegulation, RoomType, Customer, Reservation, CustomerTypeRegulation
 
 
 def check_login(username, password):
@@ -67,16 +67,20 @@ def calculate_total_reservation_price(reservation_info=None, room_id=None):
                 num_foreign_customers += 1
 
         with app.app_context():
-            room_price = db.session.query(Room.name, RoomType.name, RoomRegulation.price) \
+            room_price = db.session.query(Room.name, RoomType.name, RoomRegulation.price, RoomRegulation.surcharge,
+                                          RoomRegulation.capacity) \
                 .join(Room, Room.room_type_id.__eq__(RoomType.id)) \
                 .join(RoomRegulation, RoomRegulation.room_type_id.__eq__(RoomType.id)).filter(
                 Room.id.__eq__(room_id)).first()
 
             total_price = room_price.price
-            if num_customers == 3:
-                total_price += total_price * 0.25
+            if num_customers == room_price.capacity:
+                total_price += total_price * room_price.surcharge
             if num_foreign_customers > 0:
-                total_price *= 1.5
+                customer_rate = db.session.query(CustomerType.type, CustomerTypeRegulation.rate) \
+                    .join(CustomerTypeRegulation, CustomerTypeRegulation.customer_type_id.__eq__(CustomerType.id)) \
+                    .filter(CustomerType.type.__eq__('FOREIGN')).first()
+                total_price *= customer_rate.rate
 
             reservation_info[room_id]['total_price'] = total_price
             return reservation_info

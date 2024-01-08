@@ -151,6 +151,7 @@ class RoomRegulation(db.Model):
     room_quantity = Column(Integer, default=10)
     capacity = Column(Integer, default=2)
     price = Column(Float, default=100000)
+    surcharge = Column(Float, default=0.25)
 
 
 class CustomerTypeRegulation(BaseModel):
@@ -210,4 +211,13 @@ if __name__ == "__main__":
         db.session.add_all([rr1, rr2, rr3])
         db.session.commit()
 
+        import hashlib
 
+        userR = User(username='NhungTran', password=str(hashlib.md5('123'.encode('utf-8')).hexdigest()),
+                     role=UserRole.RECEPTIONIST, email='nhung@gmail.com', phone='035588475', gender=False)
+        db.session.add(userR)
+        db.session.commit()
+
+        r1 = Receptionist(name='Tran Thi Nhung', id=2)
+        db.session.add(r1)
+        db.session.commit()

@@ -75,10 +75,11 @@ def user_signin():
         user = utils.check_login(username=username, password=password)
         if user:
             login_user(user=user)
-            if current_user.role == UserRole.CUSTOMER:
-                return redirect(url_for('home'))
+
             if current_user.role == UserRole.ADMIN:
                 return redirect('/admin')
+            else:
+                return redirect(url_for('home'))
         else:
             err_msg = 'Username or Password is incorrect!!!'
 

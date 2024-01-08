@@ -21,7 +21,7 @@ endblock %} {% block content %}
             />
         </div>
         <div class="price">
-            <p class="mt-2" style="font-size: larger; color: red;"> <i>{{
+            <p class="mt-2" style="font-size: larger; color: red;"><i>{{
                 "{:,.1f}".format(room.price) }} <i class="fa-solid fa-dong-sign"></i>/<b>2 persons</b></i></p>
             <p style="color: green" class="mt-3">
                 <i>
@@ -34,19 +34,22 @@ endblock %} {% block content %}
         </div>
     </div>
     <div class="col-md-5 col-xs-12">
-        <form method="POST" class="form-group booking-info" onsubmit="submitForm(event)">
+        <form method="POST" class="form-group booking-info">
             {% if current_user.is_authenticated %}
             <div class="first-customer customer">
+
                 <label><b>CUSTOMER 1</b></label>
+                <span onclick="autoFill('{{ customer_info.name }}', '{{ customer_info.identification }}', '{{ customer_info.type }}' )"
+                      class="auto-fill animate__animated">User your profile</span>
 
                 <label style="display: block" class="mt-1" for="cus1">Name</label>
                 <input
+                        onfocus="flash()"
                         name="customerName1"
                         id="cus1"
                         type="text"
                         class="form-control mt-2"
-                        value="{{ customer_info.name }}"
-                        readonly
+                        required
                 />
 
                 <label style="display: block" class="mt-1" for="idNum1"
@@ -57,15 +60,15 @@ endblock %} {% block content %}
                         id="idNum1"
                         type="number"
                         class="form-control mt-2"
-                        value="{{ customer_info.identification }}"
-                        readonly
                 />
 
                 <label style="display: block" class="mt-2" for="cus1-type"
                 >Customer Type</label
                 >
                 <select class="form-control mt-2" name="customerType1" id="cus1-type">
-                    <option>{{ customer_info.type }}</option>
+                    {% for r in role_cus %}
+                    <option>{{ r }}</option>
+                    {% endfor %}
                 </select>
             </div>
             <div class="rest-customer">

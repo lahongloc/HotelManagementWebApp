@@ -102,7 +102,7 @@ def add_customers(customers=None, room_id=None, checkin_time=None, checkout_time
     added_customers_ids = []
     added_reservation_id = None
     if customers and room_id and checkin_time and checkout_time and total_price:
-
+        print(customers)
         # add reservation
         try:
             if current_user.role.__eq__(UserRole.CUSTOMER):
@@ -131,21 +131,30 @@ def add_customers(customers=None, room_id=None, checkin_time=None, checkout_time
                 db.session.add(c)
                 db.session.commit()
                 added_customers_ids.append(c.customer_id)
+        try:
+            with app.app_context():
+                cus_type = 1
+                if customers['1']['customerType'] == 'FOREIGN':
+                    cus_type = 2
+                c = Customer(name=customers['1']['customerName'],
+                             identification=customers['1']['customerIdNum'], customer_type_id=cus_type)
+                db.session.add(c)
+                db.session.commit()
+                added_customers_ids.append(c.customer_id)
+        except Exception as ex:
+            added_customers_ids.append(get_customer_info().customer_id)
+            print(str(ex))
+
     except Exception as ex:
         print(str(ex))
 
     # add reservation details
     try:
-        current_user_rd = ReservationDetail(customer_id=get_customer_info().customer_id,
-                                            reservation_id=added_reservation_id)
-        db.session.add(current_user_rd)
-        db.session.commit()
         for cus_id in added_customers_ids:
             rd = ReservationDetail(customer_id=cus_id, reservation_id=added_reservation_id)
             db.session.add(rd)
             db.session.commit()
 
-            return True
+        return True
     except Exception as ex:
         print(str(ex))
-
