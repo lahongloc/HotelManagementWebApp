@@ -19,6 +19,23 @@ def get_customer_info():
             return customer_info
 
 
+def get_full_user_info():
+    if current_user.is_authenticated:
+        with app.app_context():
+            if current_user.role == UserRole.CUSTOMER:
+                full_user_info = db.session.query(User.username, User.password, User.email, User.phone, User.avatar,
+                                                  User.gender,
+                                                  Customer.name, Customer.identification, CustomerType.type) \
+                    .join(User, User.id == Customer.id) \
+                    .join(CustomerType, CustomerType.id == Customer.customer_type_id) \
+                    .group_by(User.username, User.password, User.email, User.phone, User.avatar, User.gender,
+                              Customer.name, Customer.identification,
+                              CustomerType.type)
+                full_user_info = full_user_info.filter(Customer.id.__eq__(current_user.id)).first()
+
+                print(full_user_info)
+                return full_user_info
+
 def get_room_types():
     with app.app_context():
         room_types = RoomType.query.all()

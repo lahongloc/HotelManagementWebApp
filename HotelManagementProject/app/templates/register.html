@@ -15,7 +15,12 @@
         <br>
         {% for rc in role_cus %}
         <input style="margin: 5px;" class="cus_type" type="radio" name="customer_type" value="{{ rc }}"
-               {% if loop.first %}checked{% endif %}> {{ rc }}
+               {% if loop.first %}checked{% endif %}>
+            {% if loop.first %}
+            <span style="color: #DD0000;"><i class="fas fa-flag"></i> {{ rc }}</span>
+            {% else %}
+            <span style="color: #808000;"><i class="fas fa-globe-americas"></i> {{ rc }}</span>
+            {% endif %}
         {% endfor %}
     </div>
 
@@ -31,7 +36,6 @@
 
     <div>
         <label><b>Choose Gender</b></label>
-        <label>Choose Gender:</label>
         <br>
         <input style="margin: 5px; accent-color: #1E90FF;" type="radio" name="gender" value="Man" checked/> <span style="color: #1E90FF;"><i class="fa-solid fa-person"></i> Male</span>
         <input style="margin-left: 10px; accent-color: #FF1493;" type="radio" name="gender" value="Woman"/> <span style="color: #FF1493;"><i class="fa-solid fa-person-dress"></i> Female</span>

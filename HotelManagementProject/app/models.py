@@ -55,7 +55,7 @@ class CustomerType(BaseModel):
 
 
 class Customer(db.Model):
-    id = Column(Integer, ForeignKey(User.id), unique=True)
+    id = Column(Integer, ForeignKey(User.id), unique=True) # khóa ngoại tham chiếu đến User
     customer_id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(50), nullable=False)
     identification = Column(String(15), unique=True)
@@ -66,7 +66,7 @@ class Customer(db.Model):
     reservation_details = Relationship('ReservationDetail', backref='customer', lazy=True)
 
     def __str__(self):
-        return self.id
+        return self.name
 
 
 class RoomType(BaseModel):
@@ -142,6 +142,7 @@ class Receipt(BaseModel):
 class Comment(db.Model):
     id = Column(Integer, ForeignKey(Customer.id), nullable=False,
                 primary_key=True)  # primary key as well as foreign key
+    content = Column(String(1000), nullable=False)
     room_id = Column(Integer, ForeignKey(Room.id), nullable=False, primary_key=True)
 
 
@@ -188,7 +189,52 @@ if __name__ == "__main__":
             avatar='https://cdn.pixabay.com/photo/2020/07/14/13/07/icon-5404125_1280.png',
             email='loc@gmail.com',
             phone='0334454203')
-        db.session.add(user1)
+        user1 = User(
+            role=UserRole.ADMIN,
+            username='locla123',
+            password=str(hashlib.md5('123'.encode('utf-8')).hexdigest()),
+            avatar='https://cdn.pixabay.com/photo/2020/07/14/13/07/icon-5404125_1280.png',
+            email='2151053036loc@ou.edu.vn',
+            phone='0334454203')
+        user2 = User(
+            role=UserRole.CUSTOMER,
+            username='kiet',
+            password=str(hashlib.md5('kiet'.encode('utf-8')).hexdigest()),
+            avatar='https://cdn.pixabay.com/photo/2020/07/14/13/07/icon-5404125_1280.png',
+            email='2151050219kiet@ou.edu.vn',
+            phone='0869311727')
+        user3 = User(
+            role=UserRole.CUSTOMER,
+            username='duy',
+            password=str(hashlib.md5('duy'.encode('utf-8')).hexdigest()),
+            avatar='https://cdn.pixabay.com/photo/2020/07/14/13/07/icon-5404125_1280.png',
+            email='2151050055@ou.edu.vn',
+            phone='0123456789')
+        user4 = User(
+            role=UserRole.CUSTOMER,
+            username='lan',
+            password=str(hashlib.md5('lan'.encode('utf-8')).hexdigest()),
+            avatar='https://cdn.pixabay.com/photo/2020/07/14/13/07/icon-5404125_1280.png',
+            email='lan@gmail.com',
+            phone='0642138713')
+        user5 = User(
+            role=UserRole.CUSTOMER,
+            username='tuan',
+            password=str(hashlib.md5('tuan'.encode('utf-8')).hexdigest()),
+            avatar='https://cdn.pixabay.com/photo/2020/07/14/13/07/icon-5404125_1280.png',
+            email='tuan@gmail.com',
+            phone='0287112946')
+        user6 = User(
+            role=UserRole.CUSTOMER,
+            username='lau',
+            password=str(hashlib.md5('lau'.encode('utf-8')).hexdigest()),
+            avatar='https://cdn.pixabay.com/photo/2020/07/14/13/07/icon-5404125_1280.png',
+            email='lau@gmail.com',
+            phone='0198247172')
+        user7 = User(username='NhungTran', password=str(hashlib.md5('123'.encode('utf-8')).hexdigest()),
+                     role=UserRole.RECEPTIONIST, email='nhung@gmail.com', phone='035588475', gender=False)
+        db.session.commit()
+        db.session.add_all([user1, user2, user3, user4, user5, user6, user7])
         db.session.commit()
 
         admin1 = Administrator(id=1, name='La Hồng Lộc')
@@ -211,13 +257,52 @@ if __name__ == "__main__":
         db.session.add_all([rr1, rr2, rr3])
         db.session.commit()
 
-        import hashlib
-
-        userR = User(username='NhungTran', password=str(hashlib.md5('123'.encode('utf-8')).hexdigest()),
-                     role=UserRole.RECEPTIONIST, email='nhung@gmail.com', phone='035588475', gender=False)
-        db.session.add(userR)
+        r1 = Receptionist(name='Tran Thi Nhung', id=7)
+        db.session.add(r1)
         db.session.commit()
 
-        r1 = Receptionist(name='Tran Thi Nhung', id=2)
-        db.session.add(r1)
+        cus1 = Customer(id=2, name='Trần Tuấn Kiệt', identification='0194612374612', customer_type_id=1)
+        cus2 = Customer(id=3, name='Hoàng Nguyễn Quốc Duy', identification='0123491958123', customer_type_id=1)
+        cus3 = Customer(id=4, name='Trần Lê Lân', identification='01235012357', customer_type_id=2)
+        cus4 = Customer(id=5, name='Văn Công Tuấn', identification='09832478143', customer_type_id=2)
+        cus5 = Customer(id=6, name='Ngô Văn Lâu', identification='01283597235', customer_type_id=1)
+        db.session.add_all([cus1, cus2, cus3, cus4, cus5])
+        db.session.commit()
+
+        cm1 = Comment(id=2, content='Phòng này quá ok <3', room_id=1)
+        cm2 = Comment(id=3, content='Cũng tàm tạm, cần nâng cấp dịch vụ phòng!', room_id=1)
+        cm3 = Comment(id=4, content='Sẽ ghé thăm vào lần sau nếu có dịp', room_id=2)
+        cm4 = Comment(id=5, content='Một căn phòng đáng trải nghiệm nhất tại khách sạn, 5 sau nhé', room_id=2)
+        cm5 = Comment(id=6,
+                      content='Mình có một người bạn nước ngoài ở chung, sẽ nhân hệ số 1.5 nhưng đây là quy định chung của khách sạn rùi nên cũng không sao, miễn là dịch vụ OK và phòng thì miễn chê',
+                      room_id=2)
+        cm6 = Comment(id=2,
+                      content='Có dịp ghé qua đây, đang loay hoay tìm phòng thì có dịch vụ đặt phòng trước, đến nơi chỉ cần đưa thông tin phiếu cho nhân viên lễ tân là nhận phòng ở luôn, 10 điểm',
+                      room_id=3)
+        cm7 = Comment(id=3, content='Phòng này 0 điểm ... không có điểm nào để chê ạ =)))', room_id=3)
+        cm8 = Comment(id=4, content='Thật là một nơi đáng để tra nghiệm', room_id=3)
+        cm9 = Comment(id=5, content='Xứng đáng với số tiền bỏ ra', room_id=3)
+        cm10 = Comment(id=6,
+                       content='Mình không biết những nơi khác thế nào, nhưng đối với mình noi đây rất tiện nghi từ dịch vụ cho đến giải quyết sự cố cho khách hàng',
+                       room_id=3)
+        cm11 = Comment(id=2,
+                       content='Mình lỡ làm bể kính phòng tắm nên phải bồi thường, nhưng vẫn hài lòng với những gì khách sạn mang đến',
+                       room_id=4)
+        cm12 = Comment(id=3, content='Cần điều chỉnh số lượng người ở trong phòng nhiều hơn', room_id=4)
+        cm13 = Comment(id=4, content='Nơi này rất thoải mái và tiện nghi, có view đỉnh lắm ạ!', room_id=4)
+        cm14 = Comment(id=5, content='Những gì khách sạn mang đến rất tốt cho trải nghiệm của tôi', room_id=4)
+        cm15 = Comment(id=6, content='Nhân viên dễ thương lắm, tư vấn phòng này và trải nghiệm rất tốt', room_id=4)
+        cm16 = Comment(id=2,
+                       content='Quá tuyt vời mặc dù mình ở 3 người nên có thêm phụ phí 25% nha mng ơi, quy định chung của khách sạn rùi',
+                       room_id=5)
+        cm17 = Comment(id=3, content='Cần điều chỉnh hệ số lúc thanh toán thì quá oke vì mình là khách nước ngoài',
+                       room_id=5)
+        cm18 = Comment(id=4,
+                       content='9.5 điểm, vì 0.5 điểm còn lại là do mình đi 3 người nên thu 25% và có nhân hệ số 1.5 lúc thanh toán huhuhuhhhhuhu :(',
+                       room_id=5)
+        db.session.add_all([cm1, cm2,
+                            cm3, cm4, cm5, cm6,
+                            cm7, cm8, cm9,
+                            cm10, cm11, cm12, cm13, cm14, cm15,
+                            cm16, cm17, cm18])
         db.session.commit()
