@@ -39,8 +39,10 @@ endblock %} {% block content %}
             <div class="first-customer customer">
 
                 <label><b>CUSTOMER 1</b></label>
+                {% if current_user.role|string == 'UserRole.CUSTOMER' %}
                 <span onclick="autoFill('{{ customer_info.name }}', '{{ customer_info.identification }}', '{{ customer_info.type }}' )"
                       class="auto-fill animate__animated">User your profile</span>
+                {% endif %}
 
                 <label style="display: block" class="mt-1" for="cus1">Name</label>
                 <input

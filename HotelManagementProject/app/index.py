@@ -6,7 +6,6 @@ from app import app, dao, login, utils
 from flask import render_template, request, redirect, url_for, jsonify, session
 from flask_login import login_user, logout_user, current_user
 import cloudinary.uploader
-import requests
 from app.models import UserRole
 
 

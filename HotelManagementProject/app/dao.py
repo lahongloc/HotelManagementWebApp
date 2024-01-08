@@ -158,3 +158,44 @@ def add_customers(customers=None, room_id=None, checkin_time=None, checkout_time
         return True
     except Exception as ex:
         print(str(ex))
+
+
+def get_room_regulation():
+    # if current_user.is_authenticated and current_user.role.__eq__(UserRole.ADMIN):
+    with app.app_context():
+        room_regulation = db.session.query(RoomType.name.label('rome_type_name'),
+                                           User.username.label('user_name'),
+                                           RoomRegulation.room_quantity,
+                                           RoomRegulation.capacity,
+                                           RoomRegulation.price) \
+            .join(Administrator, Administrator.id == RoomRegulation.admin_id) \
+            .join(RoomType, RoomType.id == RoomRegulation.room_type_id) \
+            .join(User, User.id == Administrator.id) \
+            .group_by(RoomRegulation.room_quantity,
+                      RoomRegulation.capacity,
+                      RoomRegulation.price,
+                      RoomType.name.label('rome_type_name'),
+                      User.username.label('user_name')) \
+            .all()
+
+        # print(room_regulation)
+        return room_regulation
+
+
+def get_customer_type_regulation():
+    # if current_user.is_authenticated and current_user.role.__eq__(UserRole.ADMIN):
+    with app.app_context():
+        customer_type_regulation = db.session.query(CustomerTypeRegulation.id,
+                                                    CustomerType.type.label('customer_type'),
+                                                    Administrator.name.label('name_admin'),
+                                                    CustomerTypeRegulation.rate) \
+            .join(Administrator, Administrator.id == CustomerTypeRegulation.admin_id) \
+            .join(CustomerType, CustomerType.id == CustomerTypeRegulation.customer_type_id) \
+            .group_by(CustomerTypeRegulation.id,
+                      CustomerType.type.label('customer_type'),
+                      Administrator.name.label('name_admin'),
+                      CustomerTypeRegulation.rate) \
+            .all()
+
+        # print(customer_type_regulation)
+        return customer_type_regulation
