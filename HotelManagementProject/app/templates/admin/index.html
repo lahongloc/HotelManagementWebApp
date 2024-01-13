@@ -1,0 +1,41 @@
+{% extends 'admin/master.html' %}
+
+{% block body %}
+
+{% if current_user.is_authenticated %}
+
+<h1 class="text-center text-info">CHÀO MỪNG {{ current_user.username }} ĐẾN TRANG QUẢN TRỊ!!!</h1>
+<br>
+<div class="row">
+  <div class="col-md-6 col-xs-12">
+    <table class="table">
+      <tr>
+        <th>Tên Loại Phòng</th>
+        <th>Username</th>
+        <th>Số phòng tối đa</th>
+        <th>Số người ở tối đa</th>
+        <th>Giá loại phòng</th>
+      </tr>
+      {% for r in room_regulation %}
+      <tr>
+        <td>{{ r[0] }}</td>
+        <td>{{ r[1] }}</td>
+        <td>{{ r[2] }}</td>
+        <td>{{ r[3] }}</td>
+        <td>{{ "{:,.0f}".format(r[4]) }} VND</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+  <div class="col-md-7 col-xs-12">
+    <canvas id="myChart"></canvas>
+  </div>
+</div>
+{% else %}
+<a href="{{ url_for('user_signin') }}">
+  <b>Click here to log in as administrator!</b>
+</a>
+{% endif %}
+
+{% endblock %}
+

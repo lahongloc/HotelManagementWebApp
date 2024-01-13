@@ -30,6 +30,15 @@ class MyAdminIndexView(AdminIndexView):
                            room_regulation=dao.get_room_regulation(),
                            customer_type_regulation=dao.get_customer_type_regulation())
 
+class MonthSaleStatisticView(BaseView):
+    @expose('/')
+    def index(self):
+        return self.render('admin/monthSaleStatistic.html',
+                           monthSaleStatistic=dao.month_sale_statistic())
+
+    def is_accessible(self):
+        return current_user.is_authenticated and current_user.role == UserRole.ADMIN
+
 
 class MyRoomTypeView(AuthenticatedModelView):
     column_searchable_list = ['name']
@@ -104,3 +113,4 @@ admin.add_view(MyRoomView(Room, db.session))
 admin.add_view(MyRoomRegulation(RoomRegulation, db.session))
 admin.add_view(MyCustomerTypeRegulation(CustomerTypeRegulation, db.session))
 admin.add_view(LogoutView(name='Logout'))
+admin.add_view(MonthSaleStatisticView(name='Month Sale Statistic'))

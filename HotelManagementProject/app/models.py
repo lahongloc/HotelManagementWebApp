@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from app import app, db
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Enum, DateTime, Float
 from sqlalchemy.orm import Relationship
@@ -7,9 +9,8 @@ from flask_login import UserMixin
 
 class UserRole(CommonEnum):
     ADMIN = 1
-    SERVICE_STAFF = 2
-    RECEPTIONIST = 3
-    CUSTOMER = 4
+    RECEPTIONIST = 2
+    CUSTOMER = 3
 
 
 class BaseModel(db.Model):
@@ -32,13 +33,6 @@ class Administrator(db.Model):
     name = Column(String(50), nullable=False)
 
 
-class ServiceStaff(db.Model):
-    id = Column(Integer, ForeignKey(User.id), nullable=False, primary_key=True)
-    name = Column(String(50), nullable=False)
-    service_records = Relationship('ServiceRecord', backref='service_staff', lazy=True)
-    problem_records = Relationship('ProblemRecord', backref='service_staff', lazy=True)
-
-
 class Receptionist(db.Model):
     id = Column(Integer, ForeignKey(User.id), nullable=False, primary_key=True)
     name = Column(String(50), nullable=False)
@@ -55,7 +49,7 @@ class CustomerType(BaseModel):
 
 
 class Customer(db.Model):
-    id = Column(Integer, ForeignKey(User.id), unique=True) # khóa ngoại tham chiếu đến User
+    id = Column(Integer, ForeignKey(User.id), unique=True)  # khóa ngoại tham chiếu đến User
     customer_id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(50), nullable=False)
     identification = Column(String(15), unique=True)
@@ -96,7 +90,7 @@ class Reservation(BaseModel):
     room_id = Column(Integer, ForeignKey(Room.id), nullable=False)
     checkin_date = Column(DateTime, nullable=False)
     checkout_date = Column(DateTime, nullable=False)
-    total_price = Column(Float, nullable=False)
+    deposit = Column(Float, nullable=False)
     reservation_details = Relationship('ReservationDetail', backref='reservation', lazy=True)
 
 
@@ -106,37 +100,20 @@ class ReservationDetail(BaseModel):
 
 
 class RoomRental(BaseModel):
-    customer_id = Column(Integer, ForeignKey(Customer.id), nullable=False)
+    customer_id = Column(Integer, ForeignKey(Customer.customer_id), nullable=False)
     receptionist_id = Column(Integer, ForeignKey(Receptionist.id), nullable=False)
-    is_received_room = Column(Boolean)
+    # is_received_room = Column(Boolean)
     room_id = Column(Integer, ForeignKey(Room.id))  # null if is_received_room == True
     reservation_id = Column(Integer, ForeignKey(Reservation.id))  # null if is_received_room == False
-
+    deposit = Column(Float)
     receipt = Relationship('Receipt', uselist=False, back_populates='room_rental')
-
-
-#
-class ServiceRecord(BaseModel):
-    description = Column(String(1000))
-    price = Column(Float)
-    service_staff_id = Column(Integer, ForeignKey(ServiceStaff.id), nullable=False)
-    receipt = Relationship('Receipt', uselist=False, back_populates='service_record')
-
-
-class ProblemRecord(BaseModel):
-    description = Column(String(1000))
-    price = Column(Float)
-    service_staff_id = Column(Integer, ForeignKey(ServiceStaff.id), nullable=False)
-    receipt = Relationship('Receipt', uselist=False, back_populates='problem_record')
 
 
 class Receipt(BaseModel):
     rental_room_id = Column(Integer, ForeignKey(RoomRental.id), nullable=False)
     room_rental = Relationship('RoomRental', back_populates='receipt')
-    service_record_id = Column(Integer, ForeignKey(ServiceRecord.id))
-    service_record = Relationship('ServiceRecord', back_populates='receipt')
-    problem_record_id = Column(Integer, ForeignKey(ProblemRecord.id))
-    problem_record = Relationship('ProblemRecord', back_populates='receipt')
+    total_price = Column(Float, nullable=False)
+    created_date = Column(DateTime, nullable=False)
 
 
 class Comment(db.Model):
@@ -188,13 +165,6 @@ if __name__ == "__main__":
             password=str(hashlib.md5('123'.encode('utf-8')).hexdigest()),
             avatar='https://cdn.pixabay.com/photo/2020/07/14/13/07/icon-5404125_1280.png',
             email='loc@gmail.com',
-            phone='0334454203')
-        user1 = User(
-            role=UserRole.ADMIN,
-            username='locla123',
-            password=str(hashlib.md5('123'.encode('utf-8')).hexdigest()),
-            avatar='https://cdn.pixabay.com/photo/2020/07/14/13/07/icon-5404125_1280.png',
-            email='2151053036loc@ou.edu.vn',
             phone='0334454203')
         user2 = User(
             role=UserRole.CUSTOMER,
@@ -251,9 +221,9 @@ if __name__ == "__main__":
         db.session.add_all([ctr1, ctr2])
         db.session.commit()
 
-        rr1 = RoomRegulation(room_type_id=1, admin_id=1, room_quantity=10, capacity=3, price=500000)
-        rr2 = RoomRegulation(room_type_id=2, admin_id=1, room_quantity=15, capacity=3, price=1500000)
-        rr3 = RoomRegulation(room_type_id=3, admin_id=1, room_quantity=17, capacity=3, price=2000000)
+        rr1 = RoomRegulation(room_type_id=1, admin_id=1, room_quantity=10, capacity=3, price=3000000)
+        rr2 = RoomRegulation(room_type_id=2, admin_id=1, room_quantity=15, capacity=3, price=4000000)
+        rr3 = RoomRegulation(room_type_id=3, admin_id=1, room_quantity=17, capacity=3, price=5000000)
         db.session.add_all([rr1, rr2, rr3])
         db.session.commit()
 
@@ -305,4 +275,61 @@ if __name__ == "__main__":
                             cm7, cm8, cm9,
                             cm10, cm11, cm12, cm13, cm14, cm15,
                             cm16, cm17, cm18])
+        db.session.commit()
+
+        reservation_data = [
+            {'customer_id': 2, 'receptionist_id': 7, 'room_id': 4, 'checkin_date': datetime(2024, 1, 9, 17, 1),
+             'checkout_date': datetime(2024, 1, 19, 17, 1), 'deposit': 900000},
+            {'customer_id': 1, 'receptionist_id': 7, 'room_id': 2, 'checkin_date': datetime(2024, 3, 25, 17, 11),
+             'checkout_date': datetime(2024, 3, 29, 17, 11), 'deposit': 1500000},
+            {'customer_id': 2, 'receptionist_id': 7, 'room_id': 2, 'checkin_date': datetime(2023, 12, 11, 17, 12),
+             'checkout_date': datetime(2023, 12, 21, 17, 12), 'deposit': 1500000},
+            {'customer_id': 1, 'receptionist_id': 7, 'room_id': 1, 'checkin_date': datetime(2024, 1, 9, 17, 1),
+             'checkout_date': datetime(2024, 2, 9, 17, 1), 'deposit': 1200000},
+            {'customer_id': 4, 'receptionist_id': 7, 'room_id': 1, 'checkin_date': datetime(2024, 1, 9, 17, 1),
+             'checkout_date': datetime(2024, 1, 29, 17, 1), 'deposit': 1200000},
+            {'customer_id': 5, 'receptionist_id': 7, 'room_id': 2, 'checkin_date': datetime(2023, 12, 11, 17, 12),
+             'checkout_date': datetime(2023, 12, 19, 17, 12), 'deposit': 1500000},
+            {'customer_id': 2, 'receptionist_id': 7, 'room_id': 1, 'checkin_date': datetime(2023, 12, 11, 17, 12),
+             'checkout_date': datetime(2023, 12, 17, 17, 12), 'deposit': 1200000},
+        ]
+
+        for data in reservation_data:
+            reservation = Reservation(**data)
+            db.session.add(reservation)
+        db.session.commit()
+
+        room_rental_data = [
+            {'customer_id': 1, 'receptionist_id': 7, 'room_id': 4, 'reservation_id': 1, 'deposit': None},
+            {'customer_id': 2, 'receptionist_id': 7, 'room_id': 2, 'reservation_id': 2, 'deposit': None},
+            {'customer_id': 3, 'receptionist_id': 7, 'room_id': 3, 'reservation_id': None, 'deposit': 1500000},
+            {'customer_id': 2, 'receptionist_id': 7, 'room_id': 2, 'reservation_id': 3, 'deposit': None},
+            {'customer_id': 5, 'receptionist_id': 7, 'room_id': 1, 'reservation_id': 4, 'deposit': None},
+            {'customer_id': 4, 'receptionist_id': 7, 'room_id': 1, 'reservation_id': 5, 'deposit': None},
+            {'customer_id': 5, 'receptionist_id': 7, 'room_id': 3, 'reservation_id': None, 'deposit': 1500000},
+            {'customer_id': 2, 'receptionist_id': 7, 'room_id': 2, 'reservation_id': 6, 'deposit': None},
+            {'customer_id': 1, 'receptionist_id': 7, 'room_id': 1, 'reservation_id': 7, 'deposit': None},
+        ]
+
+        for data in room_rental_data:
+            room_rental = RoomRental(**data)
+            db.session.add(room_rental)
+        db.session.commit()
+
+        receipt_data = [
+            {'rental_room_id': 1, 'total_price': 3000000, 'created_date': datetime(2024, 1, 19, 17, 1)},
+            {'rental_room_id': 2, 'total_price': 5000000, 'created_date': datetime(2024, 3, 29, 17, 11)},
+            {'rental_room_id': 3, 'total_price': 5000000, 'created_date': datetime(2024, 3, 29, 17, 11)},
+            {'rental_room_id': 4, 'total_price': 5000000, 'created_date': datetime(2024, 3, 29, 17, 11)},
+            {'rental_room_id': 5, 'total_price': 4000000, 'created_date': datetime(2024, 3, 29, 17, 11)},
+            {'rental_room_id': 6, 'total_price': 4000000, 'created_date': datetime(2024, 3, 29, 17, 11)},
+            {'rental_room_id': 7, 'total_price': 5000000, 'created_date': datetime(2024, 3, 29, 17, 11)},
+            {'rental_room_id': 8, 'total_price': 5000000, 'created_date': datetime(2024, 3, 29, 17, 11)},
+            {'rental_room_id': 9, 'total_price': 4000000, 'created_date': datetime(2024, 3, 29, 17, 11)},
+        ]
+
+        for data in receipt_data:
+            receipt = Receipt(**data)
+            db.session.add(receipt)
+
         db.session.commit()

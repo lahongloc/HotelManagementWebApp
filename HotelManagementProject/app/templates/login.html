@@ -41,4 +41,13 @@
     </button>
 </form>
 
+<h1>Thông tin thanh toán</h1>
+    <form method="POST" action="{{ url_for('payment') }}">
+        <label for="amount">Số tiền:</label>
+        <input type="text" name="amount" id="amount" required><br>
+        <label for="description">Mô tả đơn hàng:</label>
+        <input type="text" name="description" id="description" required><br>
+        <button type="submit">Thanh toán</button>
+    </form>
+
 {% endblock %}

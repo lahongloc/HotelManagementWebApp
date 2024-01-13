@@ -2,10 +2,12 @@ import hashlib
 import random
 from datetime import datetime
 
-from app import app, dao, login, utils
+from app import app, dao, login, utils, vnpay_config
 from flask import render_template, request, redirect, url_for, jsonify, session
 from flask_login import login_user, logout_user, current_user
 import cloudinary.uploader
+
+from app.dao import vnpay
 from app.models import UserRole
 
 
@@ -301,6 +303,20 @@ def common_response():
     return {
         'reservation_info': session.get('reservation_info')
     }
+
+@app.route('/payment', methods=['POST'])
+def payment():
+    amount = 50000
+    vnp = vnpay()
+    # Xây dựng hàm cần thiết cho vnpay
+    vnp.requestData['vnp_Version'] = '2.1.0'
+    vnp.requestData['vnp_Command'] = 'pay'
+    vnp.requestData['vnp_TmnCode'] = 'PMAKVMOW'
+    vnp.requestData['vnp_Amount'] = amount * 100
+    vnp.requestData['vnp_CurrCode'] = 'VND'
+    vnp.requestData['vnp_TxnRef'] = order_id
+    vnp.requestData['vnp_OrderInfo'] = order_desc
+    vnp.requestData['vnp_OrderType'] = order_type
 
 
 if __name__ == "__main__":
