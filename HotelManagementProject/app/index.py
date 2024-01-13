@@ -2,13 +2,15 @@ import hashlib
 import random
 from datetime import datetime
 
+from mysql.connector import cursor
+
 from app import app, dao, login, utils, vnpay_config
-from flask import render_template, request, redirect, url_for, jsonify, session
+from flask import render_template, request, redirect, url_for, jsonify, session, flash
 from flask_login import login_user, logout_user, current_user
 import cloudinary.uploader
 
 from app.dao import vnpay
-from app.models import UserRole
+from app.models import UserRole, Receipt
 
 
 @app.route('/')
@@ -304,19 +306,70 @@ def common_response():
         'reservation_info': session.get('reservation_info')
     }
 
-@app.route('/payment', methods=['POST'])
+
+@app.route('/payment', methods=['GET', 'POST'])
 def payment():
-    amount = 50000
-    vnp = vnpay()
-    # Xây dựng hàm cần thiết cho vnpay
-    vnp.requestData['vnp_Version'] = '2.1.0'
-    vnp.requestData['vnp_Command'] = 'pay'
-    vnp.requestData['vnp_TmnCode'] = 'PMAKVMOW'
-    vnp.requestData['vnp_Amount'] = amount * 100
-    vnp.requestData['vnp_CurrCode'] = 'VND'
-    vnp.requestData['vnp_TxnRef'] = order_id
-    vnp.requestData['vnp_OrderInfo'] = order_desc
-    vnp.requestData['vnp_OrderType'] = order_type
+    if request.method == 'POST':
+        order_desc = request.form.get('order_desc')
+        rental_room_id = request.form.get('rental_room_id')
+        # order_type = request.form.get('order_type')
+        amount = int(request.form.get('amount')) * 100
+
+        vnp = vnpay()
+        # Xây dựng hàm cần thiết cho vnpay
+        vnp.requestData['vnp_Version'] = '2.1.0'
+        vnp.requestData['vnp_Command'] = 'pay'
+        vnp.requestData['vnp_TmnCode'] = 'PMAKVMOW'
+        vnp.requestData['vnp_Amount'] = amount
+        vnp.requestData['vnp_CurrCode'] = 'VND'
+        vnp.requestData['vnp_TxnRef'] = str(rental_room_id) + '-' + datetime.now().strftime('%Y%m%d%H%M%S')
+        vnp.requestData['vnp_OrderInfo'] = order_desc  # Nội dung thanh toán
+        vnp.requestData['vnp_OrderType'] = 'order_type'
+
+        vnp.requestData['vnp_Locale'] = 'vn'
+
+        vnp.requestData['vnp_CreateDate'] = datetime.now().strftime('%Y%m%d%H%M%S')
+        vnp.requestData['vnp_IpAddr'] = "127.0.0.1"
+        vnp.requestData['vnp_ReturnUrl'] = url_for('vnpay_return', _external=True)
+
+        # Lưu thông tin cần thiết vào session
+        session['rental_room_id'] = rental_room_id
+        session['amount'] = amount
+
+        vnp_payment_url = vnp.get_payment_url('https://sandbox.vnpayment.vn/paymentv2/vpcpay.html',
+                                              'USYEHCIUSVVCFQYKBQBZSUASXUXRSTCS')
+
+        return redirect(vnp_payment_url)
+    else:
+        return render_template('payment.html')
+    return render_template('payment.html')
+
+
+@app.route('/vnpay_return', methods=['GET'])
+def vnpay_return():
+    vnp_TransactionNo = request.args.get('vnp_TransactionNo')
+    vnp_TxnRef = request.args.get('vnp_TxnRef')
+    vnp_Amount = request.args.get('vnp_Amount')
+    vnp_ResponseCode = request.args.get('vnp_ResponseCode')
+
+    if vnp_ResponseCode == '00':
+        rental_room_id = session.get('rental_room_id')
+        amount = session.get('amount')
+
+        rc = Receipt(rental_room_id=rental_room_id, total_price=amount, created_date=datetime.now())
+        db.session.add(rc)
+        db.session.commit()
+
+        flash('Thanh toán thành công!')
+    else:
+        flash('Lỗi thanh toán. Vui lòng thử lại!')
+
+    # Xóa thông tin từ session để tránh lưu trữ không cần thiết
+    session.pop('order_desc', None)
+    session.pop('rental_room_id', None)
+    session.pop('amount', None)
+
+    return redirect(url_for('user_signin'))
 
 
 if __name__ == "__main__":
