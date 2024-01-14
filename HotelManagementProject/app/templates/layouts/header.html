@@ -52,9 +52,11 @@
                     <a class="nav-link dropdown-toggle" href="#" role="button"
                        data-bs-toggle="dropdown">Menu</a>
                     <ul class="dropdown-menu">
+                        {% if current_user.role|string == 'UserRole.RECEPTIONIST' %}
                         <li>
-                            <a class="dropdown-item" href="">a</a>
+                            <a class="dropdown-item" href="/renting-room">Hotel management</a>
                         </li>
+                        {% endif %}
                         <li>
                             <a class="dropdown-item" href="">b</a>
                         </li>

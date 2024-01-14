@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from app import app, db
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Enum, DateTime, Float
 from sqlalchemy.orm import Relationship
@@ -97,6 +99,7 @@ class Reservation(BaseModel):
     checkin_date = Column(DateTime, nullable=False)
     checkout_date = Column(DateTime, nullable=False)
     total_price = Column(Float, nullable=False)
+    is_checkin = Column(Boolean, default=False)
     reservation_details = Relationship('ReservationDetail', backref='reservation', lazy=True)
 
 
@@ -106,16 +109,22 @@ class ReservationDetail(BaseModel):
 
 
 class RoomRental(BaseModel):
-    customer_id = Column(Integer, ForeignKey(Customer.id), nullable=False)
+    customer_id = Column(Integer, ForeignKey(Customer.customer_id))
     receptionist_id = Column(Integer, ForeignKey(Receptionist.id), nullable=False)
-    is_received_room = Column(Boolean)
     room_id = Column(Integer, ForeignKey(Room.id))  # null if is_received_room == True
     reservation_id = Column(Integer, ForeignKey(Reservation.id))  # null if is_received_room == False
+    checkin_date = Column(DateTime, default=datetime.now())
+    checkout_date = Column(DateTime)
+    room_rental_details = Relationship('RoomRentalDetail', backref='room_rental', lazy=True)
 
     receipt = Relationship('Receipt', uselist=False, back_populates='room_rental')
 
 
-#
+class RoomRentalDetail(BaseModel):
+    customer_id = Column(Integer, ForeignKey(Customer.customer_id), primary_key=True)
+    room_rental_id = Column(Integer, ForeignKey(RoomRental.id), primary_key=True)
+
+
 class ServiceRecord(BaseModel):
     description = Column(String(1000))
     price = Column(Float)
@@ -211,6 +220,17 @@ if __name__ == "__main__":
         rr2 = RoomRegulation(room_type_id=2, admin_id=1, room_quantity=15, capacity=3, price=1500000)
         rr3 = RoomRegulation(room_type_id=3, admin_id=1, room_quantity=17, capacity=3, price=2000000)
         db.session.add_all([rr1, rr2, rr3])
+        db.session.commit()
+
+        import hashlib
+
+        user2 = User(username='NhungTran', password=str(hashlib.md5('123'.encode('utf-8')).hexdigest()),
+                     role=UserRole.RECEPTIONIST, phone='012345654', gender=False, email='nhungtran@gmail.com')
+        db.session.add(user2)
+        db.session.commit()
+
+        rc1 = Receptionist(id=2, name='Tran Thi Nhung')
+        db.session.add(rc1)
         db.session.commit()
 
         # db.drop_all()

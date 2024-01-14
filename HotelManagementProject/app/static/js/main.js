@@ -106,3 +106,25 @@ const payForReservation = (room_id, reservationInfo) => {
     }
 
 }
+
+const checkin = (reservationId, roomName) => {
+    if(confirm(`Are you sure you want to check in to room ${roomName}?`) === true) {
+        fetch('/api/room-renting', {
+            method: 'POST',
+            body: JSON.stringify({
+               reservationId
+            }),
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(res => res.json())
+            .then(data => {
+                if(data.code === 200) {
+                    location.reload()
+                }
+            })
+            .catch(err => console.error(err))
+    }
+}
+

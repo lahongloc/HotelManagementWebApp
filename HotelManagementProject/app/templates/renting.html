@@ -1,0 +1,150 @@
+{% extends 'layouts/base.html' %}
+{% block title %} Renting room - Elite-Hotel {% endblock %}
+{% block link %}
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+{% endblock %}
+
+{% block content %}
+{% if err_msg %}
+<div class="alert alert-danger">
+    <h4>{{ err_msg }}</h4>
+</div>
+{% endif %}
+<h1>ROOM RENTING PAGE!</h1>
+<ul class="nav nav-tabs">
+    <li class="{% if 'room_id' in request.args and 'roomType' in request.args and 'price' in request.args %}active{% endif %}"><a data-toggle="tab" href="#rent">Rent</a></li>
+    <li class="{% if 'identification' in request.form %}active{% endif %}"><a data-toggle="tab" href="#checkin">Check in</a></li>
+    <li><a data-toggle="tab" href="#checkout">Check out</a></li>
+</ul>
+
+<div class="tab-content">
+    <div id="rent" class="tab-pane fade {% if 'room_id' in request.args and 'roomType' in request.args and 'price' in request.args %}in active{% endif %}">
+        <h3>RENTING PAGE</h3>
+        <div class="col-md-4 col-xs-12">
+            <form class="form-group">
+                <div class="mb-3 mt-3">
+                    <label for="room_id" class="form-label">Choose room:</label>
+                    <select onchange="takeRoomInfo(this)" class="form-control mt-2" name="room_id" id="room_id">
+                        {% for r in rooms_info %}
+                        <option value="{{ r.id }}">{{ r.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3 mt-3">
+                    <label for="roomType" class="form-label">Room type:</label>
+                    <input readonly type="text" class="form-control" id="roomType" name="roomType">
+                </div>
+                <div class="mb-3">
+                    <label for="price" class="form-label">Price:</label>
+                    <input readonly type="text" class="form-control" id="price" name="price">
+                </div>
+                <input type="submit" class="btn btn-custom" value="CHOOSE">
+            </form>
+        </div>
+        {% if room %}
+        <div style="margin-left: 16rem;" class="col-md-5 col-xs-12">
+            <div class="room-info">
+                <img style="margin: 0 auto; border-radius: 12px;" width="95%" src="{{ url_for('static', filename=room.image) }}" alt="">
+                <h3><strong>ROOM RENTAL INFORMATION</strong></h3>
+                <h4>{{ room.name }} - {{ room.room_type }}</h4>
+                <p style="color: red; font-size: larger"><strong>{{ "{:,.1f}".format(room.price) }} VND/2 persons</strong></p>
+            </div>
+            {% include 'layouts/bookRoom.html' %}
+        </div>
+        {% endif %}
+    </div>
+    <div id="checkin" class="tab-pane fade {% if 'identification' in request.form %}in active{% endif %}">
+        <h3>CHECK IN PAGE</h3>
+        <div>
+            <form action="{{ url_for('room_renting') }}" method="POST">
+                <div class="mb-3 mt-3">
+                    <label for="Identification" class="form-label">Identification:</label>
+                    <input required type="number" class="form-control" id="identification"
+                           placeholder="Enter identification"
+                           name="identification">
+                </div>
+                <button type="submit" class="btn btn-primary">Check</button>
+            </form>
+        </div>
+        <div class="booked-rooms mt-5">
+            {% if booked_rooms %}
+            {% for br in booked_rooms %}
+            <div class="plan">
+                <div class="inner">
+                    <span class="pricing">
+                        <span>
+                            {{ "{:,.1f}".format(booked_rooms[br]['total_price']) }} <i
+                                class="fa-solid fa-dong-sign"></i><small></small>
+                        </span>
+                    </span>
+                    <h1 class="title">ROOM {{ booked_rooms[br]['room'] }}</h1>
+                    <p class="info"><strong>Checkin date:</strong> {{ booked_rooms[br]['checkin_date'] }}</p>
+                    <p class="info"><strong>Checkout date:</strong> {{ booked_rooms[br]['checkout_date'] }}</p>
+                    <p class="members"><strong>Members:</strong></p>
+                    <ul class="features">
+                        {% for m in booked_rooms[br]['room_users'][0] %}
+                        <li>
+                            <span>
+                                <i class="fa-solid fa-user-check"></i>
+                            </span>
+                            <span>{{ m.name }}</span>
+                        </li>
+                        {% endfor %}
+                        <li>
+                            <span>
+                                <i class="fa-solid fa-circle-check"></i>
+                            </span>
+                            <span>Deposit has been paid</span>
+                        </li>
+                    </ul>
+                    <div class="action">
+                        <button onclick="checkin('{{ booked_rooms[br]['reservation_id'] }}', '{{ booked_rooms[br]['room'] }}')"
+                                class="button">
+                            CHECK IN
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            {% endif %}
+        </div>
+
+    </div>
+    <div id="checkout" class="tab-pane fade">
+        <h3>CHECK OUT PAGE</h3>
+        <div>
+            <p>Some content in menu 2.</p>
+        </div>
+    </div>
+</div>
+<script>
+    const takeRoomInfo = () => {
+        var roomId = document.getElementById('room_id').value
+        fetch('/api/take-room-info', {
+            method: 'POST',
+            body: JSON.stringify({
+               roomId
+            }),
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(res => res.json())
+            .then(data => {
+                console.log(data)
+                document.getElementById('roomType').value = data.roomType
+                document.getElementById('price').value = `${data.price.toLocaleString('en-US', { style: 'currency', currency: 'VND' })}`
+
+
+            })
+            .catch(err => console.error(err))
+    }
+    takeRoomInfo()
+
+    const assign = (obj) => {
+        console.log(obj)
+    }
+</script>
+{% endblock %}

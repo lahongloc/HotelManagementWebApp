@@ -2,6 +2,7 @@ import hashlib
 from datetime import datetime
 
 from flask_login import current_user, AnonymousUserMixin
+from sqlalchemy import desc
 
 from app.models import *
 from app import app, utils
@@ -10,7 +11,7 @@ import smtplib
 
 
 def get_customer_info():
-    if current_user:
+    if current_user.is_authenticated:
         with app.app_context():
             customer_info = db.session.query(Customer.id, Customer.customer_id, Customer.identification, Customer.name,
                                              CustomerType.type) \
@@ -35,6 +36,7 @@ def get_full_user_info():
 
                 print(full_user_info)
                 return full_user_info
+
 
 def get_room_types():
     with app.app_context():
@@ -62,7 +64,8 @@ def get_rooms_info(room_id=None):
                                       RoomRegulation.capacity,
                                       RoomRegulation.distance) \
             .join(Room, Room.room_type_id.__eq__(RoomType.id)) \
-            .join(RoomRegulation, RoomRegulation.room_type_id.__eq__(RoomType.id))
+            .join(RoomRegulation, RoomRegulation.room_type_id.__eq__(RoomType.id)) \
+            .order_by(Room.id)
 
         if room_id:
             rooms_info = rooms_info.filter(Room.id.__eq__(room_id)).first()
@@ -201,6 +204,62 @@ def add_customers(customers=None, room_id=None, checkin_time=None, checkout_time
                 rd = ReservationDetail(customer_id=i, reservation_id=added_reservation_id)
                 db.session.add(rd)
                 db.session.commit()
+
+
+def create_room_rental(reservation_id=None):
+    if reservation_id:
+        try:
+            with app.app_context():
+                rr = RoomRental(reservation_id=reservation_id, receptionist_id=current_user.id)
+                Reservation.query.filter(Reservation.id.__eq__(reservation_id)).first().is_checkin = True
+                db.session.add(rr)
+                db.session.commit()
+        except Exception as ex:
+            print(str(ex))
+
+
+def receptionist_room_rental(room_rental_info=None, checkout_time=None, room_id=None):
+    if room_rental_info and checkout_time and room_id:
+        added_customers_ids = []
+        added_room_rental = None
+        # print(room_rental_info[str(room_id)]['users'])
+        # add customers
+        try:
+            for i in range(1, len(room_rental_info[str(room_id)]['users']) + 1):
+                cus_identification = room_rental_info[str(room_id)]['users'][i]['customerIdNum']
+                customer_id = find_customer_by_identification(identification=cus_identification)
+                if customer_id:
+                    added_customers_ids.append(customer_id)
+                else:
+                    c = Customer(name=room_rental_info[str(room_id)]['users'][i]['customerName'],
+                                 identification=room_rental_info[str(room_id)]['users'][i]['customerIdNum'])
+                    c.customer_type_id = get_id_of_customer_type(
+                        room_rental_info[str(room_id)]['users'][i]['customerType'])
+                    db.session.add(c)
+                    db.session.commit()
+                    added_customers_ids.append(c.customer_id)
+        except Exception as ex:
+            print(str(ex))
+
+        #     add room rental
+        try:
+            if added_customers_ids:
+                rr = RoomRental(receptionist_id=current_user.id, room_id=room_id, checkout_date=checkout_time)
+                db.session.add(rr)
+                db.session.commit()
+                added_room_rental = rr.id
+        except Exception as ex:
+            print(str(ex))
+
+        #     add room rental detail
+        try:
+            if added_customers_ids and added_room_rental:
+                for c in added_customers_ids:
+                    rrd = RoomRentalDetail(customer_id=c, room_rental_id=added_room_rental)
+                    db.session.add(rrd)
+                    db.session.commit()
+        except Exception as ex:
+            print(str(ex))
 
 
 def find_customer_by_identification(identification=None):
