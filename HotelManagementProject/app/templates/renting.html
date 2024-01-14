@@ -12,9 +12,6 @@
     <h4>{{ err_msg }}</h4>
 </div>
 {% endif %}
-{% if not request.args and not request.form %}
-<p>{{ request.args }} - {{ request.form }}</p>
-{% endif %}
 <h1>ROOM RENTING PAGE!</h1>
 <ul class="nav nav-tabs">
     <li class="{% if ('room_id' in request.args and 'roomType' in request.args and 'price' in request.args) or (not request.args and not request.form) %}active{% endif %}"><a data-toggle="tab" href="#rent">Rent</a></li>

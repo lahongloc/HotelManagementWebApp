@@ -98,22 +98,27 @@ def calculate_total_reservation_price(reservation_info=None, room_id=None):
 
 
 def check_reservation(checkin_time=datetime.now(), checkout_time=None, room_id=None):
-    if checkin_time and checkout_time and room_id:
+    if checkin_time and checkout_time:
         is_valid = True
-        with app.app_context():
-            reservation = db.session.query(Reservation.checkin_date, Reservation.checkout_date).filter(
-                Reservation.room_id.__eq__(room_id)).all()
-            for dt in reservation:
+        with ((app.app_context())):
+            reservation = db.session.query(Reservation.checkin_date, Reservation.checkout_date)
+            room_rental = db.session.query(RoomRental.checkin_date, RoomRental.checkout_date)
+
+            if room_id:
+                reservation = reservation.filter(Reservation.room_id.__eq__(room_id))
+                room_rental = room_rental.filter(RoomRental.room_id.__eq__(room_id))
+
+            for dt in reservation.all():
                 if (dt[0] <= checkin_time <= dt[1]) or (dt[0] <= checkout_time <= dt[1]) or (
                         dt[0] >= checkin_time and dt[1] <= checkout_time):
                     is_valid = False
+                    break
 
-            room_rental = db.session.query(RoomRental.checkin_date, RoomRental.checkout_date).filter(
-                RoomRental.room_id.__eq__(room_id)).all()
-            for r in room_rental:
+            for r in room_rental.all():
                 if (r[0] <= checkin_time <= r[1]) or (r[0] <= checkout_time <= r[1]) or (
                         r[0] >= checkin_time and r[1] <= checkout_time):
                     is_valid = False
+                    break
 
         return is_valid
 

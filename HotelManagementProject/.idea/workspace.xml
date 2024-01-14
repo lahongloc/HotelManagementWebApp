@@ -6,7 +6,13 @@
   <component name="ChangeListManager">
     <list default="true" id="ea8802a9-2f06-4219-a180-981ee28ae377" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/dao.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/dao.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/index.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/index.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/templates/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/app/templates/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/templates/layouts/base.html" beforeDir="false" afterPath="$PROJECT_DIR$/app/templates/layouts/base.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/templates/layouts/footer.html" beforeDir="false" afterPath="$PROJECT_DIR$/app/templates/layouts/footer.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/templates/renting.html" beforeDir="false" afterPath="$PROJECT_DIR$/app/templates/renting.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/utils.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -105,8 +111,8 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.models" />
         <item itemvalue="Python.index" />
+        <item itemvalue="Python.models" />
         <item itemvalue="Python.utils" />
       </list>
     </recent_temporary>

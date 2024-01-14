@@ -11,8 +11,17 @@ import cloudinary.uploader
 
 @app.route('/')
 def home():
+    kw = request.args.get('kw')
+    checkin = request.args.get('checkin')
+    checkout = request.args.get('checkout')
+    room_type = request.args.get('roomType')
+
+    if checkin and checkout:
+        checkin = datetime.strptime(checkin, "%Y-%m-%dT%H:%M")
+        checkout = datetime.strptime(checkout, "%Y-%m-%dT%H:%M")
+
     room_types = dao.get_room_types()
-    rooms_info = dao.get_rooms_info()
+    rooms_info = dao.get_rooms_info(kw=kw, checkin=checkin, checkout=checkout, room_type=room_type)
     return render_template('index.html',
                            room_types=room_types,
                            rooms_info=rooms_info)

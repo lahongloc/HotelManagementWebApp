@@ -56,7 +56,7 @@ def get_rooms():
         return rooms
 
 
-def get_rooms_info(room_id=None):
+def get_rooms_info(room_id=None, kw=None, checkin=None, checkout=None,room_type=None):
     with app.app_context():
         rooms_info = db.session.query(Room.name, Room.id, Room.image, RoomType.name.label('room_type'),
                                       RoomRegulation.price,
@@ -70,6 +70,17 @@ def get_rooms_info(room_id=None):
         if room_id:
             rooms_info = rooms_info.filter(Room.id.__eq__(room_id)).first()
             return rooms_info
+        if kw:
+            rooms_info = rooms_info.filter(Room.name.contains(kw))
+        if room_type:
+            rooms_info = rooms_info.filter(RoomType.id.__eq__(room_type))
+
+        new_rooms_info = []
+        if checkin and checkout:
+            for r in rooms_info.all():
+                if utils.check_reservation(checkin_time=checkin, checkout_time=checkout, room_id=r.id):
+                    new_rooms_info.append(r)
+            return new_rooms_info
 
         return rooms_info.all()
 

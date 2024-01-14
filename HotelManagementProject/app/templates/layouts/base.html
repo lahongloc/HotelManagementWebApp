@@ -35,9 +35,11 @@
 </nav>
 <div class="container" style="width: 70%; margin: 0 auto; margin-top: 3rem;">
     {% block content %}{% endblock %}
-    {% block footer %}
-    {% include 'layouts/footer.html' %}
-    {% endblock %}
+</div>
+<div class="mt-5">
+{% block footer %}
+{% include 'layouts/footer.html' %}
+{% endblock %}
 </div>
 
 </body>

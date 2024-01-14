@@ -7,32 +7,26 @@
         <form class="d-flex">
             <div class="search-item">
                 <i class="fa-solid fa-magnifying-glass"></i> <span>Room Name</span>
-                <input id="kw" class=" me-2" type="text" style="width: 180px; outline: none; !important; border: none;"
+                <input name="kw" id="kw" class=" me-2" type="text"
+                       style="width: 180px; outline: none; !important; border: none;"
                        placeholder="Search">
             </div>
             <div class="search-item">
                 <p><i class="fa-regular fa-calendar"></i> Check in</p>
-                <input id="check_in_date" style="border: none; padding: 0; outline: none;" type="date">
+                <input name="checkin" id="check_in_date" style="border: none; padding: 0; outline: none;" type="datetime-local">
             </div>
             <div class="search-item">
                 <p><i class="fa-regular fa-calendar"></i> Check out</p>
-                <input id="check_out_date" style="border: none; padding: 0; outline: none;" type="date">
+                <input name="checkout" id="check_out_date" style="border: none; padding: 0; outline: none;" type="datetime-local">
             </div>
             <div class="search-item">
-                <div class="dropdown">
-                    <button type="button" class="btn dropdown-toggle" data-bs-toggle="dropdown">
-                        <i class="fa-solid fa-mattress-pillow"></i> <span class="room-type-name">Guests and Rooms</span>
-                    </button>
-                    <ul class="dropdown-menu room-type-dropdown">
-                        {% for rt in room_types %}
-                        <li onclick="takeRoomType(this)" id="{{ rt.id }}" class="dropdown-item room-type">{{ rt.name
-                            }}
-                        </li>
-                        {% endfor %}
-                    </ul>
-                </div>
+                <select style="box-shadow: rgba(33, 35, 38, 0.1) 0px 10px 10px -10px;" class="form-control" name="roomType" id="roomType">
+                    {% for rt in room_types %}
+                    <option value="{{ rt.id }}">{{ rt.name }}</option>
+                    {% endfor %}
+                </select>
             </div>
-            <button onclick="search()" style="width: 7rem;" class="btn btn-custom" type="button"><b>Search</b>
+            <button onclick="search()" style="width: 7rem;" class="btn btn-custom" type="submit"><b>Search</b>
             </button>
         </form>
     </div>
@@ -40,9 +34,10 @@
 {% for r in rooms_info %}
 <div class="rooms mt-5" style="border-radius: 15px; overflow: hidden;">
     <a style="margin: 0; padding: 0;" class="navbar-brand" href="{{ url_for('home') }}">
-        <img style="margin: 0.25rem; border-radius: 10px; padding: 0; height: 100%" width="350" src="{{ url_for('static', filename=r.image) }}" alt="">
+        <img style="margin: 0.25rem; border-radius: 10px; padding: 0; height: 100%" width="350"
+             src="{{ url_for('static', filename=r.image) }}" alt="">
     </a>
-    <div class="room-info" style="line-height: 35px">
+    <div style="line-height: 35px">
         <h4 class="room-name">
             <b>{{ r.name }} - {{ r.room_type }}</b>
         </h4>
@@ -58,7 +53,8 @@
             included</p>
         <br>
         <h5 style="display: inline-block; margin-right: 45px;"><b>{{ "{:,.1f}".format(r.price) }} VND</b></h5><br>
-        <a style="background-color: green;" href="{{ url_for('room_details', room_id=r.id) }}" class="view-detail-btn btn btn-custom mt-2"><b>View detail <i class="fa-solid fa-arrow-right"></i></b></a>
+        <a style="background-color: green;" href="{{ url_for('room_details', room_id=r.id) }}"
+           class="view-detail-btn btn btn-custom mt-2"><b>View detail <i class="fa-solid fa-arrow-right"></i></b></a>
     </div>
 </div>
 {% endfor %}
