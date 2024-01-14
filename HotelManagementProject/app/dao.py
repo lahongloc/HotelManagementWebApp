@@ -188,7 +188,8 @@ def get_room_regulation():
                                            User.username.label('user_name'),
                                            RoomRegulation.room_quantity,
                                            RoomRegulation.capacity,
-                                           RoomRegulation.price) \
+                                           RoomRegulation.price,
+                                           RoomRegulation.surcharge * 100) \
             .join(Administrator, Administrator.id == RoomRegulation.admin_id) \
             .join(RoomType, RoomType.id == RoomRegulation.room_type_id) \
             .join(User, User.id == Administrator.id) \
@@ -221,12 +222,13 @@ def get_customer_type_regulation():
         # print(customer_type_regulation)
         return customer_type_regulation
 
+
 class vnpay:
     requestData = {}
     responseData = {}
 
     def get_payment_url(self, vnpay_payment_url, secret_key):
-        #Dữ liệu thanh toán được sắp xếp dưới dạng danh sách các cặp khóa-giá trị theo thứ tự tăng dần của khóa.
+        # Dữ liệu thanh toán được sắp xếp dưới dạng danh sách các cặp khóa-giá trị theo thứ tự tăng dần của khóa.
         inputData = sorted(self.requestData.items())
         # Duyệt qua danh sách đã sắp xếp và tạo chuỗi query sử dụng urllib.parse.quote_plus để mã hóa giá trị
         queryString = ''
@@ -239,12 +241,12 @@ class vnpay:
                 seq = 1
                 queryString = key + '=' + urllib.parse.quote_plus(str(val))
 
-        #Sử dụng phương thức __hmacsha512 để tạo mã hash từ chuỗi query và khóa bí mật
+        # Sử dụng phương thức __hmacsha512 để tạo mã hash từ chuỗi query và khóa bí mật
         hashValue = self.__hmacsha512(secret_key, queryString)
         return vnpay_payment_url + "?" + queryString + '&vnp_SecureHash=' + hashValue
 
     def validate_response(self, secret_key):
-        #Lấy giá trị của vnp_SecureHash từ self.responseData.
+        # Lấy giá trị của vnp_SecureHash từ self.responseData.
         vnp_SecureHash = self.responseData['vnp_SecureHash']
         # Loại bỏ các tham số liên quan đến mã hash
         if 'vnp_SecureHash' in self.responseData.keys():
@@ -252,7 +254,7 @@ class vnpay:
 
         if 'vnp_SecureHashType' in self.responseData.keys():
             self.responseData.pop('vnp_SecureHashType')
-        #Sắp xếp dữ liệu (inputData)
+        # Sắp xếp dữ liệu (inputData)
         inputData = sorted(self.responseData.items())
 
         hasData = ''
@@ -264,7 +266,7 @@ class vnpay:
                 else:
                     seq = 1
                     hasData = str(key) + '=' + urllib.parse.quote_plus(str(val))
-        #Tạo mã hash
+        # Tạo mã hash
         hashValue = self.__hmacsha512(secret_key, hasData)
 
         print(
@@ -272,7 +274,7 @@ class vnpay:
 
         return vnp_SecureHash == hashValue
 
-    #tạo mã hash dựa trên thuật toán HMAC-SHA-512
+    # tạo mã hash dựa trên thuật toán HMAC-SHA-512
     @staticmethod
     def __hmacsha512(key, data):
         byteKey = key.encode('utf-8')
@@ -280,23 +282,42 @@ class vnpay:
         return hmac.new(byteKey, byteData, hashlib.sha512).hexdigest()
 
 
-
-def month_sale_statistic():
+def month_sale_statistic(kw=None, from_date=None, to_date=None):
     with app.app_context():
+        if not kw and not from_date and not to_date:
+            count_receipt = Receipt.query.count()
+        elif from_date and to_date:
+            count_receipt = Receipt.query.filter(
+                Receipt.created_date.__ge__(from_date),
+                Receipt.created_date.__le__(to_date)).count()
+        elif from_date:
+            count_receipt = Receipt.query.filter(
+                Receipt.created_date.__ge__(from_date)).count()
+        elif to_date:
+            count_receipt = Receipt.query.filter(
+                Receipt.created_date.__le__(to_date)).count()
+
         month_sale_statistic = db.session.query(RoomType.name,
                                                 func.sum(Receipt.total_price),
                                                 func.count(RoomRental.id),
-                                                func.cast((func.count(RoomRental.id) / Receipt.query.count()) * 100
+                                                func.cast((func.count(RoomRental.id) / count_receipt) * 100
                                                           , Numeric(5, 2))) \
             .outerjoin(RoomRental, RoomRental.id.__eq__(Receipt.rental_room_id)) \
             .outerjoin(Reservation, Reservation.id.__eq__(RoomRental.reservation_id)) \
-            .outerjoin(Room, Room.id.__eq__(Reservation.room_id) # Phải là OR vì Thuê Phòng CÓ THỂ KHÔNG thông qua Phiếu Đặt Phòng
+            .outerjoin(Room, Room.id.__eq__(
+            Reservation.room_id)  # Phải là OR vì Thuê Phòng CÓ THỂ KHÔNG thông qua Phiếu Đặt Phòng
                        or Room.id.__eq__(RoomRental.room_id)) \
             .outerjoin(RoomType, RoomType.id.__eq__(Room.room_type_id)) \
             .group_by(RoomType.name) \
-            .order_by(RoomType.id) \
-            .all()
-        return month_sale_statistic
+            .order_by(RoomType.id)
 
+        if kw:
+            month_sale_statistic = month_sale_statistic.filter(RoomType.name.contains(kw))
 
+        if from_date:
+            month_sale_statistic = month_sale_statistic.filter(Receipt.created_date.__ge__(from_date))
 
+        if to_date:
+            month_sale_statistic = month_sale_statistic.filter(Receipt.created_date.__le__(to_date))
+
+        return month_sale_statistic.all()

@@ -3,7 +3,7 @@ from flask_admin import Admin, BaseView, expose, AdminIndexView
 from app.models import Room, RoomType, UserRole, RoomRegulation, CustomerTypeRegulation
 from app import app, db
 from flask_login import current_user, logout_user
-from flask import redirect
+from flask import redirect, request
 import dao
 
 
@@ -26,15 +26,30 @@ class LogoutView(BaseView):
 class MyAdminIndexView(AdminIndexView):
     @expose('/')
     def index(self):
+        role_admin = None
+        if current_user.role == UserRole.ADMIN:
+            role_admin = 'ADMIN'
         return self.render('admin/index.html',
                            room_regulation=dao.get_room_regulation(),
-                           customer_type_regulation=dao.get_customer_type_regulation())
+                           customer_type_regulation=dao.get_customer_type_regulation(),
+                           role_admin=role_admin)
 
 class MonthSaleStatisticView(BaseView):
     @expose('/')
     def index(self):
+        kw = request.args.get('kw')
+        from_date = request.args.get('from_date')
+        to_date = request.args.get('to_date')
+        mss = dao.month_sale_statistic(kw=kw,
+                                       from_date=from_date,
+                                       to_date=to_date)
+        total_revenue = 0
+        for m in mss:
+            total_revenue = total_revenue + m[1]
+
         return self.render('admin/monthSaleStatistic.html',
-                           monthSaleStatistic=dao.month_sale_statistic())
+                           monthSaleStatistic=mss,
+                           total_revenue=total_revenue)
 
     def is_accessible(self):
         return current_user.is_authenticated and current_user.role == UserRole.ADMIN
@@ -112,5 +127,5 @@ admin.add_view(MyRoomTypeView(RoomType, db.session))
 admin.add_view(MyRoomView(Room, db.session))
 admin.add_view(MyRoomRegulation(RoomRegulation, db.session))
 admin.add_view(MyCustomerTypeRegulation(CustomerTypeRegulation, db.session))
-admin.add_view(LogoutView(name='Logout'))
 admin.add_view(MonthSaleStatisticView(name='Month Sale Statistic'))
+admin.add_view(LogoutView(name='Logout'))

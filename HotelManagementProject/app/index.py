@@ -340,8 +340,7 @@ def payment():
                                               'USYEHCIUSVVCFQYKBQBZSUASXUXRSTCS')
 
         return redirect(vnp_payment_url)
-    else:
-        return render_template('payment.html')
+
     return render_template('payment.html')
 
 

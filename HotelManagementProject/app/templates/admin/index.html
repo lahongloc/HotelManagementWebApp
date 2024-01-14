@@ -2,19 +2,21 @@
 
 {% block body %}
 
-{% if current_user.is_authenticated %}
-
-<h1 class="text-center text-info">CHÀO MỪNG {{ current_user.username }} ĐẾN TRANG QUẢN TRỊ!!!</h1>
+{% if current_user.is_authenticated and role_admin == 'ADMIN' %}
+<h1 class="text-center text-dark">CHÀO MỪNG {{ current_user.username }} ĐẾN TRANG QUẢN TRỊ KHÁCH SẠN!!!</h1>
 <br>
-<div class="row">
-  <div class="col-md-6 col-xs-12">
+<div style="justify-content:center" class="row text-center">
+  <br>
+  <h3 class="text-center text-info">THÔNG TIN CHUNG VỀ QUY ĐỊNH LOẠI PHÒNG</h3>
+  <div class="col-md-8 col-xs-12">
     <table class="table">
       <tr>
         <th>Tên Loại Phòng</th>
         <th>Username</th>
-        <th>Số phòng tối đa</th>
-        <th>Số người ở tối đa</th>
-        <th>Giá loại phòng</th>
+        <th>Số Phòng Tối Đa</th>
+        <th>Số Người Ở Tối Đa</th>
+        <th>Giá Loại Phòng</th>
+        <th>Phụ Thu Số Người Quy Định</th>
       </tr>
       {% for r in room_regulation %}
       <tr>
@@ -23,6 +25,27 @@
         <td>{{ r[2] }}</td>
         <td>{{ r[3] }}</td>
         <td>{{ "{:,.0f}".format(r[4]) }} VND</td>
+        <td>{{ r[5] }} %</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+  <br>
+  <h3 class="text-center text-info">THÔNG TIN CHUNG VỀ QUY ĐỊNH LOẠI KHÁCH HÀNG</h3>
+  <div class="col-md-8 col-xs-12">
+    <table class="table">
+      <tr>
+        <th>Mã Quy Định</th>
+        <th>Loại Khách Hàng</th>
+        <th>Admin Tạo Quy Định</th>
+        <th>Hệ Số Phụ Thu</th>
+      </tr>
+      {% for c in customer_type_regulation %}
+      <tr>
+        <td>{{ c[0] }}</td>
+        <td>{{ c[1] }}</td>
+        <td>{{ c[2] }}</td>
+        <td>{{ c[3] }}</td>
       </tr>
       {% endfor %}
     </table>
