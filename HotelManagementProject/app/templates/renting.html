@@ -12,15 +12,18 @@
     <h4>{{ err_msg }}</h4>
 </div>
 {% endif %}
+{% if not request.args and not request.form %}
+<p>{{ request.args }} - {{ request.form }}</p>
+{% endif %}
 <h1>ROOM RENTING PAGE!</h1>
 <ul class="nav nav-tabs">
-    <li class="{% if 'room_id' in request.args and 'roomType' in request.args and 'price' in request.args %}active{% endif %}"><a data-toggle="tab" href="#rent">Rent</a></li>
+    <li class="{% if ('room_id' in request.args and 'roomType' in request.args and 'price' in request.args) or (not request.args and not request.form) %}active{% endif %}"><a data-toggle="tab" href="#rent">Rent</a></li>
     <li class="{% if 'identification' in request.form %}active{% endif %}"><a data-toggle="tab" href="#checkin">Check in</a></li>
     <li><a data-toggle="tab" href="#checkout">Check out</a></li>
 </ul>
 
 <div class="tab-content">
-    <div id="rent" class="tab-pane fade {% if 'room_id' in request.args and 'roomType' in request.args and 'price' in request.args %}in active{% endif %}">
+    <div id="rent" class="tab-pane fade {% if ('room_id' in request.args and 'roomType' in request.args and 'price' in request.args) or (not request.args and not request.form) %}in active{% endif %}">
         <h3>RENTING PAGE</h3>
         <div class="col-md-4 col-xs-12">
             <form class="form-group">
