@@ -1,13 +1,31 @@
 import hashlib
+import hmac
+import urllib
 from datetime import datetime
 
 from flask_login import current_user, AnonymousUserMixin
-from sqlalchemy import desc
+from sqlalchemy import func, Numeric, extract
 
 from app.models import *
 from app import app, utils
 
 import smtplib
+
+
+def send_message_twilio(message):
+    from twilio.rest import Client
+
+    account_sid = 'AC34dbe9c496f4108ac74cda4a50ab4b94'
+    auth_token = '112ca59ebefd2a224813f7339cf368aa'
+    client = Client(account_sid, auth_token)
+
+    message = client.messages.create(
+        _from='+17178976092',
+        body='Loc Yeu Ly Lammmmmmmm',
+        to='+84869311727'
+    )
+
+    print(message.sid)
 
 
 def get_customer_info():
@@ -56,7 +74,7 @@ def get_rooms():
         return rooms
 
 
-def get_rooms_info(room_id=None, kw=None, checkin=None, checkout=None,room_type=None):
+def get_rooms_info(room_id=None, kw=None, checkin=None, checkout=None, room_type=None):
     with app.app_context():
         rooms_info = db.session.query(Room.name, Room.id, Room.image, RoomType.name.label('room_type'),
                                       RoomRegulation.price,
@@ -137,7 +155,8 @@ def get_room_regulation():
                                            User.username.label('user_name'),
                                            RoomRegulation.room_quantity,
                                            RoomRegulation.capacity,
-                                           RoomRegulation.price) \
+                                           RoomRegulation.price,
+                                           RoomRegulation.surcharge * 100) \
             .join(Administrator, Administrator.id == RoomRegulation.admin_id) \
             .join(RoomType, RoomType.id == RoomRegulation.room_type_id) \
             .join(User, User.id == Administrator.id) \
@@ -182,7 +201,7 @@ def add_customers(customers=None, room_id=None, checkin_time=None, checkout_time
             r = Reservation(room_id=room_id,
                             checkin_date=checkin_time,
                             checkout_date=checkout_time,
-                            total_price=total_price)
+                            deposit=total_price)
             if current_user.role == UserRole.CUSTOMER:
                 r.customer_id = get_customer_info().customer_id
             elif current_user.role == UserRole.RECEPTIONIST:
@@ -286,3 +305,136 @@ def get_id_of_customer_type(type=None):
         with app.app_context():
             type_id = CustomerType.query.filter(CustomerType.type.__eq__(str(type).strip())).first()
             return type_id.id
+
+
+class vnpay:
+    requestData = {}
+    responseData = {}
+
+    def get_payment_url(self, vnpay_payment_url, secret_key):
+        # Dữ liệu thanh toán được sắp xếp dưới dạng danh sách các cặp khóa-giá trị theo thứ tự tăng dần của khóa.
+        inputData = sorted(self.requestData.items())
+        # Duyệt qua danh sách đã sắp xếp và tạo chuỗi query sử dụng urllib.parse.quote_plus để mã hóa giá trị
+        queryString = ''
+        hasData = ''
+        seq = 0
+        for key, val in inputData:
+            if seq == 1:
+                queryString = queryString + "&" + key + '=' + urllib.parse.quote_plus(str(val))
+            else:
+                seq = 1
+                queryString = key + '=' + urllib.parse.quote_plus(str(val))
+
+        # Sử dụng phương thức __hmacsha512 để tạo mã hash từ chuỗi query và khóa bí mật
+        hashValue = self.__hmacsha512(secret_key, queryString)
+        return vnpay_payment_url + "?" + queryString + '&vnp_SecureHash=' + hashValue
+
+    def validate_response(self, secret_key):
+        # Lấy giá trị của vnp_SecureHash từ self.responseData.
+        vnp_SecureHash = self.responseData['vnp_SecureHash']
+        # Loại bỏ các tham số liên quan đến mã hash
+        if 'vnp_SecureHash' in self.responseData.keys():
+            self.responseData.pop('vnp_SecureHash')
+
+        if 'vnp_SecureHashType' in self.responseData.keys():
+            self.responseData.pop('vnp_SecureHashType')
+        # Sắp xếp dữ liệu (inputData)
+        inputData = sorted(self.responseData.items())
+
+        hasData = ''
+        seq = 0
+        for key, val in inputData:
+            if str(key).startswith('vnp_'):
+                if seq == 1:
+                    hasData = hasData + "&" + str(key) + '=' + urllib.parse.quote_plus(str(val))
+                else:
+                    seq = 1
+                    hasData = str(key) + '=' + urllib.parse.quote_plus(str(val))
+        # Tạo mã hash
+        hashValue = self.__hmacsha512(secret_key, hasData)
+
+        print(
+            'Validate debug, HashData:' + hasData + "\n HashValue:" + hashValue + "\nInputHash:" + vnp_SecureHash)
+
+        return vnp_SecureHash == hashValue
+
+    # tạo mã hash dựa trên thuật toán HMAC-SHA-512
+    @staticmethod
+    def __hmacsha512(key, data):
+        byteKey = key.encode('utf-8')
+        byteData = data.encode('utf-8')
+        return hmac.new(byteKey, byteData, hashlib.sha512).hexdigest()
+
+
+def month_sale_statistic(month=None, year=None, kw=None, from_date=None, to_date=None):
+    with app.app_context():
+        if not kw and not from_date and not to_date and not month and not year:
+            count_receipt = Receipt.query.count()
+        elif from_date and to_date:
+            count_receipt = Receipt.query.filter(
+                Receipt.created_date.__ge__(from_date),
+                Receipt.created_date.__le__(to_date)).count()
+        elif from_date:
+            count_receipt = Receipt.query.filter(
+                Receipt.created_date.__ge__(from_date)).count()
+        elif to_date:
+            count_receipt = Receipt.query.filter(
+                Receipt.created_date.__le__(to_date)).count()
+        elif kw:
+            count_receipt = Receipt.query.count()
+        elif month:
+            count_receipt = Receipt.query.filter(
+                extract('month', Receipt.created_date) == month)
+            if year:
+                count_receipt = count_receipt.filter(
+                    extract('year', Receipt.created_date) == year)
+            count_receipt = count_receipt.count()
+
+        month_sale_statistic = db.session.query(RoomType.name,
+                                                func.sum(Receipt.total_price),
+                                                func.count(RoomRental.id),
+                                                func.cast((func.count(RoomRental.id) / count_receipt) * 100
+                                                          , Numeric(5, 2))) \
+            .outerjoin(RoomRental, RoomRental.id.__eq__(Receipt.rental_room_id)) \
+            .outerjoin(Reservation, Reservation.id.__eq__(RoomRental.reservation_id)) \
+            .outerjoin(Room, Room.id.__eq__(
+            Reservation.room_id)  # Phải là OR vì Thuê Phòng CÓ THỂ KHÔNG thông qua Phiếu Đặt Phòng
+                       or Room.id.__eq__(RoomRental.room_id)) \
+            .outerjoin(RoomType, RoomType.id.__eq__(Room.room_type_id)) \
+            .group_by(RoomType.name) \
+            .order_by(RoomType.id)
+
+        if month:
+            month_sale_statistic = month_sale_statistic.filter(
+                extract('month', Receipt.created_date) == month) \
+                .group_by(extract('month', Receipt.created_date))
+
+        if year:
+            month_sale_statistic = month_sale_statistic.filter(
+                extract('year', Receipt.created_date) == year)
+
+        if kw:
+            month_sale_statistic = month_sale_statistic.filter(RoomType.name.contains(kw))
+
+        if from_date:
+            month_sale_statistic = month_sale_statistic.filter(Receipt.created_date.__ge__(from_date))
+
+        if to_date:
+            month_sale_statistic = month_sale_statistic.filter(Receipt.created_date.__le__(to_date))
+
+        return month_sale_statistic.all()
+
+# def year_month_sale_statistic(month=None, year=None):
+#     with app.app_context():
+#         result = db.session.query(extract('month', Receipt.created_date),
+#                                   extract('year', Receipt.created_date),
+#                                   func.sum(Receipt.total_price)) \
+#             .group_by(extract('month', Receipt.created_date),
+#                       extract('year', Receipt.created_date))
+#         if year:
+#             result = result.filter(extract('year', Receipt.created_date) == year)
+#
+#         if month:
+#             result = result.filter(extract('month', Receipt.created_date) == month)
+#
+#         return result.all()

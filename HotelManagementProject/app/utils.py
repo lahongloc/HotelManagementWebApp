@@ -2,6 +2,7 @@ import hashlib
 from datetime import datetime
 
 from flask_login import current_user
+from sqlalchemy import func
 
 from app import db, dao, app, login
 from app.models import User, CustomerType, Room, RoomRegulation, RoomType, Customer, Reservation, \
@@ -97,7 +98,7 @@ def calculate_total_reservation_price(reservation_info=None, room_id=None):
             return reservation_info
 
 
-def check_reservation(checkin_time=datetime.now(), checkout_time=None, room_id=None):
+def check_reservation(checkin_time=datetime.now(), checkout_time=None, room_id=None, is_renting=False):
     if checkin_time and checkout_time:
         is_valid = True
         with ((app.app_context())):
@@ -113,12 +114,12 @@ def check_reservation(checkin_time=datetime.now(), checkout_time=None, room_id=N
                         dt[0] >= checkin_time and dt[1] <= checkout_time):
                     is_valid = False
                     break
-
-            for r in room_rental.all():
-                if (r[0] <= checkin_time <= r[1]) or (r[0] <= checkout_time <= r[1]) or (
-                        r[0] >= checkin_time and r[1] <= checkout_time):
-                    is_valid = False
-                    break
+            if is_renting:
+                for r in room_rental.all():
+                    if (r[0] <= checkin_time <= r[1]) or (r[0] <= checkout_time <= r[1]) or (
+                            r[0] >= checkin_time and r[1] <= checkout_time):
+                        is_valid = False
+                        break
 
         return is_valid
 
@@ -136,7 +137,7 @@ def get_cus_type_by_identification(identification=None):
 def get_booked_rooms_by_identification(identification=None):
     if identification:
         with app.app_context():
-            reservations = db.session.query(Reservation.id.label('reservation_id'), Reservation.total_price, Room.name,
+            reservations = db.session.query(Reservation.id.label('reservation_id'), Reservation.deposit, Room.name,
                                             Reservation.checkin_date,
                                             Reservation.checkout_date) \
                 .join(ReservationDetail, ReservationDetail.reservation_id.__eq__(Reservation.id)) \
@@ -160,7 +161,7 @@ def get_booked_rooms_by_identification(identification=None):
                     'checkin_date': rs.checkin_date,
                     'checkout_date': rs.checkout_date,
                     'room_users': [ru for ru in room_users if ru[0].reservation_id == rs.reservation_id],
-                    'total_price': rs.total_price
+                    'total_price': rs.deposit
                 }
 
             return result

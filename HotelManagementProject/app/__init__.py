@@ -20,3 +20,10 @@ cloudinary.config(
     api_key='732317971657346',
     api_secret='wT_8MwiAKqPtofzi2BgwQyinazM'
 )
+
+# Các thông số cần thiết từ tài khoản VNPay Sandbox
+vnpay_config = {
+    'vnp_TmnCode': 'PMAKVMOW',
+    'vnp_HashSecret': 'USYEHCIUSVVCFQYKBQBZSUASXUXRSTCS',
+    'vnp_Url': 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html',
+}
