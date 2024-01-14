@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from flask_admin.contrib.sqla import ModelView
 from flask_admin import Admin, BaseView, expose, AdminIndexView
 from app.models import Room, RoomType, UserRole, RoomRegulation, CustomerTypeRegulation
@@ -34,22 +36,33 @@ class MyAdminIndexView(AdminIndexView):
                            customer_type_regulation=dao.get_customer_type_regulation(),
                            role_admin=role_admin)
 
+
 class MonthSaleStatisticView(BaseView):
     @expose('/')
     def index(self):
         kw = request.args.get('kw')
         from_date = request.args.get('from_date')
         to_date = request.args.get('to_date')
+        month = request.args.get('month')
+        year = request.args.get('year')
+
         mss = dao.month_sale_statistic(kw=kw,
                                        from_date=from_date,
-                                       to_date=to_date)
+                                       to_date=to_date,
+                                       month=month,
+                                       year=year)
         total_revenue = 0
         for m in mss:
             total_revenue = total_revenue + m[1]
 
+        if not month:
+            month = '(1-12)'
+
         return self.render('admin/monthSaleStatistic.html',
                            monthSaleStatistic=mss,
-                           total_revenue=total_revenue)
+                           total_revenue=total_revenue,
+                           year=year,
+                           month=month)
 
     def is_accessible(self):
         return current_user.is_authenticated and current_user.role == UserRole.ADMIN

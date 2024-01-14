@@ -8,6 +8,19 @@
 <div style="justify-content: center;" class="row">
     <div class="col-md-8 col-xs-12">
         <table class="table text-center">
+            <form>
+                <div style="display: flex; align-items: center; justify-content: space-between; margin: 0 auto; margin-bottom: 1rem;"
+                     class="col-md-10 col-xs-12 form-group">
+                    <input style="display: inline-block;" type="number" min="1" max="12" class="form-control"
+                           name="month"
+                           placeholder="Input MONTH {{ month }}">
+                    <input style="display: inline-block; margin-left: 15px;" type="number" min="2000" class="form-control"
+                           name="year"
+                           placeholder="Input YEAR {{ year }}">
+                    <input style="margin-left: 15px; display: inline-block;" type="submit" value="Submit MONTH"
+                           class="btn btn-info">
+                </div>
+            </form>
             <tr>
                 <th>STT</th>
                 <th>Loại Phòng</th>
@@ -27,7 +40,7 @@
             </tr>
             {% endfor %}
 
-            <tr class="text-info">
+            <tr class="text-info" style="color: #C16E70 !important;">
                 <th> Tổng Doanh Thu:</th>
                 <th></th>
                 <th>{{ "{:,.0f}".format(total_revenue) }} VND</th>
@@ -38,10 +51,11 @@
         </table>
     </div>
 </div>
-<div class="col-md-5 col-xs-12">
+<div style="margin: 0 auto;" class="col-md-5 col-xs-12">
     <form>
+        <h4 class="text-center text-info">BÁO CÁO DOANH THU (FILTER)</h4>
         <div class="form-group">
-            <input type="text" class="form-control" name="kw" placeholder="Input Key word ...">
+            <input type="text" class="form-control" name="kw" placeholder="Input room type name ...">
         </div>
         <div class="form-group">
             <input type="date" class="form-control" name="from_date">
@@ -52,17 +66,18 @@
         <input style="margin-top: 5px;" type="submit" value="Statistical" class="btn btn-info">
     </form>
     <canvas id="myChart"></canvas>
-    <canvas id="myChart2"></canvas>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     window.onload = function() {
       const ctx = document.getElementById('myChart').getContext('2d');
-      const ctx2 = document.getElementById('myChart2').getContext('2d');
 
       let data = [];
       let labels = [];
+      let data2 = [];
+      let labels2 = [];
+
       let colors = [];
       let borderColors = [];
       let r, g, b;

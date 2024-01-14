@@ -4,7 +4,7 @@ import urllib
 from datetime import datetime
 
 from flask_login import current_user, AnonymousUserMixin
-from sqlalchemy import func, Numeric
+from sqlalchemy import func, Numeric, extract
 
 from app.models import *
 from app import app
@@ -282,9 +282,9 @@ class vnpay:
         return hmac.new(byteKey, byteData, hashlib.sha512).hexdigest()
 
 
-def month_sale_statistic(kw=None, from_date=None, to_date=None):
+def month_sale_statistic(month=None, year=None, kw=None, from_date=None, to_date=None):
     with app.app_context():
-        if not kw and not from_date and not to_date:
+        if not kw and not from_date and not to_date and not month and not year:
             count_receipt = Receipt.query.count()
         elif from_date and to_date:
             count_receipt = Receipt.query.filter(
@@ -296,6 +296,15 @@ def month_sale_statistic(kw=None, from_date=None, to_date=None):
         elif to_date:
             count_receipt = Receipt.query.filter(
                 Receipt.created_date.__le__(to_date)).count()
+        elif kw:
+            count_receipt = Receipt.query.count()
+        elif month:
+            count_receipt = Receipt.query.filter(
+                extract('month', Receipt.created_date) == month)
+            if year:
+                count_receipt = count_receipt.filter(
+                    extract('year', Receipt.created_date) == year)
+            count_receipt = count_receipt.count()
 
         month_sale_statistic = db.session.query(RoomType.name,
                                                 func.sum(Receipt.total_price),
@@ -311,6 +320,15 @@ def month_sale_statistic(kw=None, from_date=None, to_date=None):
             .group_by(RoomType.name) \
             .order_by(RoomType.id)
 
+        if month:
+            month_sale_statistic = month_sale_statistic.filter(
+                extract('month', Receipt.created_date) == month) \
+                .group_by(extract('month', Receipt.created_date))
+
+        if year:
+            month_sale_statistic = month_sale_statistic.filter(
+                extract('year', Receipt.created_date) == year)
+
         if kw:
             month_sale_statistic = month_sale_statistic.filter(RoomType.name.contains(kw))
 
@@ -321,3 +339,19 @@ def month_sale_statistic(kw=None, from_date=None, to_date=None):
             month_sale_statistic = month_sale_statistic.filter(Receipt.created_date.__le__(to_date))
 
         return month_sale_statistic.all()
+
+
+# def year_month_sale_statistic(month=None, year=None):
+#     with app.app_context():
+#         result = db.session.query(extract('month', Receipt.created_date),
+#                                   extract('year', Receipt.created_date),
+#                                   func.sum(Receipt.total_price)) \
+#             .group_by(extract('month', Receipt.created_date),
+#                       extract('year', Receipt.created_date))
+#         if year:
+#             result = result.filter(extract('year', Receipt.created_date) == year)
+#
+#         if month:
+#             result = result.filter(extract('month', Receipt.created_date) == month)
+#
+#         return result.all()
