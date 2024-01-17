@@ -20,13 +20,15 @@ def send_message_twilio(message):
     client = Client(account_sid, auth_token)
 
     message = client.messages.create(
-        _from='+17178976092',
-        body='Loc Yeu Ly Lammmmmmmm',
+        from_='+17178976092',
+        body=message,
         to='+84869311727'
     )
 
     print(message.sid)
 
+
+# send_message_twilio('aaaaaaaaaaaaaaaaaa')
 
 def get_customer_info():
     if current_user.is_authenticated:
@@ -240,12 +242,31 @@ def create_room_rental(reservation_id=None):
     if reservation_id:
         try:
             with app.app_context():
-                rr = RoomRental(reservation_id=reservation_id, receptionist_id=current_user.id)
-                Reservation.query.filter(Reservation.id.__eq__(reservation_id)).first().is_checkin = True
+                reservation = Reservation.query.get(reservation_id)
+                rr = RoomRental(reservation_id=reservation_id, receptionist_id=current_user.id,
+                                checkout_date=reservation.checkout_date, deposit=reservation.deposit)
+                reservation.is_checkin = True
                 db.session.add(rr)
                 db.session.commit()
         except Exception as ex:
             print(str(ex))
+
+
+def create_receipt(room_rental_id=None, room_id=None):
+    if room_rental_id and room_id:
+        with app.app_context():
+            deposit_rate = RoomRegulation.query.get(Room.query.get(room_id).room_type_id).deposit_rate
+            room_rental = RoomRental.query.get(room_rental_id)
+            # calculate the total price from the room rental 's deposit and the deposit rate
+            total_price = room_rental.deposit / deposit_rate - deposit_rate
+
+            rc = Receipt(rental_room_id=room_rental.id, total_price=total_price)
+            room_rental.is_paid = True
+            db.session.add(rc)
+            db.session.commit()
+
+
+create_receipt(room_id=3)
 
 
 def receptionist_room_rental(room_rental_info=None, checkout_time=None, room_id=None):
@@ -255,31 +276,34 @@ def receptionist_room_rental(room_rental_info=None, checkout_time=None, room_id=
         # print(room_rental_info[str(room_id)]['users'])
         # add customers
         try:
-            for i in range(1, len(room_rental_info[str(room_id)]['users']) + 1):
-                cus_identification = room_rental_info[str(room_id)]['users'][i]['customerIdNum']
+            for i in range(1, len(room_rental_info[room_id]['users']) + 1):
+                cus_identification = room_rental_info[room_id]['users'][i]['customerIdNum']
                 customer_id = find_customer_by_identification(identification=cus_identification)
                 if customer_id:
                     added_customers_ids.append(customer_id)
                 else:
-                    c = Customer(name=room_rental_info[str(room_id)]['users'][i]['customerName'],
-                                 identification=room_rental_info[str(room_id)]['users'][i]['customerIdNum'])
+                    c = Customer(name=room_rental_info[room_id]['users'][i]['customerName'],
+                                 identification=room_rental_info[room_id]['users'][i]['customerIdNum'])
                     c.customer_type_id = get_id_of_customer_type(
-                        room_rental_info[str(room_id)]['users'][i]['customerType'])
+                        room_rental_info[room_id]['users'][i]['customerType'])
                     db.session.add(c)
                     db.session.commit()
                     added_customers_ids.append(c.customer_id)
         except Exception as ex:
             print(str(ex))
+            return False
 
         #     add room rental
         try:
             if added_customers_ids:
-                rr = RoomRental(receptionist_id=current_user.id, room_id=room_id, checkout_date=checkout_time)
+                rr = RoomRental(receptionist_id=current_user.id, room_id=room_id, checkout_date=checkout_time,
+                                deposit=room_rental_info[room_id]['total_price'])
                 db.session.add(rr)
                 db.session.commit()
                 added_room_rental = rr.id
         except Exception as ex:
             print(str(ex))
+            return False
 
         #     add room rental detail
         try:
@@ -290,6 +314,8 @@ def receptionist_room_rental(room_rental_info=None, checkout_time=None, room_id=
                     db.session.commit()
         except Exception as ex:
             print(str(ex))
+            return False
+    return True
 
 
 def find_customer_by_identification(identification=None):

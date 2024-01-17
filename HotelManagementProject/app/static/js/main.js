@@ -128,3 +128,24 @@ const checkin = (reservationId, roomName) => {
     }
 }
 
+const checkout = (roomRentalId, roomName, roomId) => {
+    if(confirm(`Are you sure you want to check in to room ${roomName}?`) === true) {
+        fetch('/api/room-checkout', {
+            method: 'POST',
+            body: JSON.stringify({
+               roomRentalId,
+               roomId
+            }),
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(res => res.json())
+            .then(data => {
+                if(data.code === 200) {
+                    location.reload()
+                }
+            })
+            .catch(err => console.error(err))
+    }
+}

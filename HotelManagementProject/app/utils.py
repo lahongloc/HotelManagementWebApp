@@ -6,7 +6,7 @@ from sqlalchemy import func
 
 from app import db, dao, app, login
 from app.models import User, CustomerType, Room, RoomRegulation, RoomType, Customer, Reservation, \
-    CustomerTypeRegulation, ReservationDetail, RoomRental
+    CustomerTypeRegulation, ReservationDetail, RoomRental, RoomRentalDetail
 
 
 def check_login(username, password):
@@ -80,7 +80,7 @@ def calculate_total_reservation_price(reservation_info=None, room_id=None):
 
         with app.app_context():
             room_price = db.session.query(Room.name, RoomType.name, RoomRegulation.price, RoomRegulation.surcharge,
-                                          RoomRegulation.capacity) \
+                                          RoomRegulation.capacity, RoomRegulation.deposit_rate) \
                 .join(Room, Room.room_type_id.__eq__(RoomType.id)) \
                 .join(RoomRegulation, RoomRegulation.room_type_id.__eq__(RoomType.id)).filter(
                 Room.id.__eq__(room_id)).first()
@@ -93,6 +93,8 @@ def calculate_total_reservation_price(reservation_info=None, room_id=None):
                     .join(CustomerTypeRegulation, CustomerTypeRegulation.customer_type_id.__eq__(CustomerType.id)) \
                     .filter(CustomerType.type.__eq__('FOREIGN')).first()
                 total_price *= customer_rate.rate
+
+            total_price *= room_price.deposit_rate
 
             reservation_info[room_id]['total_price'] = total_price
             return reservation_info
@@ -165,3 +167,73 @@ def get_booked_rooms_by_identification(identification=None):
                 }
 
             return result
+
+
+def get_rented_rooms_by_identification(identification=None):
+    if identification:
+        with app.app_context():
+            customer = Customer.query.filter(Customer.identification.__eq__(identification.strip())).first()
+            if customer:
+                rented_rooms_from_reservation = db.session.query(ReservationDetail.customer_id,
+                                                                 Reservation.id.label('reservation_id'),
+                                                                 RoomRental.id.label('room_rental_id'),
+                                                                 RoomRental.checkin_date,
+                                                                 RoomRental.checkout_date,
+                                                                 RoomRental.deposit.label('total_price'),
+                                                                 Room.name.label('room_name'),
+                                                                 Room.id.label('room_id')) \
+                    .join(Reservation, Reservation.id.__eq__(ReservationDetail.reservation_id)) \
+                    .join(RoomRental, RoomRental.reservation_id.__eq__(Reservation.id)) \
+                    .join(Room, Room.id.__eq__(Reservation.room_id)) \
+                    .filter(ReservationDetail.customer_id.__eq__(customer.customer_id),
+                            Reservation.is_checkin.__eq__(True), RoomRental.is_paid.__eq__(False)).all()
+
+                room_rentals = {}
+                if rented_rooms_from_reservation:
+                    for rr in rented_rooms_from_reservation:
+                        r = db.session.query(Customer.name.label('name')) \
+                            .join(ReservationDetail, ReservationDetail.customer_id.__eq__(Customer.customer_id)) \
+                            .filter(ReservationDetail.reservation_id.__eq__(rr.reservation_id)).all()
+                        room_rentals[rr.room_rental_id] = {
+                            'room_id': rr.room_id,
+                            'room_rental_id': rr.room_rental_id,
+                            'room': rr.room_name,
+                            'room_users': r,
+                            'checkin_date': rr.checkin_date,
+                            'checkout_date': rr.checkout_date,
+                            'total_price': rr.total_price
+                        }
+
+                rented_rooms_by_direct_booking = db.session.query(Customer.customer_id,
+                                                                  RoomRentalDetail.id,
+                                                                  RoomRental.id.label('room_rental_id'),
+                                                                  RoomRental.checkin_date,
+                                                                  RoomRental.checkout_date,
+                                                                  RoomRental.deposit.label('total_price'),
+                                                                  Room.name.label('room_name'),
+                                                                  Room.id.label('room_id')) \
+                    .join(RoomRentalDetail, RoomRentalDetail.customer_id.__eq__(Customer.customer_id)) \
+                    .join(RoomRental, RoomRental.id.__eq__(RoomRentalDetail.room_rental_id)) \
+                    .join(Room, Room.id.__eq__(RoomRental.room_id)) \
+                    .filter(Customer.identification.__eq__(identification.strip()),
+                            RoomRental.is_paid.__eq__(False)).all()
+
+                if rented_rooms_by_direct_booking:
+                    for rr in rented_rooms_by_direct_booking:
+                        r = db.session.query(Customer.name.label('name')) \
+                            .join(RoomRentalDetail, RoomRentalDetail.customer_id.__eq__(Customer.customer_id)) \
+                            .filter(RoomRentalDetail.room_rental_id.__eq__(rr.room_rental_id)).all()
+
+                        room_rentals[rr.room_rental_id] = {
+                            'room_id': rr.room_id,
+                            'room_rental_id': rr.room_rental_id,
+                            'room': rr.room_name,
+                            'room_users': r,
+                            'checkin_date': rr.checkin_date,
+                            'checkout_date': rr.checkout_date,
+                            'total_price': rr.total_price
+                        }
+                return room_rentals
+
+
+get_rented_rooms_by_identification(identification='192137035')
