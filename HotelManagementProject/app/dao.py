@@ -36,7 +36,6 @@ def get_full_user_info():
                               CustomerType.type)
                 full_user_info = full_user_info.filter(Customer.id.__eq__(current_user.id)).first()
 
-                print(full_user_info)
                 return full_user_info
 
 

@@ -5,13 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="8ba62ad7-1de8-4fa2-b696-49aef2001289" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/../BaiBaoCao_QuanLyKhachSan.docx" beforeDir="false" afterPath="$PROJECT_DIR$/../BaiBaoCao_QuanLyKhachSan.docx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../ClassDiagram/ClassDiagram_QLKS_part1.asta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/admin.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/admin.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/dao.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/dao.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/templates/admin/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/app/templates/admin/index.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/templates/admin/monthSaleStatistic.html" beforeDir="false" afterPath="$PROJECT_DIR$/app/templates/admin/monthSaleStatistic.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
