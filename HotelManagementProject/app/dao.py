@@ -2,14 +2,30 @@ import hashlib
 import hmac
 import urllib
 from datetime import datetime
+import numpy as np
 
 from flask_login import current_user, AnonymousUserMixin
-from sqlalchemy import func, Numeric, extract
+from sqlalchemy import func, Numeric, extract, or_, and_, case, desc
+from sqlalchemy.orm import aliased
 
 from app.models import *
-from app import app
+from app import app, utils
 
 import smtplib
+
+
+def send_message_twilio(message):
+    from twilio.rest import Client
+
+    account_sid = 'AC34dbe9c496f4108ac74cda4a50ab4b94'
+    auth_token = '112ca59ebefd2a224813f7339cf368aa'
+    client = Client(account_sid, auth_token)
+
+    message = client.messages.create(
+        from_='+17178976092',
+        body=str(message),
+        to='+84869311727'
+    )
 
 
 def get_customer_info():
@@ -36,6 +52,7 @@ def get_full_user_info():
                               CustomerType.type)
                 full_user_info = full_user_info.filter(Customer.id.__eq__(current_user.id)).first()
 
+                # print(full_user_info)
                 return full_user_info
 
 
@@ -57,20 +74,56 @@ def get_rooms():
         return rooms
 
 
-def get_rooms_info(room_id=None):
+def get_rooms_info(room_id=None, kw=None, checkin=None, checkout=None, room_type=None, page=1):
     with app.app_context():
         rooms_info = db.session.query(Room.name, Room.id, Room.image, RoomType.name.label('room_type'),
                                       RoomRegulation.price,
                                       RoomRegulation.room_quantity,
-                                      RoomRegulation.capacity) \
+                                      RoomRegulation.capacity,
+                                      RoomRegulation.distance) \
             .join(Room, Room.room_type_id.__eq__(RoomType.id)) \
-            .join(RoomRegulation, RoomRegulation.room_type_id.__eq__(RoomType.id))
+            .join(RoomRegulation, RoomRegulation.room_type_id.__eq__(RoomType.id)) \
+            .order_by(Room.id)
 
         if room_id:
             rooms_info = rooms_info.filter(Room.id.__eq__(room_id)).first()
             return rooms_info
+        if kw:
+            rooms_info = rooms_info.filter(Room.name.contains(kw))
+        if room_type:
+            rooms_info = rooms_info.filter(RoomType.id.__eq__(room_type))
 
-        return rooms_info.all()
+        new_rooms_info = []
+        if checkin and checkout:
+            for r in rooms_info.all():
+                if utils.check_reservation(checkin_time=checkin, checkout_time=checkout, room_id=r.id):
+                    new_rooms_info.append(r)
+            return new_rooms_info
+
+        start = page * app.config['PAGE_SIZE'] - app.config['PAGE_SIZE']
+        end = start + app.config['PAGE_SIZE']
+
+        return rooms_info.slice(start, end).all(), Room.query.count()
+
+
+def get_comment(room_id=None):
+    if room_id:
+        with app.app_context():
+            comments = db.session.query(User.avatar, User.username, Comment.content, Comment.created_date) \
+                .join(Customer, Customer.id.__eq__(User.id)) \
+                .join(Comment, Comment.customer_id.__eq__(Customer.id)) \
+                .filter(Comment.room_id.__eq__(room_id)).order_by(desc(Comment.created_date)).all()
+            return comments
+
+
+def add_comment(content=None, room_id=None):
+    if content and room_id:
+        with app.app_context():
+            # customers_id = db.session.query(Customer.id).join(User, current_user.id == Customer.id).first()
+            customer = Customer.query.filter(Customer.id.__eq__(current_user.id)).first()
+            comment = Comment(customer=customer, content=content, room_id=room_id)
+            db.session.add(comment)
+            db.session.commit()
 
 
 def get_user_role():
@@ -118,68 +171,6 @@ def send_gmail(receive_email=None, subject=None, message=None):
         print('Empty email???')
 
 
-def add_customers(customers=None, room_id=None, checkin_time=None, checkout_time=None, total_price=None):
-    added_customers_ids = []
-    added_reservation_id = None
-    if customers and room_id and checkin_time and checkout_time and total_price:
-        print(customers)
-        # add reservation
-        try:
-            if current_user.role.__eq__(UserRole.CUSTOMER):
-                checkin_time = datetime.strptime(str(checkin_time), "%Y-%m-%dT%H:%M")
-                checkout_time = datetime.strptime(str(checkout_time), "%Y-%m-%dT%H:%M")
-                with app.app_context():
-                    r = Reservation(customer_id=get_customer_info().customer_id, room_id=room_id,
-                                    checkin_date=checkin_time,
-                                    checkout_date=checkout_time,
-                                    total_price=total_price)
-                    db.session.add(r)
-                    db.session.commit()
-                    added_reservation_id = r.id
-        except Exception as ex:
-            print(str(ex))
-
-    # add customers paying for the reservation
-    try:
-        for i in range(2, len(customers) + 1):
-            cus_type = 1
-            if customers[str(i)]['customerType'] == 'FOREIGN':
-                cus_type = 2
-            with app.app_context():
-                c = Customer(name=customers[str(i)]['customerName'],
-                             identification=customers[str(i)]['customerIdNum'], customer_type_id=cus_type)
-                db.session.add(c)
-                db.session.commit()
-                added_customers_ids.append(c.customer_id)
-        try:
-            with app.app_context():
-                cus_type = 1
-                if customers['1']['customerType'] == 'FOREIGN':
-                    cus_type = 2
-                c = Customer(name=customers['1']['customerName'],
-                             identification=customers['1']['customerIdNum'], customer_type_id=cus_type)
-                db.session.add(c)
-                db.session.commit()
-                added_customers_ids.append(c.customer_id)
-        except Exception as ex:
-            added_customers_ids.append(get_customer_info().customer_id)
-            print(str(ex))
-
-    except Exception as ex:
-        print(str(ex))
-
-    # add reservation details
-    try:
-        for cus_id in added_customers_ids:
-            rd = ReservationDetail(customer_id=cus_id, reservation_id=added_reservation_id)
-            db.session.add(rd)
-            db.session.commit()
-
-        return True
-    except Exception as ex:
-        print(str(ex))
-
-
 def get_room_regulation():
     # if current_user.is_authenticated and current_user.role.__eq__(UserRole.ADMIN):
     with app.app_context():
@@ -220,6 +211,123 @@ def get_customer_type_regulation():
 
         # print(customer_type_regulation)
         return customer_type_regulation
+
+
+def add_customers(customers=None, room_id=None, checkin_time=None, checkout_time=None, total_price=None):
+    added_customers_ids = []
+    added_reservation_id = None
+    if customers and room_id and checkin_time and checkout_time and total_price:
+        # 1. create reservation and save this reservation_id for creating reservation_detail
+        checkin_time = datetime.strptime(str(checkin_time), "%Y-%m-%dT%H:%M")
+        checkout_time = datetime.strptime(str(checkout_time), "%Y-%m-%dT%H:%M")
+        with app.app_context():
+            r = Reservation(room_id=room_id,
+                            checkin_date=checkin_time,
+                            checkout_date=checkout_time,
+                            deposit=total_price)
+            if current_user.role == UserRole.CUSTOMER:
+                r.customer_id = get_customer_info().customer_id
+            elif current_user.role == UserRole.RECEPTIONIST:
+                r.receptionist_id = current_user.id
+            db.session.add(r)
+            db.session.commit()
+            # save the reservation_id
+            added_reservation_id = r.id
+        is_customers_added = True
+        # 2. add customers who will use the room to db
+        try:
+            if added_reservation_id:
+                for cus in customers:
+                    customer_id = find_customer_by_identification(customers[str(cus)]['customerIdNum'])
+                    if customer_id:
+                        added_customers_ids.append(customer_id)
+                    else:
+                        c = Customer(name=customers[str(cus)]['customerName'],
+                                     identification=customers[str(cus)]['customerIdNum'])
+                        c.customer_type_id = get_id_of_customer_type(customers[str(cus)]['customerType'])
+                        db.session.add(c)
+                        db.session.commit()
+                        added_customers_ids.append(c.customer_id)
+        except Exception as ex:
+            is_customers_added = False
+            print(str(ex))
+        # 3. add reservation_detail
+        if added_reservation_id and is_customers_added:
+            for i in added_customers_ids:
+                rd = ReservationDetail(customer_id=i, reservation_id=added_reservation_id)
+                db.session.add(rd)
+                db.session.commit()
+
+
+def create_room_rental(reservation_id=None):
+    if reservation_id:
+        try:
+            with app.app_context():
+                rr = RoomRental(reservation_id=reservation_id, receptionist_id=current_user.id)
+                Reservation.query.filter(Reservation.id.__eq__(reservation_id)).first().is_checkin = True
+                db.session.add(rr)
+                db.session.commit()
+        except Exception as ex:
+            print(str(ex))
+
+
+def receptionist_room_rental(room_rental_info=None, checkout_time=None, room_id=None):
+    if room_rental_info and checkout_time and room_id:
+        added_customers_ids = []
+        added_room_rental = None
+        # print(room_rental_info[str(room_id)]['users'])
+        # add customers
+        try:
+            for i in range(1, len(room_rental_info[str(room_id)]['users']) + 1):
+                cus_identification = room_rental_info[str(room_id)]['users'][i]['customerIdNum']
+                customer_id = find_customer_by_identification(identification=cus_identification)
+                if customer_id:
+                    added_customers_ids.append(customer_id)
+                else:
+                    c = Customer(name=room_rental_info[str(room_id)]['users'][i]['customerName'],
+                                 identification=room_rental_info[str(room_id)]['users'][i]['customerIdNum'])
+                    c.customer_type_id = get_id_of_customer_type(
+                        room_rental_info[str(room_id)]['users'][i]['customerType'])
+                    db.session.add(c)
+                    db.session.commit()
+                    added_customers_ids.append(c.customer_id)
+        except Exception as ex:
+            print(str(ex))
+
+        #     add room rental
+        try:
+            if added_customers_ids:
+                rr = RoomRental(receptionist_id=current_user.id, room_id=room_id, checkout_date=checkout_time)
+                db.session.add(rr)
+                db.session.commit()
+                added_room_rental = rr.id
+        except Exception as ex:
+            print(str(ex))
+
+        #     add room rental detail
+        try:
+            if added_customers_ids and added_room_rental:
+                for c in added_customers_ids:
+                    rrd = RoomRentalDetail(customer_id=c, room_rental_id=added_room_rental)
+                    db.session.add(rrd)
+                    db.session.commit()
+        except Exception as ex:
+            print(str(ex))
+
+
+def find_customer_by_identification(identification=None):
+    if identification:
+        with app.app_context():
+            customer = Customer.query.filter(Customer.identification.__eq__(str(identification).strip())).first()
+            if customer:
+                return customer.customer_id
+
+
+def get_id_of_customer_type(type=None):
+    if type:
+        with app.app_context():
+            type_id = CustomerType.query.filter(CustomerType.type.__eq__(str(type).strip())).first()
+            return type_id.id
 
 
 class vnpay:
@@ -281,14 +389,10 @@ class vnpay:
         return hmac.new(byteKey, byteData, hashlib.sha512).hexdigest()
 
 
-def month_sale_statistic(month=None, year=None, kw=None, from_date=None, to_date=None):
+def month_sale_statistic(month=None, year=None, kw=None, from_date=None, to_date=None, **kwargs):
     with app.app_context():
         if not kw and not from_date and not to_date and not month and not year:
             count_receipt = Receipt.query.count()
-        elif from_date and to_date:
-            count_receipt = Receipt.query.filter(
-                Receipt.created_date.__ge__(from_date),
-                Receipt.created_date.__le__(to_date)).count()
         elif from_date:
             count_receipt = Receipt.query.filter(
                 Receipt.created_date.__ge__(from_date)).count()
@@ -304,53 +408,94 @@ def month_sale_statistic(month=None, year=None, kw=None, from_date=None, to_date
                 count_receipt = count_receipt.filter(
                     extract('year', Receipt.created_date) == year)
             count_receipt = count_receipt.count()
+        else:
+            count_receipt = Receipt.query.filter(
+                extract('year', Receipt.created_date) == year).count()
 
         month_sale_statistic = db.session.query(RoomType.name,
-                                                func.sum(Receipt.total_price),
-                                                func.count(RoomRental.id),
-                                                func.cast((func.count(RoomRental.id) / count_receipt) * 100
+                                                func.coalesce(func.sum(Receipt.total_price), 0),
+                                                func.coalesce(func.count(Receipt.id), 0),
+                                                func.cast((func.count(Receipt.id) / count_receipt) * 100
                                                           , Numeric(5, 2))) \
-            .outerjoin(RoomRental, RoomRental.id.__eq__(Receipt.rental_room_id)) \
-            .outerjoin(Reservation, Reservation.id.__eq__(RoomRental.reservation_id)) \
-            .outerjoin(Room, Room.id.__eq__(
-            Reservation.room_id)  # Phải là OR vì Thuê Phòng CÓ THỂ KHÔNG thông qua Phiếu Đặt Phòng
-                       or Room.id.__eq__(RoomRental.room_id)) \
-            .outerjoin(RoomType, RoomType.id.__eq__(Room.room_type_id)) \
+            .join(Room, Room.room_type_id.__eq__(RoomType.id), isouter=True) \
+            .join(RoomRental, RoomRental.room_id.__eq__(Room.id), isouter=True) \
+            .join(Receipt, Receipt.rental_room_id.__eq__(RoomRental.id), isouter=True) \
             .group_by(RoomType.name) \
             .order_by(RoomType.id)
 
         if month:
             month_sale_statistic = month_sale_statistic.filter(
-                extract('month', Receipt.created_date) == month) \
-                .group_by(extract('month', Receipt.created_date))
+                extract('month', Receipt.created_date) == month)
 
         if year:
             month_sale_statistic = month_sale_statistic.filter(
                 extract('year', Receipt.created_date) == year)
 
         if kw:
-            month_sale_statistic = month_sale_statistic.filter(RoomType.name.contains(kw))
+            month_sale_statistic = month_sale_statistic.filter(
+                RoomType.name.contains(kw))
 
         if from_date:
-            month_sale_statistic = month_sale_statistic.filter(Receipt.created_date.__ge__(from_date))
+            month_sale_statistic = month_sale_statistic.filter(
+                Receipt.created_date.__ge__(from_date))
 
         if to_date:
-            month_sale_statistic = month_sale_statistic.filter(Receipt.created_date.__le__(to_date))
+            month_sale_statistic = month_sale_statistic.filter(
+                Receipt.created_date.__le__(to_date))
 
         return month_sale_statistic.all()
 
 
-# def year_month_sale_statistic(month=None, year=None):
-#     with app.app_context():
-#         result = db.session.query(extract('month', Receipt.created_date),
-#                                   extract('year', Receipt.created_date),
-#                                   func.sum(Receipt.total_price)) \
-#             .group_by(extract('month', Receipt.created_date),
-#                       extract('year', Receipt.created_date))
-#         if year:
-#             result = result.filter(extract('year', Receipt.created_date) == year)
-#
-#         if month:
-#             result = result.filter(extract('month', Receipt.created_date) == month)
-#
-#         return result.all()
+def month_room_density_statistic(**kwargs):
+    with app.app_context():
+        # # print((RoomRental.query.get(1).checkout_date - RoomRental.query.get(1).checkin_date).days)
+        # total_rental_days = 0
+        # for i in RoomRental.query.all():
+        #     total_rental_days = total_rental_days + (i.checkout_date - i.checkin_date).days
+        #
+        # # print(
+        # #     (np.datetime64(RoomRental.query.get(1).checkout_date) - np.datetime64(RoomRental.query.get(1).checkin_date)) \
+        # #         .astype('timedelta64[D]').item()
+        # # )
+        #
+        # month_room_density_statistic = db.session.query(Room.name,
+        #                                                 func.sum(
+        #                                                     np.datetime64(
+        #                                                         RoomRental.checkout_date) - np.datetime64(
+        #                                                         RoomRental.checkin_date)) \
+        #                                                 .astype('timedelta64[D]').item().days
+        #                                                 ), \
+        #                                                 (
+        #                                                         np.datetime64(RoomRental.checkout_date) - np.datetime64(RoomRental.checkin_date) \
+        #                                                     .astype('timedelta64[D]').item().days
+        #                                                 ).days / total_rental_days * 100 \
+        #     .join(Room, RoomRental.room_id.__eq__(Room.id), isouter=True) \
+        #     .group_by(Room.name).all()
+        #
+        # return month_room_density_statistic
+
+        # Tính tổng số ngày thuê
+        total_rental_days = 0
+        total_rental_days_query = db.session.query(
+            func.sum(extract('day', RoomRental.checkout_date - RoomRental.checkin_date))
+        ).scalar()
+
+        total_rental_days = total_rental_days_query if total_rental_days_query else 0
+
+        # print(total_rental_days)
+
+        # Câu truy vấn sử dụng SQLAlchemy và NumPy
+        month_room_density_statistic = db.session.query(
+            Room.name,
+            func.sum(extract('day', RoomRental.checkout_date - RoomRental.checkin_date)).label('total_days'),
+            func.cast(
+                func.sum(extract('day', RoomRental.checkout_date - RoomRental.checkin_date)) /
+                total_rental_days * 100,
+                db.Numeric(5, 2)
+            ).label('utilization_rate')
+        ).join(Room, RoomRental.room_id.__eq__(Room.id)) \
+            .group_by(Room.name).order_by(Room.id)
+
+        return month_room_density_statistic.all()
+
+# print(month_room_density_statistic())

@@ -145,3 +145,8 @@ p {
     background-color: #967e4d;
     color: white;
 }
+
+.page-item.active-custom .page-link {
+    background-color: #967;
+    color: #fff;
+}

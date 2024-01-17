@@ -5,7 +5,8 @@ from flask_login import current_user
 from sqlalchemy import func
 
 from app import db, dao, app, login
-from app.models import User, Receipt, CustomerType, Room, RoomRegulation, RoomType, Customer, Reservation, CustomerTypeRegulation
+from app.models import User, Receipt, CustomerType, Room, RoomRegulation, RoomType, Customer, Reservation, \
+    CustomerTypeRegulation
 
 
 def check_login(username, password):
@@ -26,6 +27,7 @@ def get_customer_by_user():
             c = Customer.query.join(User, User.id == Customer.id)
             c = c.filter(Customer.id.__eq__(current_user.id)).first()
             return c
+
 
 def add_user(customer_type=None, name=None, username=None, password=None, phone=None, id_num=None, **kwargs):
     if customer_type and name and username and password and phone and id_num:

@@ -10,8 +10,9 @@ login = LoginManager(app)
 
 app.secret_key = '56%^&*987^&*(098&*((*&^&*&'
 app.config['SQLALCHEMY_DATABASE_URI'] = str.format('mysql+pymysql://root:%s@localhost/hoteldb?charset=utf8mb4'
-                                                   % quote('Tuankiet3172@3'))
+                                                   % quote ('Tuankiet3172@3'))
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
+app.config['PAGE_SIZE'] = 4
 
 db = SQLAlchemy(app=app)
 

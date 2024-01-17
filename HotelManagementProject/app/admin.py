@@ -57,6 +57,8 @@ class MonthSaleStatisticView(BaseView):
 
         if not month:
             month = '(1-12)'
+        if not year:
+            year = '(All)'
 
         return self.render('admin/monthSaleStatistic.html',
                            monthSaleStatistic=mss,

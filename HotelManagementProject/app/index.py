@@ -1,12 +1,13 @@
 import hashlib
+import json
+import math
 import random
 from datetime import datetime
+# from mysql.connector import cursor
 
-from mysql.connector import cursor
-
-from app import app, dao, login, utils, vnpay_config
+from app import app, dao, login, utils
 from flask import render_template, request, redirect, url_for, jsonify, session, flash
-from flask_login import login_user, logout_user, current_user
+from flask_login import login_user, logout_user, current_user, login_required
 import cloudinary.uploader
 
 from app.dao import vnpay
@@ -15,11 +16,24 @@ from app.models import UserRole, Receipt
 
 @app.route('/')
 def home():
+    kw = request.args.get('kw')
+    checkin = request.args.get('checkin')
+    checkout = request.args.get('checkout')
+    room_type = request.args.get('roomType')
+    page = request.args.get('pages', 1)
+
+    if checkin and checkout:
+        checkin = datetime.strptime(checkin, "%Y-%m-%dT%H:%M")
+        checkout = datetime.strptime(checkout, "%Y-%m-%dT%H:%M")
+
     room_types = dao.get_room_types()
-    rooms_info = dao.get_rooms_info()
+    rooms_info, counter = dao.get_rooms_info(kw=kw, checkin=checkin, checkout=checkout, room_type=room_type,
+                                             page=int(page))
+
     return render_template('index.html',
                            room_types=room_types,
-                           rooms_info=rooms_info)
+                           rooms_info=rooms_info,
+                           pages=math.ceil(counter / app.config['PAGE_SIZE']))
 
 
 @app.route('/user-register', methods=['get', 'post'])
@@ -81,6 +95,8 @@ def user_signin():
 
             if current_user.role == UserRole.ADMIN:
                 return redirect('/admin')
+            elif current_user.role == UserRole.RECEPTIONIST:
+                return redirect(url_for('room_renting'))
             else:
                 return redirect(url_for('home'))
         else:
@@ -217,14 +233,26 @@ def search():
     return data
 
 
-@app.route('/rooms/<room_id>')
+@app.route('/rooms/<room_id>', methods=['post', 'get'])
 def room_details(room_id):
+    err_msg = ''
     room = dao.get_rooms_info(room_id=room_id)
-    return render_template('roomDetail.html', room=room)
+
+    if request.method == 'POST':
+        content = request.form.get('content')
+        if content:
+            try:
+                dao.add_comment(content=content, room_id=room_id)
+            except Exception as ex:
+                print(str(ex))
+                err_msg = str(ex)
+    comments = dao.get_comment(room_id=room_id)
+    return render_template('roomDetail.html',room=room,comments=comments,err_msg=err_msg)
 
 
 @app.route("/booking-room/<room_id>", methods=['post', 'get'])
 def room_booking(room_id):
+    err_msg = ''
     room = dao.get_rooms_info(room_id=room_id)
 
     customer_info = dao.get_customer_info()
@@ -242,10 +270,10 @@ def room_booking(room_id):
         user = {}
         count = 0
         user_counter = 0
-        customer_info = request.form.to_dict()
-        customer_info.popitem()
-        customer_info.popitem()
-        for i in customer_info:
+        customers_list = request.form.to_dict()
+        customers_list.popitem()
+        customers_list.popitem()
+        for i in customers_list:
             user[str(i)[:-1]] = request.form.get(i)
             count += 1
             if count == 3:
@@ -257,16 +285,21 @@ def room_booking(room_id):
         checkin_time = datetime.strptime(str(reservation_info[str(room_id)]['checkin_time']), "%Y-%m-%dT%H:%M")
         checkout_time = datetime.strptime(str(reservation_info[str(room_id)]['checkout_time']), "%Y-%m-%dT%H:%M")
         is_valid = utils.check_reservation(checkin_time=checkin_time, checkout_time=checkout_time, room_id=room_id)
+        # print(reservation_info)
         if is_valid:
             session['reservation_info'] = utils.calculate_total_reservation_price(reservation_info=reservation_info,
                                                                                   room_id=room_id)
             return redirect(url_for('pay_for_reservation', room_id=room_id))
+        else:
+            err_msg = 'This time is not available for this room. Please choose another time period!'
 
     return render_template('booking.html',
                            room=room,
                            customer_info=customer_info,
                            role_cus=role_cus,
-                           total_price=total_price)
+                           total_price=total_price,
+                           err_msg=err_msg,
+                           is_booking=True)
 
 
 @app.route('/reservation-paying')
@@ -294,9 +327,123 @@ def api_of_reservation_pay():
         if not is_paid:
             code = 400
     except Exception as ex:
+        print(str(ex))
         code = 400
     return jsonify({
         'code': code
+    })
+
+
+@app.route('/api/check-cus-type', methods=['POST'])
+def handle_check_cus_type():
+    try:
+        data = request.json
+        cus_info = None
+        err_msg = 200
+        try:
+            cus_info = utils.get_cus_type_by_identification(identification=str(data.get('identification')))
+        except Exception as ex:
+            print(str(ex))
+            err_msg = 400
+        if not cus_info:
+            err_msg = 400
+        return jsonify({
+            'cusType': cus_info.type,
+            'cusName': cus_info.name,
+            'code': err_msg
+        })
+    except Exception as ex:
+        print(str(ex))
+        return jsonify({
+            'code': 400
+        })
+
+
+@login_required
+@app.route('/renting-room', methods=['POST', 'GET'])
+def room_renting():
+    err_msg = ''
+    if current_user.role != UserRole.RECEPTIONIST:
+        return redirect(url_for('home'))
+    room_id = request.args.get('room_id', 1)
+    room = dao.get_rooms_info(room_id=room_id)
+
+    booked_rooms = None
+    role_cus = dao.get_customer_role()
+
+    room_types = dao.get_room_types()
+    rooms_info = dao.get_rooms_info()
+    if request.method.__eq__('POST'):
+        identification = request.form.get('identification')
+        booked_rooms = utils.get_booked_rooms_by_identification(identification=identification)
+
+        room_id = request.form.get('room_id', room_id)
+        data = request.form.to_dict()
+        try:
+            room_rental_info = {room_id: {
+                'users': {},
+                'total_price': 0.0,
+                'checkout_time': request.form.get('checkout')
+            }}
+            user = {}
+            count = 0
+            data.popitem()
+            user_counter = 0
+            for i in data:
+                user[str(i)[:-1]] = request.form.get(i)
+                count += 1
+                if count == 3:
+                    count = 0
+                    user_counter += 1
+                    room_rental_info[room_id]['users'][user_counter] = user
+                    user = {}
+            # print(room_rental_info)
+            checkout_time = datetime.strptime(str(room_rental_info[str(room_id)]['checkout_time']), "%Y-%m-%dT%H:%M")
+            room_rental_info = utils.calculate_total_reservation_price(reservation_info=room_rental_info,
+                                                                       room_id=room_id)
+
+            if utils.check_reservation(checkout_time=checkout_time, room_id=room_id, is_renting=True):
+                dao.receptionist_room_rental(room_rental_info=room_rental_info, checkout_time=checkout_time,
+                                             room_id=room_id)
+            else:
+                err_msg = 'This time is not available for this room. Please choose another time period!'
+        except Exception as ex:
+            print(str(ex))
+
+    return render_template('renting.html',
+                           booked_rooms=booked_rooms,
+                           rooms_info=rooms_info,
+                           room=room,
+                           room_types=room_types,
+                           role_cus=role_cus,
+                           is_renting=True,
+                           err_msg=err_msg)
+
+
+@app.route('/api/take-room-info', methods=['POST'])
+def take_room_info():
+    data = request.json
+    room_id = data.get('roomId')
+    room = dao.get_rooms_info(room_id=room_id)
+    return jsonify({
+        'roomName': room.name,
+        'roomType': room.room_type,
+        'price': room.price
+    })
+
+
+@app.route('/api/room-renting', methods=['POST'])
+def handel_room_renting():
+    err_msg = 200
+    data = request.json
+    try:
+        reservation_id = int(data.get('reservationId'))
+        dao.create_room_rental(reservation_id=reservation_id)
+    except Exception as ex:
+        err_msg = 400
+        print(str(ex))
+    return jsonify({
+        'code': err_msg
     })
 
 

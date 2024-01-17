@@ -84,12 +84,14 @@ class Room(BaseModel):
 
 
 class Reservation(BaseModel):
-    customer_id = Column(Integer, ForeignKey(Customer.customer_id), nullable=False)
+    customer_id = Column(Integer, ForeignKey(Customer.customer_id))
     # is_at_hotel = Column(Boolean, default=False)
     receptionist_id = Column(Integer, ForeignKey(Receptionist.id))
     room_id = Column(Integer, ForeignKey(Room.id), nullable=False)
     checkin_date = Column(DateTime, nullable=False)
     checkout_date = Column(DateTime, nullable=False)
+    # total_price = Column(Float, nullable=False)
+    is_checkin = Column(Boolean, default=False)
     deposit = Column(Float, nullable=False)
     reservation_details = Relationship('ReservationDetail', backref='reservation', lazy=True)
 
@@ -100,13 +102,21 @@ class ReservationDetail(BaseModel):
 
 
 class RoomRental(BaseModel):
-    customer_id = Column(Integer, ForeignKey(Customer.customer_id), nullable=False)
+    customer_id = Column(Integer, ForeignKey(Customer.customer_id))
     receptionist_id = Column(Integer, ForeignKey(Receptionist.id), nullable=False)
-    # is_received_room = Column(Boolean)
     room_id = Column(Integer, ForeignKey(Room.id))  # null if is_received_room == True
     reservation_id = Column(Integer, ForeignKey(Reservation.id))  # null if is_received_room == False
+    checkin_date = Column(DateTime, default=datetime.now())
+    checkout_date = Column(DateTime)
     deposit = Column(Float)
+    room_rental_details = Relationship('RoomRentalDetail', backref='room_rental', lazy=True)
+
     receipt = Relationship('Receipt', uselist=False, back_populates='room_rental')
+
+
+class RoomRentalDetail(BaseModel):
+    customer_id = Column(Integer, ForeignKey(Customer.customer_id), primary_key=True)
+    room_rental_id = Column(Integer, ForeignKey(RoomRental.id), primary_key=True)
 
 
 class Receipt(BaseModel):
@@ -116,11 +126,11 @@ class Receipt(BaseModel):
     created_date = Column(DateTime, nullable=False)
 
 
-class Comment(db.Model):
-    id = Column(Integer, ForeignKey(Customer.id), nullable=False,
-                primary_key=True)  # primary key as well as foreign key
+class Comment(BaseModel):
+    customer_id = Column(Integer, ForeignKey(Customer.id), nullable=False)
     content = Column(String(1000), nullable=False)
     room_id = Column(Integer, ForeignKey(Room.id), nullable=False, primary_key=True)
+    created_date = Column(DateTime, default=datetime.now())
 
 
 class RoomRegulation(db.Model):
@@ -130,6 +140,7 @@ class RoomRegulation(db.Model):
     capacity = Column(Integer, default=2)
     price = Column(Float, default=100000)
     surcharge = Column(Float, default=0.25)
+    distance = Column(Integer, nullable=False, default=28)
 
 
 class CustomerTypeRegulation(BaseModel):
@@ -156,6 +167,8 @@ if __name__ == "__main__":
         r5 = Room(name='A05', room_type_id=3, image='images/p5.png')
         db.session.add_all([r1, r2, r3, r4, r5])
         db.session.commit()
+
+        ######################################################
 
         import hashlib
 
@@ -211,10 +224,24 @@ if __name__ == "__main__":
         db.session.add(admin1)
         db.session.commit()
 
+        r1 = Receptionist(name='Tran Thi Nhung', id=7)
+        db.session.add(r1)
+        db.session.commit()
+
         ct1 = CustomerType()
         ct2 = CustomerType(type='FOREIGN')
         db.session.add_all([ct1, ct2])
         db.session.commit()
+
+        cus1 = Customer(id=2, name='Trần Tuấn Kiệt', identification='0194612374612', customer_type_id=1)
+        cus2 = Customer(id=3, name='Hoàng Nguyễn Quốc Duy', identification='0123491958123', customer_type_id=1)
+        cus3 = Customer(id=4, name='Trần Lê Lân', identification='01235012357', customer_type_id=2)
+        cus4 = Customer(id=5, name='Văn Công Tuấn', identification='09832478143', customer_type_id=2)
+        cus5 = Customer(id=6, name='Ngô Văn Lâu', identification='01283597235', customer_type_id=1)
+        db.session.add_all([cus1, cus2, cus3, cus4, cus5])
+        db.session.commit()
+
+        ##################
 
         ctr1 = CustomerTypeRegulation(admin_id=1, customer_type_id=1)
         ctr2 = CustomerTypeRegulation(admin_id=1, customer_type_id=2, rate=1.5)
@@ -227,48 +254,43 @@ if __name__ == "__main__":
         db.session.add_all([rr1, rr2, rr3])
         db.session.commit()
 
-        r1 = Receptionist(name='Tran Thi Nhung', id=7)
-        db.session.add(r1)
-        db.session.commit()
-
-        cus1 = Customer(id=2, name='Trần Tuấn Kiệt', identification='0194612374612', customer_type_id=1)
-        cus2 = Customer(id=3, name='Hoàng Nguyễn Quốc Duy', identification='0123491958123', customer_type_id=1)
-        cus3 = Customer(id=4, name='Trần Lê Lân', identification='01235012357', customer_type_id=2)
-        cus4 = Customer(id=5, name='Văn Công Tuấn', identification='09832478143', customer_type_id=2)
-        cus5 = Customer(id=6, name='Ngô Văn Lâu', identification='01283597235', customer_type_id=1)
-        db.session.add_all([cus1, cus2, cus3, cus4, cus5])
-        db.session.commit()
-
-        cm1 = Comment(id=2, content='Phòng này quá ok <3', room_id=1)
-        cm2 = Comment(id=3, content='Cũng tàm tạm, cần nâng cấp dịch vụ phòng!', room_id=1)
-        cm3 = Comment(id=4, content='Sẽ ghé thăm vào lần sau nếu có dịp', room_id=2)
-        cm4 = Comment(id=5, content='Một căn phòng đáng trải nghiệm nhất tại khách sạn, 5 sau nhé', room_id=2)
-        cm5 = Comment(id=6,
+        cm1 = Comment(customer_id=2, content='Phòng này quá ok <3', room_id=1, created_date=datetime(2024, 1, 9, 17, 1))
+        cm2 = Comment(customer_id=3, content='Cũng tàm tạm, cần nâng cấp dịch vụ phòng!', created_date=datetime(2024, 1, 9, 17, 1), room_id=1)
+        cm3 = Comment(customer_id=4, content='Sẽ ghé thăm vào lần sau nếu có dịp', created_date=datetime(2024, 1, 9, 17, 1), room_id=2)
+        cm4 = Comment(customer_id=5, content='Một căn phòng đáng trải nghiệm nhất tại khách sạn, 5 sau nhé', created_date=datetime(2024, 1, 9, 17, 1), room_id=2)
+        cm5 = Comment(customer_id=6,
                       content='Mình có một người bạn nước ngoài ở chung, sẽ nhân hệ số 1.5 nhưng đây là quy định chung của khách sạn rùi nên cũng không sao, miễn là dịch vụ OK và phòng thì miễn chê',
+                      created_date=datetime(2024, 1, 9, 17, 1),
                       room_id=2)
-        cm6 = Comment(id=2,
+        cm6 = Comment(customer_id=2,
                       content='Có dịp ghé qua đây, đang loay hoay tìm phòng thì có dịch vụ đặt phòng trước, đến nơi chỉ cần đưa thông tin phiếu cho nhân viên lễ tân là nhận phòng ở luôn, 10 điểm',
+                      created_date=datetime(2024, 1, 9, 17, 1),
                       room_id=3)
-        cm7 = Comment(id=3, content='Phòng này 0 điểm ... không có điểm nào để chê ạ =)))', room_id=3)
-        cm8 = Comment(id=4, content='Thật là một nơi đáng để tra nghiệm', room_id=3)
-        cm9 = Comment(id=5, content='Xứng đáng với số tiền bỏ ra', room_id=3)
-        cm10 = Comment(id=6,
+        cm7 = Comment(customer_id=3, content='Phòng này 0 điểm ... không có điểm nào để chê ạ =)))',created_date=datetime(2024, 1, 9, 17, 1), room_id=3)
+        cm8 = Comment(customer_id=4, content='Thật là một nơi đáng để tra nghiệm',created_date=datetime(2024, 1, 9, 17, 1), room_id=3)
+        cm9 = Comment(customer_id=5, content='Xứng đáng với số tiền bỏ ra', created_date=datetime(2024, 1, 9, 17, 1), room_id=3)
+        cm10 = Comment(customer_id=6,
                        content='Mình không biết những nơi khác thế nào, nhưng đối với mình noi đây rất tiện nghi từ dịch vụ cho đến giải quyết sự cố cho khách hàng',
+                       created_date=datetime(2024, 1, 9, 17, 1),
                        room_id=3)
-        cm11 = Comment(id=2,
+        cm11 = Comment(customer_id=2,
                        content='Mình lỡ làm bể kính phòng tắm nên phải bồi thường, nhưng vẫn hài lòng với những gì khách sạn mang đến',
+                       created_date=datetime(2024, 1, 9, 17, 1),
                        room_id=4)
-        cm12 = Comment(id=3, content='Cần điều chỉnh số lượng người ở trong phòng nhiều hơn', room_id=4)
-        cm13 = Comment(id=4, content='Nơi này rất thoải mái và tiện nghi, có view đỉnh lắm ạ!', room_id=4)
-        cm14 = Comment(id=5, content='Những gì khách sạn mang đến rất tốt cho trải nghiệm của tôi', room_id=4)
-        cm15 = Comment(id=6, content='Nhân viên dễ thương lắm, tư vấn phòng này và trải nghiệm rất tốt', room_id=4)
-        cm16 = Comment(id=2,
+        cm12 = Comment(customer_id=3, content='Cần điều chỉnh số lượng người ở trong phòng nhiều hơn',created_date=datetime(2024, 1, 9, 17, 1), room_id=4)
+        cm13 = Comment(customer_id=4, content='Nơi này rất thoải mái và tiện nghi, có view đỉnh lắm ạ!',created_date=datetime(2024, 1, 9, 17, 1), room_id=4)
+        cm14 = Comment(customer_id=5, content='Những gì khách sạn mang đến rất tốt cho trải nghiệm của tôi',created_date=datetime(2024, 1, 9, 17, 1), room_id=4)
+        cm15 = Comment(customer_id=6, content='Nhân viên dễ thương lắm, tư vấn phòng này và trải nghiệm rất tốt',created_date=datetime(2024, 1, 9, 17, 1), room_id=4)
+        cm16 = Comment(customer_id=2,
                        content='Quá tuyt vời mặc dù mình ở 3 người nên có thêm phụ phí 25% nha mng ơi, quy định chung của khách sạn rùi',
+                       created_date=datetime(2024, 1, 9, 17, 1),
                        room_id=5)
-        cm17 = Comment(id=3, content='Cần điều chỉnh hệ số lúc thanh toán thì quá oke vì mình là khách nước ngoài',
+        cm17 = Comment(customer_id=3, content='Cần điều chỉnh hệ số lúc thanh toán thì quá oke vì mình là khách nước ngoài',
+                       created_date=datetime(2024, 1, 9, 17, 1),
                        room_id=5)
-        cm18 = Comment(id=4,
+        cm18 = Comment(customer_id=4,
                        content='9.5 điểm, vì 0.5 điểm còn lại là do mình đi 3 người nên thu 25% và có nhân hệ số 1.5 lúc thanh toán huhuhuhhhhuhu :(',
+                       created_date=datetime(2024, 1, 9, 17, 1),
                        room_id=5)
         db.session.add_all([cm1, cm2,
                             cm3, cm4, cm5, cm6,
@@ -317,15 +339,15 @@ if __name__ == "__main__":
         db.session.commit()
 
         receipt_data = [
-            {'rental_room_id': 1, 'total_price': 3000000, 'created_date': datetime(2024, 1, 19, 17, 1)},
-            {'rental_room_id': 2, 'total_price': 5000000, 'created_date': datetime(2024, 3, 29, 17, 11)},
-            {'rental_room_id': 3, 'total_price': 5000000, 'created_date': datetime(2024, 3, 29, 17, 11)},
-            {'rental_room_id': 4, 'total_price': 5000000, 'created_date': datetime(2024, 3, 29, 17, 11)},
-            {'rental_room_id': 5, 'total_price': 4000000, 'created_date': datetime(2024, 3, 29, 17, 11)},
-            {'rental_room_id': 6, 'total_price': 4000000, 'created_date': datetime(2024, 3, 29, 17, 11)},
-            {'rental_room_id': 7, 'total_price': 5000000, 'created_date': datetime(2024, 3, 29, 17, 11)},
-            {'rental_room_id': 8, 'total_price': 5000000, 'created_date': datetime(2024, 3, 29, 17, 11)},
-            {'rental_room_id': 9, 'total_price': 4000000, 'created_date': datetime(2024, 3, 29, 17, 11)},
+            {'rental_room_id': 1, 'total_price': 3000000, 'created_date': datetime(2023, 1, 19, 17, 1)},
+            {'rental_room_id': 2, 'total_price': 5000000, 'created_date': datetime(2023, 1, 29, 17, 11)},
+            {'rental_room_id': 3, 'total_price': 5000000, 'created_date': datetime(2023, 2, 19, 17, 11)},
+            {'rental_room_id': 4, 'total_price': 5000000, 'created_date': datetime(2023, 4, 29, 17, 11)},
+            {'rental_room_id': 5, 'total_price': 4000000, 'created_date': datetime(2024, 1, 29, 17, 11)},
+            {'rental_room_id': 6, 'total_price': 4000000, 'created_date': datetime(2024, 2, 29, 17, 11)},
+            {'rental_room_id': 7, 'total_price': 5000000, 'created_date': datetime(2024, 2, 29, 17, 11)},
+            {'rental_room_id': 8, 'total_price': 5000000, 'created_date': datetime(2024, 2, 29, 17, 11)},
+            {'rental_room_id': 9, 'total_price': 4000000, 'created_date': datetime(2024, 4, 29, 17, 11)},
         ]
 
         for data in receipt_data:
