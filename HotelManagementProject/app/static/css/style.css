@@ -12,6 +12,11 @@
 p {
     margin-bottom: 0;
 }
+
+table, tr, td, th {
+    border: none!important;
+}
+
 .navbar-dark .navbar-nav .nav-link {
     color: #343c55 !important;
     font-size: larger;

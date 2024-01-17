@@ -14,13 +14,17 @@
 {% endif %}
 <h1>ROOM RENTING PAGE!</h1>
 <ul class="nav nav-tabs">
-    <li class="{% if ('room_id' in request.args and 'roomType' in request.args and 'price' in request.args) or (not request.args and not request.form) %}active{% endif %}"><a data-toggle="tab" href="#rent">Rent</a></li>
-    <li class="{% if 'identification' in request.form %}active{% endif %}"><a data-toggle="tab" href="#checkin">Check in</a></li>
+    <li class="{% if ('room_id' in request.args and 'roomType' in request.args and 'price' in request.args) or (not request.args and not request.form) %}active{% endif %}">
+        <a data-toggle="tab" href="#rent">Rent</a></li>
+    <li class="{% if 'identification' in request.form %}active{% endif %}"><a data-toggle="tab" href="#checkin">Check
+        in</a></li>
     <li><a data-toggle="tab" href="#checkout">Check out</a></li>
+    <li><a data-toggle="tab" href="#payment">Payment</a></li>
 </ul>
 
 <div class="tab-content">
-    <div id="rent" class="tab-pane fade {% if ('room_id' in request.args and 'roomType' in request.args and 'price' in request.args) or (not request.args and not request.form) %}in active{% endif %}">
+    <div id="rent"
+         class="tab-pane fade {% if ('room_id' in request.args and 'roomType' in request.args and 'price' in request.args) or (not request.args and not request.form) %}in active{% endif %}">
         <h3>RENTING PAGE</h3>
         <div class="col-md-4 col-xs-12">
             <form class="form-group">
@@ -46,10 +50,12 @@
         {% if room %}
         <div style="margin-left: 16rem;" class="col-md-5 col-xs-12">
             <div class="room-info">
-                <img style="margin: 0 auto; border-radius: 12px;" width="95%" src="{{ url_for('static', filename=room.image) }}" alt="">
+                <img style="margin: 0 auto; border-radius: 12px;" width="95%"
+                     src="{{ url_for('static', filename=room.image) }}" alt="">
                 <h3><strong>ROOM RENTAL INFORMATION</strong></h3>
                 <h4>{{ room.name }} - {{ room.room_type }}</h4>
-                <p style="color: red; font-size: larger"><strong>{{ "{:,.1f}".format(room.price) }} VND/2 persons</strong></p>
+                <p style="color: red; font-size: larger"><strong>{{ "{:,.1f}".format(room.price) }} VND/2
+                    persons</strong></p>
             </div>
             {% include 'layouts/bookRoom.html' %}
         </div>
@@ -118,6 +124,45 @@
             <p>Some content in menu 2.</p>
         </div>
     </div>
+
+    <div id="payment" class="tab-pane fade">
+        <h3>PAYMENT PAGE</h3>
+        <form>
+            <label>
+                Check room name
+                <input id="searchRoomInp" onInput="handleSearchRoom('{{ booked_rooms_detail }}')" placeholder="Room name"/>
+            </label>
+        </form>
+        <table class="table table-borderless tableRooms">
+            <thead>
+            <tr>
+                <th scope="col">Room name</th>
+                <th scope="col">Customer name</th>
+                <th scope="col">Checkin date</th>
+                <th scope="col">Checkout date</th>
+                <th scope="col">Deposit</th>
+                <th scope="col">Action</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for room in booked_rooms_detail %}
+            <tr class="tableRow">
+                <td name="room_name">{{ room.room_name }}</td>
+                <td name="customer_name">{{ room.customer_name }}</td>
+                <td name="checkin_date">{{ room.checkin_date }}</td>
+                <td name="checkout_date">{{ room.checkout_date }}</td>
+                <td name="deposit">{% if room.deposit %}{{ room.deposit }}{% else %}0{% endif %}</td>
+                <td class="d-flex align-items-center">
+                    <button onClick="handleClickPayBtn('{{ room.id }}')" class="btn btn-primary">
+                        Pay
+                    </button>
+                </td>
+            </tr>
+            {% endfor %}
+
+            </tbody>
+        </table>
+    </div>
 </div>
 <script>
     const takeRoomInfo = () => {
@@ -125,7 +170,7 @@
         fetch('/api/take-room-info', {
             method: 'POST',
             body: JSON.stringify({
-               roomId
+                roomId
             }),
             headers: {
                 'Content-Type': 'application/json'
@@ -135,7 +180,10 @@
             .then(data => {
                 console.log(data)
                 document.getElementById('roomType').value = data.roomType
-                document.getElementById('price').value = `${data.price.toLocaleString('en-US', { style: 'currency', currency: 'VND' })}`
+                document.getElementById('price').value = `${data.price.toLocaleString('en-US', {
+                    style: 'currency',
+                    currency: 'VND'
+                })}`
 
 
             })
@@ -146,5 +194,69 @@
     const assign = (obj) => {
         console.log(obj)
     }
+
+    const handleClickPayBtn = (roomId) => {
+        const url = `/renting-room/payment/${roomId}`
+        window.location.href = url;
+    }
+
+    const handleSearchRoom = (booked_rooms_detail) => {
+        // let rooms = booked_rooms_detail
+
+        // localStorage.setItem('booked_rooms', booked_rooms_detail)
+
+        console.log(typeof booked_rooms_detail)
+
+        const searchRoomInp = document.getElementById('searchRoomInp');
+        const filter = searchRoomInp.value.toUpperCase();
+        const table = document.querySelector('.tableRooms');
+        const rows = table.querySelectorAll('.tableRow');
+        const newData = [];
+
+        for (let i = 0; i < rows.length; i++) {
+            const cols = rows[i].getElementsByTagName('td');
+            if (cols[0].innerText.toUpperCase().indexOf(filter) > -1) {
+                let room = {}
+                for (let j = 0; j < cols.length; j++) {
+                    const columnName = cols[j].getAttribute('name');
+                    if (columnName) {
+                        room[columnName] = cols[j].innerText;
+                        newData.push(room)
+                    }
+                }
+            }
+        }
+
+        renderTable(newData);
+    }
+
+    const renderTable = (data) => {
+        const table = document.querySelector('.tableRooms');
+        const tbody = table.querySelector('tbody');
+
+        // Xóa dữ liệu hiện tại
+        tbody.innerHTML = '';
+
+        // Render lại bảng với dữ liệu mới
+        data.forEach(room => {
+            const row = document.createElement('tr');
+            row.classList.add('tableRow');
+
+            row.innerHTML = `
+            <td scope="row">${room.room_name}</td>
+            <td>${room.customer_name}</td>
+            <td>${room.checkin_date}</td>
+            <td>${room.checkout_date}</td>
+            <td>${room.deposit}</td>
+            <td class="d-flex align-items-center">
+                <button onClick="handleClickPayBtn('${room.id}')" class="btn btn-primary">
+                    Pay
+                </button>
+            </td>
+        `;
+
+            tbody.appendChild(row);
+        });
+    };
 </script>
 {% endblock %}

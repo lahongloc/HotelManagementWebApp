@@ -1,0 +1,110 @@
+{% extends 'layouts/base.html' %}
+{% block title %} Renting room - Elite-Hotel {% endblock %}
+{% block link %}
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+{% endblock %}
+
+{% block content %}
+{% if err_msg %}
+<div class="alert alert-danger">
+    <h4>{{ err_msg }}</h4>
+</div>
+{% endif %}
+<h1>ROOM RENTING PAGE!</h1>
+
+
+<div id="payment" class="">
+    <h2 class="d-flex justify-content-center" style="margin: 20px 0;">Payment Information</h2>
+    <form action="{{ url_for('renting_room', rental_room_id=rental_room.id) }}" method="POST">
+        <div style="font-size: 16px;" class="d-flex justify-content-start align-items-center">
+            <p class="fw-bold" style="margin: 0; min-width: 478px">Room name</p>
+            <span>{{ booked_room.name }}</span>
+        </div>
+        <div style="font-size: 16px;padding: 4px 0;" class="d-flex justify-content-start align-items-center">
+            <p class="fw-bold" style="margin: 0; min-width: 478px">Room type</p>
+            <span>{{ room_type }}</span>
+        </div>
+        <div style="font-size: 16px;" class="d-flex justify-content-start align-items-center">
+            <p class="fw-bold" style="margin: 0; min-width: 478px">Price</p>
+            <span>{{ room_regulation.price }} VND</span>
+        </div>
+        <div style="font-size: 16px;padding: 4px 0;" class="d-flex justify-content-start align-items-center">
+            <p class="fw-bold" style="margin: 0; min-width: 478px">Checkin date</p>
+            <span>{{ rental_room.checkin_date }}</span>
+        </div>
+        <div style="font-size: 16px;" class="d-flex justify-content-start align-items-center">
+            <p class="fw-bold" style="margin: 0; min-width: 478px">Checkout date</p>
+            <span>{{ rental_room.checkout_date }}</span>
+        </div>
+        <p class="fw-bold" style="margin: 4px 0;font-size: 16px;">Customers</p>
+        <table style="font-size: 16px;" class="table table-borderless">
+            <thead>
+            <tr>
+                <th scope="col">Customer name</th>
+                <th scope="col">Customer Type</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for cus in customers %}
+            <tr>
+                <td>{{ cus.name }}</td>
+                <td>{{ cus.customer_type }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        <div style="font-size: 16px;" class="d-flex justify-content-start align-items-center">
+            <p class="fw-bold" style="margin: 0; min-width: 478px">Total</p>
+            <span>{{ total }}</span>
+        </div>
+
+        <label style="font-size: 16px; padding: 4px 0;" for="paymentMethod">Payment Methods</label>
+        <select style="box-shadow: rgba(33, 35, 38, 0.1) 0px 10px 10px -10px;width: 300px" class="form-control"
+                name="paymentMethod"
+                id="paymentMethod">
+            <option value="cash">Cash</option>
+            <option value="vnpay">VNPay</option>
+        </select>
+
+        <div style="padding: 4px 0;">
+            <label style="font-size: 16px; padding: 4px 0; margin-top: 16px;margin-right: 20px" for="customer_pay">Customer
+                paying</label>
+            <input style="outline: none; padding: 8px 10px;border-radius: 4px; border: 1px solid #999; width:260px"
+                   name="customer_pay"
+                   placeholder="Username" id="customer_pay"/>
+        </div>
+
+        <div class="d-flex justify-content-center" style="margin-top: 40px">
+            <button style="font-size: 16px" onClick="handlePay('{{ rental_room.id }}')" class="btn btn-primary">Confirm
+            </button>
+        </div>
+    </form>
+</div>
+<script>
+    const handlePay = (rentalRoomId) => {
+        let selectElement = document.getElementById('paymentMethod')
+        let customerName = document.getElementById('customer_pay').value
+        console.log(customerName)
+
+        // if (selectElement.value === 'cash') {
+        //     if (confirm('Paying with cash method?')) {
+        //         fetch(`/renting-room/payment/${rentalRoomId}`, {
+        //             method: 'POST',
+        //             body: {
+        //                 customerName: customerName
+        //             }
+        //         })
+        //             .then(res => res.json())
+        //             .then(data => {
+        //                 console.log(data)
+        //             })
+        //             .catch(err => console.error(err))
+        //
+        //     }
+        // }
+
+    }
+</script>
+{% endblock %}

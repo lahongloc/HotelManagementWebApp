@@ -5,7 +5,7 @@ from datetime import datetime
 # from mysql.connector import cursor
 
 from app import app, dao, login, utils
-from flask import render_template, request, redirect, url_for, jsonify, session, flash
+from flask import render_template, request, redirect, url_for, jsonify, session, flash, abort
 from flask_login import login_user, logout_user, current_user, login_required
 import cloudinary.uploader
 
@@ -357,6 +357,7 @@ def room_renting():
 
     room_types = dao.get_room_types()
     rooms_info = dao.get_rooms_info()
+    booked_rooms_detail = dao.get_booked_rooms()
     if request.method.__eq__('POST'):
         identification = request.form.get('identification')
         booked_rooms = utils.get_booked_rooms_by_identification(identification=identification)
@@ -396,6 +397,7 @@ def room_renting():
 
     return render_template('renting.html',
                            booked_rooms=booked_rooms,
+                           booked_rooms_detail=booked_rooms_detail,
                            rooms_info=rooms_info,
                            room=room,
                            room_types=room_types,
@@ -500,6 +502,50 @@ def vnpay_return():
     session.pop('amount', None)
 
     return redirect(url_for('user_signin'))
+
+
+def calculate_total_price(rental_room, roomPrice, customers):
+    has_foreign_customer = any(customer['customer_type'] == 'FOREIGN' for customer in customers)
+    total = rental_room.calculate_rental_days() * roomPrice
+    if has_foreign_customer:
+        total *= 1.5
+    if len(customers) > 2:
+        total *= .25
+    if rental_room.deposit != None:
+        total -= rental_room.deposit
+    return total
+
+
+@app.route('/renting-room/payment/<rental_room_id>', methods=['GET', 'POST'])
+def renting_room(rental_room_id):
+    if current_user.role != UserRole.RECEPTIONIST:
+        return redirect(url_for('home'))
+    rental_room = dao.get_rental_room_by_id(rental_room_id)
+    booked_room = dao.get_room_by_id(rental_room.room_id)
+    room_type = dao.get_room_type_by_id(booked_room.room_type_id)
+    room_regulation = dao.get_room_regulation_by_room_type_id(room_type.id)
+    customers = dao.get_rental_room_customers(rental_room_id)
+    total = calculate_total_price(rental_room, room_regulation.price, customers)
+
+    if request.method == 'POST':
+        username = request.form.get('customer_pay')
+        customer_pay = dao.get_customer_by_username(username)
+        if customer_pay:
+            dao.create_receipt(customer_pay.id, rental_room_id, total)
+
+            return redirect(url_for('payment_success'))
+
+    return render_template('rctPayment.html', rental_room=rental_room,
+                           booked_room=booked_room,
+                           room_type=room_type.name,
+                           room_regulation=room_regulation,
+                           customers=customers,
+                           total=total)
+
+
+@app.route('/payment_success')
+def payment_success():
+    return render_template('paymentSuccessful.html')
 
 
 if __name__ == "__main__":

@@ -113,6 +113,15 @@ class RoomRental(BaseModel):
 
     receipt = Relationship('Receipt', uselist=False, back_populates='room_rental')
 
+    def calculate_rental_days(self):
+        if not self.checkout_date or self.checkout_date <= self.checkin_date:
+            raise ValueError("Invalid checkout date")
+
+        rental_duration = self.checkout_date - self.checkin_date
+        rental_days = rental_duration.days
+
+        return rental_days
+
 
 class RoomRentalDetail(BaseModel):
     customer_id = Column(Integer, ForeignKey(Customer.customer_id), primary_key=True)
@@ -120,6 +129,7 @@ class RoomRentalDetail(BaseModel):
 
 
 class Receipt(BaseModel):
+    customer_id = Column(Integer, ForeignKey(Customer.customer_id))
     rental_room_id = Column(Integer, ForeignKey(RoomRental.id), nullable=False)
     room_rental = Relationship('RoomRental', back_populates='receipt')
     total_price = Column(Float, nullable=False)
@@ -315,15 +325,24 @@ if __name__ == "__main__":
         db.session.commit()
 
         room_rental_data = [
-            {'customer_id': 1, 'receptionist_id': 7, 'room_id': 4, 'reservation_id': 1, 'deposit': None},
-            {'customer_id': 2, 'receptionist_id': 7, 'room_id': 2, 'reservation_id': 2, 'deposit': None},
-            {'customer_id': 3, 'receptionist_id': 7, 'room_id': 3, 'reservation_id': None, 'deposit': 1500000},
-            {'customer_id': 2, 'receptionist_id': 7, 'room_id': 2, 'reservation_id': 3, 'deposit': None},
-            {'customer_id': 5, 'receptionist_id': 7, 'room_id': 1, 'reservation_id': 4, 'deposit': None},
-            {'customer_id': 4, 'receptionist_id': 7, 'room_id': 1, 'reservation_id': 5, 'deposit': None},
-            {'customer_id': 5, 'receptionist_id': 7, 'room_id': 3, 'reservation_id': None, 'deposit': 1500000},
-            {'customer_id': 2, 'receptionist_id': 7, 'room_id': 2, 'reservation_id': 6, 'deposit': None},
-            {'customer_id': 1, 'receptionist_id': 7, 'room_id': 1, 'reservation_id': 7, 'deposit': None},
+            {'customer_id': 1, 'receptionist_id': 7, 'room_id': 4, 'reservation_id': 1,
+             'checkin_date': '2024-01-14', 'checkout_date': '2024-01-20', 'deposit': None},
+            {'customer_id': 2, 'receptionist_id': 7, 'room_id': 2, 'reservation_id': 2,
+             'checkin_date': '2024-01-14', 'checkout_date': '2024-01-20', 'deposit': None},
+            {'customer_id': 3, 'receptionist_id': 7, 'room_id': 3, 'reservation_id': None,
+             'checkin_date': '2024-01-14', 'checkout_date': '2024-01-20', 'deposit': 1500000},
+            {'customer_id': 2, 'receptionist_id': 7, 'room_id': 2, 'reservation_id': 3,
+             'checkout_date': '2024-01-20', 'deposit': None},
+            {'customer_id': 5, 'receptionist_id': 7, 'room_id': 1, 'reservation_id': 4,
+             'checkout_date': '2024-01-20', 'deposit': None},
+            {'customer_id': 4, 'receptionist_id': 7, 'room_id': 1, 'reservation_id': 5,
+             'checkout_date': '2024-01-20', 'deposit': None},
+            {'customer_id': 5, 'receptionist_id': 7, 'room_id': 3, 'reservation_id': None,
+             'checkout_date': '2024-01-20', 'deposit': 1500000},
+            {'customer_id': 2, 'receptionist_id': 7, 'room_id': 2, 'reservation_id': 6,
+             'checkout_date': '2024-01-20', 'deposit': None},
+            {'customer_id': 1, 'receptionist_id': 7, 'room_id': 1, 'reservation_id': 7,
+             'checkout_date': '2024-01-20', 'deposit': None},
         ]
 
         for data in room_rental_data:
@@ -331,20 +350,20 @@ if __name__ == "__main__":
             db.session.add(room_rental)
         db.session.commit()
 
-        receipt_data = [
-            {'rental_room_id': 1, 'total_price': 3000000, 'created_date': datetime(2024, 1, 19, 17, 1)},
-            {'rental_room_id': 2, 'total_price': 5000000, 'created_date': datetime(2024, 3, 29, 17, 11)},
-            {'rental_room_id': 3, 'total_price': 5000000, 'created_date': datetime(2024, 3, 29, 17, 11)},
-            {'rental_room_id': 4, 'total_price': 5000000, 'created_date': datetime(2024, 3, 29, 17, 11)},
-            {'rental_room_id': 5, 'total_price': 4000000, 'created_date': datetime(2024, 3, 29, 17, 11)},
-            {'rental_room_id': 6, 'total_price': 4000000, 'created_date': datetime(2024, 3, 29, 17, 11)},
-            {'rental_room_id': 7, 'total_price': 5000000, 'created_date': datetime(2024, 3, 29, 17, 11)},
-            {'rental_room_id': 8, 'total_price': 5000000, 'created_date': datetime(2024, 3, 29, 17, 11)},
-            {'rental_room_id': 9, 'total_price': 4000000, 'created_date': datetime(2024, 3, 29, 17, 11)},
-        ]
+        # receipt_data = [
+        #     {'rental_room_id': 1, 'total_price': 3000000, 'created_date': datetime(2024, 1, 19, 17, 1)},
+        #     {'rental_room_id': 2, 'total_price': 5000000, 'created_date': datetime(2024, 3, 29, 17, 11)},
+        #     {'rental_room_id': 3, 'total_price': 5000000, 'created_date': datetime(2024, 3, 29, 17, 11)},
+        #     {'rental_room_id': 4, 'total_price': 5000000, 'created_date': datetime(2024, 3, 29, 17, 11)},
+        #     {'rental_room_id': 5, 'total_price': 4000000, 'created_date': datetime(2024, 3, 29, 17, 11)},
+        #     {'rental_room_id': 6, 'total_price': 4000000, 'created_date': datetime(2024, 3, 29, 17, 11)},
+        #     {'rental_room_id': 7, 'total_price': 5000000, 'created_date': datetime(2024, 3, 29, 17, 11)},
+        #     {'rental_room_id': 8, 'total_price': 5000000, 'created_date': datetime(2024, 3, 29, 17, 11)},
+        #     {'rental_room_id': 9, 'total_price': 4000000, 'created_date': datetime(2024, 3, 29, 17, 11)},
+        # ]
 
-        for data in receipt_data:
-            receipt = Receipt(**data)
-            db.session.add(receipt)
+        # for data in receipt_data:
+        #     receipt = Receipt(**data)
+        #     db.session.add(receipt)
 
         db.session.commit()

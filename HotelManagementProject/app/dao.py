@@ -4,7 +4,8 @@ import urllib
 from datetime import datetime
 
 from flask_login import current_user, AnonymousUserMixin
-from sqlalchemy import func, Numeric, extract
+from sqlalchemy import func, Numeric, extract, and_
+from sqlalchemy.orm import joinedload
 
 from app.models import *
 from app import app, utils
@@ -424,6 +425,7 @@ def month_sale_statistic(month=None, year=None, kw=None, from_date=None, to_date
 
         return month_sale_statistic.all()
 
+
 # def year_month_sale_statistic(month=None, year=None):
 #     with app.app_context():
 #         result = db.session.query(extract('month', Receipt.created_date),
@@ -438,3 +440,113 @@ def month_sale_statistic(month=None, year=None, kw=None, from_date=None, to_date
 #             result = result.filter(extract('month', Receipt.created_date) == month)
 #
 #         return result.all()
+
+
+def get_booked_rooms():
+    with app.app_context():
+        current_date = datetime.now()
+
+        unsettled_room_rentals = (
+            db.session.query(RoomRental, Room, Customer)
+            .join(RoomRental.room)
+            .join(RoomRental.customer)
+            .outerjoin(Receipt, Receipt.rental_room_id == RoomRental.id)
+            .filter(
+                (RoomRental.checkout_date >= current_date) &
+                (Receipt.rental_room_id.is_(None))
+            )
+            .all()
+        )
+
+        unsettled_rooms_details = []
+
+        for booking in unsettled_room_rentals:
+            room_rental, room, customer = booking
+
+            room_details = {
+                'id': room_rental.id,
+                'room_id': room.id,
+                'room_name': room.name,
+                'customer_name': customer.name,
+                'checkin_date': room_rental.checkin_date,
+                'checkout_date': room_rental.checkout_date,
+                'deposit': room_rental.deposit,
+            }
+
+            unsettled_rooms_details.append(room_details)
+
+        return unsettled_rooms_details
+
+
+def create_receipt(customer_id, rental_room_id, total_price):
+    receipt = Receipt(customer_id=customer_id, rental_room_id=rental_room_id, total_price=total_price, created_date=datetime.now())
+    db.session.add(receipt)
+    db.session.commit()
+    return receipt.id
+
+
+def get_room_by_id(room_id):
+    with app.app_context():
+        return Room.query.get(room_id)
+
+
+def get_rental_room_by_id(rental_room_id):
+    with app.app_context():
+        return RoomRental.query.get(rental_room_id)
+
+
+def get_room_type_by_id(room_type_id):
+    with app.app_context():
+        return RoomType.query.get(room_type_id)
+
+
+def get_room_regulation_by_room_type_id(room_type_id):
+    with app.app_context():
+        return RoomRegulation.query.get(room_type_id)
+
+
+def get_rental_room_customers(room_rental_id):
+    with app.app_context():
+        room = db.session.query(Room).join(RoomRental).filter(RoomRental.id == room_rental_id).first()
+        customers_data = db.session.query(Customer, CustomerType.type).join(
+            RoomRental, Customer.customer_id == RoomRental.customer_id).join(
+            CustomerType, Customer.customer_type_id == CustomerType.id).filter(
+            RoomRental.room_id == room.id).all()
+
+        customers = []
+        for customer, customer_type in customers_data:
+            customer_info = {
+                'customer_id': customer.customer_id,
+                'name': customer.name,
+                'identification': customer.identification,
+                'customer_type': customer_type,
+            }
+            customers.append(customer_info)
+
+        return customers
+
+
+def get_customer_by_username(username):
+    user = User.query.filter_by(username=username).first()
+
+    if user and user.role == UserRole.CUSTOMER:
+        customer = Customer.query.filter_by(id=user.id).first()
+        return customer
+    else:
+        return None
+
+
+# def get_receipt_info_by_id(receipt_id):
+#     with app.app_context():
+#         receipt_info = db.session.query(Receipt, RoomRental).join(RoomRental)\
+#             .filter(Receipt.id == receipt_id).first()
+#
+#         receipt = receipt_info[0]
+#         room_rental = receipt_info[1]
+#
+#         return {
+#             'total_price': receipt.total_price,
+#             'checkin_date': room_rental.checkin_date,
+#             'checkout_date': room_rental.checkout_date,
+#             'room_id': room_rental.room_id,
+#         }
