@@ -344,3 +344,8 @@ div.booked-rooms {
     box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 12px;
     border-radius: 15px;
 }
+
+.page-item.active-custom .page-link {
+    background-color: #007cc2;
+    color: #fff;
+}

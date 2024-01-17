@@ -34,10 +34,11 @@ def add_user(customer_type=None, name=None, username=None, password=None, phone=
         password = str(hashlib.md5(password.strip().encode('utf-8')).hexdigest())
         with app.app_context():
             user = User(username=username, gender=kwargs.get('gender'), password=password,
-                        email=kwargs.get('email'), phone=phone, avatar=kwargs.get('avatar'))
+                        email=kwargs.get('email'), phone=phone)
+            if kwargs.get('avatar'):
+                user.avatar = kwargs.get('avatar')
             db.session.add(user)
             db.session.commit()
-            # print('add user - done')
 
             for ct in CustomerType.query.all():
                 if customer_type.strip().__eq__(ct.type.strip()):

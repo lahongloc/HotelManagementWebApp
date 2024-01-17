@@ -5,6 +5,7 @@ from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Enum, DateT
 from sqlalchemy.orm import Relationship
 from enum import Enum as CommonEnum
 from flask_login import UserMixin
+from flask import url_for
 
 
 class UserRole(CommonEnum):
@@ -24,7 +25,7 @@ class User(BaseModel, UserMixin):
     role = Column(Enum(UserRole), nullable=False, default=UserRole.CUSTOMER)
     email = Column(String(50), unique=True, nullable=False)
     phone = Column(String(50), nullable=False, unique=True)
-    avatar = Column(String(100))
+    avatar = Column(String(100), default='https://cdn.pixabay.com/photo/2020/07/14/13/07/icon-5404125_1280.png')
     gender = Column(Boolean, default=True)  # True = 1 is 'Man'
 
 
@@ -125,11 +126,11 @@ class Receipt(BaseModel):
     created_date = Column(DateTime, nullable=False, default=datetime.now())
 
 
-class Comment(db.Model):
-    id = Column(Integer, ForeignKey(Customer.id), nullable=False,
-                primary_key=True)  # primary key as well as foreign key
+class Comment(BaseModel):
+    customer_id = Column(Integer, ForeignKey(Customer.id), nullable=False)
     content = Column(String(1000), nullable=False)
     room_id = Column(Integer, ForeignKey(Room.id), nullable=False, primary_key=True)
+    created_date = Column(DateTime, default=datetime.now())
 
 
 class RoomRegulation(db.Model):
@@ -209,4 +210,3 @@ if __name__ == "__main__":
         rr3 = RoomRegulation(room_type_id=3, admin_id=1, room_quantity=17, capacity=3, price=5000000)
         db.session.add_all([rr1, rr2, rr3])
         db.session.commit()
-

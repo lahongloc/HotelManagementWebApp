@@ -28,15 +28,15 @@
     {% block js%} {% endblock %}
 </head>
 <body>
-<nav class="bg-header nav-border" style="width: 100% !important; height: 70px;">
+<nav class="bg-header nav-border" style="z-index:1000; position: fixed; top: 0; left: 0; background-color: white; width: 100% !important; height: 70px;">
     {% block header %}
     {% include 'layouts/header.html' %}
     {% endblock %}
 </nav>
-<div class="container" style="width: 70%; margin: 0 auto; margin-top: 3rem;">
+<div class="container" style="width: 70%; margin: 0 auto; margin-top: 7rem;">
     {% block content %}{% endblock %}
 </div>
-<div class="mt-5">
+<div style="margin-top: 10rem;">
 {% block footer %}
 {% include 'layouts/footer.html' %}
 {% endblock %}

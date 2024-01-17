@@ -1,10 +1,11 @@
 import hashlib
 import json
+import math
 import random
 from datetime import datetime
 # from mysql.connector import cursor
 
-from app import app, dao, login, utils
+from app import app, dao, login, utils, db
 from flask import render_template, request, redirect, url_for, jsonify, session, flash
 from flask_login import login_user, logout_user, current_user, login_required
 import cloudinary.uploader
@@ -19,16 +20,20 @@ def home():
     checkin = request.args.get('checkin')
     checkout = request.args.get('checkout')
     room_type = request.args.get('roomType')
+    page = request.args.get('pages', 1)
 
     if checkin and checkout:
         checkin = datetime.strptime(checkin, "%Y-%m-%dT%H:%M")
         checkout = datetime.strptime(checkout, "%Y-%m-%dT%H:%M")
 
     room_types = dao.get_room_types()
-    rooms_info = dao.get_rooms_info(kw=kw, checkin=checkin, checkout=checkout, room_type=room_type)
+    rooms_info, counter = dao.get_rooms_info(kw=kw, checkin=checkin, checkout=checkout, room_type=room_type,
+                                             page=int(page))
+
     return render_template('index.html',
                            room_types=room_types,
-                           rooms_info=rooms_info)
+                           rooms_info=rooms_info,
+                           pages=math.ceil(counter / app.config['PAGE_SIZE']))
 
 
 @app.route('/user-register', methods=['get', 'post'])
@@ -53,6 +58,8 @@ def user_register():
                 if avatar:
                     res = cloudinary.uploader.upload(avatar)
                     avatar_path = res['secure_url']
+                if not avatar and gender == False:
+                    avatar_path = 'https://cdn.pixabay.com/photo/2020/07/14/13/06/icon-5404123_1280.png'
 
                 utils.add_user(customer_type=customer_type,
                                name=name,
@@ -228,10 +235,25 @@ def search():
     return data
 
 
-@app.route('/rooms/<room_id>')
+@app.route('/rooms/<room_id>', methods=['post', 'get'])
 def room_details(room_id):
+    err_msg = ''
     room = dao.get_rooms_info(room_id=room_id)
-    return render_template('roomDetail.html', room=room)
+
+    if request.method == 'POST':
+        content = request.form.get('content')
+        if content:
+            try:
+                dao.add_comment(content=content, room_id=room_id)
+            except Exception as ex:
+                print(str(ex))
+                err_msg = str(ex)
+    comments = dao.get_comment(room_id=room_id)
+    print(comments)
+    return render_template('roomDetail.html',
+                           room=room,
+                           comments=comments,
+                           err_msg=err_msg)
 
 
 @app.route("/booking-room/<room_id>", methods=['post', 'get'])
@@ -377,7 +399,6 @@ def room_renting():
             count = 0
             data.popitem()
             user_counter = 0
-
             for i in data:
                 user[str(i)[:-1]] = request.form.get(i)
                 count += 1

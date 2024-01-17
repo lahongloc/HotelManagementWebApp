@@ -4,7 +4,8 @@ import urllib
 from datetime import datetime
 
 from flask_login import current_user, AnonymousUserMixin
-from sqlalchemy import func, Numeric, extract
+from sqlalchemy import func, Numeric, extract, or_, and_, case, desc
+from sqlalchemy.orm import aliased
 
 from app.models import *
 from app import app, utils
@@ -21,14 +22,10 @@ def send_message_twilio(message):
 
     message = client.messages.create(
         from_='+17178976092',
-        body=message,
+        body=str(message),
         to='+84869311727'
     )
 
-    print(message.sid)
-
-
-# send_message_twilio('aaaaaaaaaaaaaaaaaa')
 
 def get_customer_info():
     if current_user.is_authenticated:
@@ -54,7 +51,7 @@ def get_full_user_info():
                               CustomerType.type)
                 full_user_info = full_user_info.filter(Customer.id.__eq__(current_user.id)).first()
 
-                print(full_user_info)
+                # print(full_user_info)
                 return full_user_info
 
 
@@ -76,7 +73,7 @@ def get_rooms():
         return rooms
 
 
-def get_rooms_info(room_id=None, kw=None, checkin=None, checkout=None, room_type=None):
+def get_rooms_info(room_id=None, kw=None, checkin=None, checkout=None, room_type=None, page=1):
     with app.app_context():
         rooms_info = db.session.query(Room.name, Room.id, Room.image, RoomType.name.label('room_type'),
                                       RoomRegulation.price,
@@ -102,7 +99,37 @@ def get_rooms_info(room_id=None, kw=None, checkin=None, checkout=None, room_type
                     new_rooms_info.append(r)
             return new_rooms_info
 
-        return rooms_info.all()
+        new_rooms_info = []
+        if checkin and checkout:
+            for r in rooms_info.all():
+                if utils.check_reservation(checkin_time=checkin, checkout_time=checkout, room_id=r.id):
+                    new_rooms_info.append(r)
+            return new_rooms_info
+
+        start = page * app.config['PAGE_SIZE'] - app.config['PAGE_SIZE']
+        end = start + app.config['PAGE_SIZE']
+
+        return rooms_info.slice(start, end).all(), Room.query.count()
+
+
+def get_comment(room_id=None):
+    if room_id:
+        with app.app_context():
+            comments = db.session.query(User.avatar, User.username, Comment.content, Comment.created_date) \
+                .join(Customer, Customer.id.__eq__(User.id)) \
+                .join(Comment, Comment.customer_id.__eq__(Customer.id)) \
+                .filter(Comment.room_id.__eq__(room_id)).order_by(desc(Comment.created_date)).all()
+            return comments
+
+
+def add_comment(content=None, room_id=None):
+    if content and room_id:
+        with app.app_context():
+            # customers_id = db.session.query(Customer.id).join(User, current_user.id == Customer.id).first()
+            customer = Customer.query.filter(Customer.id.__eq__(current_user.id)).first()
+            comment = Comment(customer=customer, content=content, room_id=room_id)
+            db.session.add(comment)
+            db.session.commit()
 
 
 def get_user_role():
@@ -266,8 +293,6 @@ def create_receipt(room_rental_id=None, room_id=None):
             db.session.commit()
 
 
-create_receipt(room_id=3)
-
 
 def receptionist_room_rental(room_rental_info=None, checkout_time=None, room_id=None):
     if room_rental_info and checkout_time and room_id:
@@ -392,14 +417,10 @@ class vnpay:
         return hmac.new(byteKey, byteData, hashlib.sha512).hexdigest()
 
 
-def month_sale_statistic(month=None, year=None, kw=None, from_date=None, to_date=None):
+def month_sale_statistic(month=None, year=None, kw=None, from_date=None, to_date=None, **kwargs):
     with app.app_context():
         if not kw and not from_date and not to_date and not month and not year:
             count_receipt = Receipt.query.count()
-        elif from_date and to_date:
-            count_receipt = Receipt.query.filter(
-                Receipt.created_date.__ge__(from_date),
-                Receipt.created_date.__le__(to_date)).count()
         elif from_date:
             count_receipt = Receipt.query.filter(
                 Receipt.created_date.__ge__(from_date)).count()
@@ -415,52 +436,94 @@ def month_sale_statistic(month=None, year=None, kw=None, from_date=None, to_date
                 count_receipt = count_receipt.filter(
                     extract('year', Receipt.created_date) == year)
             count_receipt = count_receipt.count()
+        else:
+            count_receipt = Receipt.query.filter(
+                extract('year', Receipt.created_date) == year).count()
 
         month_sale_statistic = db.session.query(RoomType.name,
-                                                func.sum(Receipt.total_price),
-                                                func.count(RoomRental.id),
-                                                func.cast((func.count(RoomRental.id) / count_receipt) * 100
+                                                func.coalesce(func.sum(Receipt.total_price), 0),
+                                                func.coalesce(func.count(Receipt.id), 0),
+                                                func.cast((func.count(Receipt.id) / count_receipt) * 100
                                                           , Numeric(5, 2))) \
-            .outerjoin(RoomRental, RoomRental.id.__eq__(Receipt.rental_room_id)) \
-            .outerjoin(Reservation, Reservation.id.__eq__(RoomRental.reservation_id)) \
-            .outerjoin(Room, Room.id.__eq__(
-            Reservation.room_id)  # Phải là OR vì Thuê Phòng CÓ THỂ KHÔNG thông qua Phiếu Đặt Phòng
-                       or Room.id.__eq__(RoomRental.room_id)) \
-            .outerjoin(RoomType, RoomType.id.__eq__(Room.room_type_id)) \
+            .join(Room, Room.room_type_id.__eq__(RoomType.id), isouter=True) \
+            .join(RoomRental, RoomRental.room_id.__eq__(Room.id), isouter=True) \
+            .join(Receipt, Receipt.rental_room_id.__eq__(RoomRental.id), isouter=True) \
             .group_by(RoomType.name) \
             .order_by(RoomType.id)
 
         if month:
             month_sale_statistic = month_sale_statistic.filter(
-                extract('month', Receipt.created_date) == month) \
-                .group_by(extract('month', Receipt.created_date))
+                extract('month', Receipt.created_date) == month)
 
         if year:
             month_sale_statistic = month_sale_statistic.filter(
                 extract('year', Receipt.created_date) == year)
 
         if kw:
-            month_sale_statistic = month_sale_statistic.filter(RoomType.name.contains(kw))
+            month_sale_statistic = month_sale_statistic.filter(
+                RoomType.name.contains(kw))
 
         if from_date:
-            month_sale_statistic = month_sale_statistic.filter(Receipt.created_date.__ge__(from_date))
+            month_sale_statistic = month_sale_statistic.filter(
+                Receipt.created_date.__ge__(from_date))
 
         if to_date:
-            month_sale_statistic = month_sale_statistic.filter(Receipt.created_date.__le__(to_date))
+            month_sale_statistic = month_sale_statistic.filter(
+                Receipt.created_date.__le__(to_date))
 
         return month_sale_statistic.all()
 
-# def year_month_sale_statistic(month=None, year=None):
-#     with app.app_context():
-#         result = db.session.query(extract('month', Receipt.created_date),
-#                                   extract('year', Receipt.created_date),
-#                                   func.sum(Receipt.total_price)) \
-#             .group_by(extract('month', Receipt.created_date),
-#                       extract('year', Receipt.created_date))
-#         if year:
-#             result = result.filter(extract('year', Receipt.created_date) == year)
-#
-#         if month:
-#             result = result.filter(extract('month', Receipt.created_date) == month)
-#
-#         return result.all()
+
+def month_room_density_statistic(**kwargs):
+    with app.app_context():
+        # # print((RoomRental.query.get(1).checkout_date - RoomRental.query.get(1).checkin_date).days)
+        # total_rental_days = 0
+        # for i in RoomRental.query.all():
+        #     total_rental_days = total_rental_days + (i.checkout_date - i.checkin_date).days
+        #
+        # # print(
+        # #     (np.datetime64(RoomRental.query.get(1).checkout_date) - np.datetime64(RoomRental.query.get(1).checkin_date)) \
+        # #         .astype('timedelta64[D]').item()
+        # # )
+        #
+        # month_room_density_statistic = db.session.query(Room.name,
+        #                                                 func.sum(
+        #                                                     np.datetime64(
+        #                                                         RoomRental.checkout_date) - np.datetime64(
+        #                                                         RoomRental.checkin_date)) \
+        #                                                 .astype('timedelta64[D]').item().days
+        #                                                 ), \
+        #                                                 (
+        #                                                         np.datetime64(RoomRental.checkout_date) - np.datetime64(RoomRental.checkin_date) \
+        #                                                     .astype('timedelta64[D]').item().days
+        #                                                 ).days / total_rental_days * 100 \
+        #     .join(Room, RoomRental.room_id.__eq__(Room.id), isouter=True) \
+        #     .group_by(Room.name).all()
+        #
+        # return month_room_density_statistic
+
+        # Tính tổng số ngày thuê
+        total_rental_days = 0
+        total_rental_days_query = db.session.query(
+            func.sum(extract('day', RoomRental.checkout_date - RoomRental.checkin_date))
+        ).scalar()
+
+        total_rental_days = total_rental_days_query if total_rental_days_query else 0
+
+        # print(total_rental_days)
+
+        # Câu truy vấn sử dụng SQLAlchemy và NumPy
+        month_room_density_statistic = db.session.query(
+            Room.name,
+            func.sum(extract('day', RoomRental.checkout_date - RoomRental.checkin_date)).label('total_days'),
+            func.cast(
+                func.sum(extract('day', RoomRental.checkout_date - RoomRental.checkin_date)) /
+                total_rental_days * 100,
+                db.Numeric(5, 2)
+            ).label('utilization_rate')
+        ).join(Room, RoomRental.room_id.__eq__(Room.id)) \
+            .group_by(Room.name).order_by(Room.id)
+
+        return month_room_density_statistic.all()
+
+# print(month_room_density_statistic())
