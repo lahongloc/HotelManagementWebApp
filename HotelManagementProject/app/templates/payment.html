@@ -3,6 +3,7 @@
 {% block content %}
 
 <h2 class="text-center text-info">Please check your bill payment information!</h2>
+<p>{{ session }}</p>
 
 <form style="width: 50%; margin: 0 auto; margin-top: 3rem;" method="post" action="{{ url_for('payment') }}">
     <div class="form-group" style="padding-bottom: 6px;">

@@ -2,7 +2,7 @@ import hashlib
 from datetime import datetime
 
 from flask_login import current_user
-from sqlalchemy import func
+from sqlalchemy import func, text
 
 from app import db, dao, app, login
 from app.models import User, CustomerType, Room, RoomRegulation, RoomType, Customer, Reservation, \
@@ -19,6 +19,15 @@ def check_login(username, password):
 
 def get_user_by_id(user_id):
     return User.query.get(user_id)
+
+
+def get_customers_by_name(name=None):
+    customers = (db.session.query(Customer.name, Customer.identification, User.avatar, CustomerType.type)
+                 .outerjoin(User, User.id == Customer.id)) \
+        .join(CustomerType, CustomerType.id.__eq__(Customer.customer_type_id))
+    if name:
+        customers = customers.filter(Customer.name.contains(name.strip()))
+    return customers.all()
 
 
 def get_customer_by_user():
@@ -127,6 +136,20 @@ def check_reservation(checkin_time=datetime.now(), checkout_time=None, room_id=N
         return is_valid
 
 
+def check_customer_existence(customers=None):
+    if customers:
+        for cus in customers:
+            customer = Customer.query.filter(
+                Customer.identification.__eq__(customers[cus]['customerIdNum'])).first()
+            if not customer or not customer.id:
+                if cus == list(customers.keys())[-1]:
+                    return False
+            if customer and customer.id:
+                return True
+
+        return True
+
+
 def get_cus_type_by_identification(identification=None):
     if identification:
         with app.app_context():
@@ -146,8 +169,9 @@ def get_booked_rooms_by_identification(identification=None):
                 .join(ReservationDetail, ReservationDetail.reservation_id.__eq__(Reservation.id)) \
                 .join(Customer, Customer.customer_id.__eq__(ReservationDetail.customer_id)) \
                 .join(Room, Room.id.__eq__(Reservation.room_id)) \
-                .filter(Customer.identification.__eq__(identification), Reservation.is_checkin.__eq__(False)).all()
-
+                .filter(Customer.identification.__eq__(identification.strip()),
+                        Reservation.is_checkin.__eq__(False)).all()
+            print(reservations)
             room_users = []
             for rs in reservations:
                 r = db.session.query(ReservationDetail.reservation_id, Customer.name, Customer.identification) \
@@ -236,5 +260,4 @@ def get_rented_rooms_by_identification(identification=None):
                         }
                 return room_rentals
 
-
-get_rented_rooms_by_identification(identification='192137035')
+# get_rented_rooms_by_identification(identification='192137035')

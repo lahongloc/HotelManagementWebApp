@@ -16,6 +16,8 @@ from app.models import UserRole, Receipt
 
 @app.route('/')
 def home():
+    session['room_rental_info'] = None
+    session['receipt'] = None
     kw = request.args.get('kw')
     checkin = request.args.get('checkin')
     checkout = request.args.get('checkout')
@@ -28,7 +30,7 @@ def home():
 
     room_types = dao.get_room_types()
     rooms_info, counter = dao.get_rooms_info(kw=kw, checkin=checkin, checkout=checkout, room_type=room_type,
-                                             page=int(page))
+                                             page=int(page), is_paginated=True)
 
     return render_template('index.html',
                            room_types=room_types,
@@ -249,7 +251,6 @@ def room_details(room_id):
                 print(str(ex))
                 err_msg = str(ex)
     comments = dao.get_comment(room_id=room_id)
-    print(comments)
     return render_template('roomDetail.html',
                            room=room,
                            comments=comments,
@@ -270,7 +271,8 @@ def room_booking(room_id):
             'users': {},
             'total_price': 0.0,
             'checkin_time': request.form.get('checkin'),
-            'checkout_time': request.form.get('checkout')
+            'checkout_time': request.form.get('checkout'),
+            'is_paid': 'No'
         }}
 
         user = {}
@@ -291,13 +293,15 @@ def room_booking(room_id):
         checkin_time = datetime.strptime(str(reservation_info[str(room_id)]['checkin_time']), "%Y-%m-%dT%H:%M")
         checkout_time = datetime.strptime(str(reservation_info[str(room_id)]['checkout_time']), "%Y-%m-%dT%H:%M")
         is_valid = utils.check_reservation(checkin_time=checkin_time, checkout_time=checkout_time, room_id=room_id)
-        # print(reservation_info)
-        if is_valid:
+        is_customer_existed = utils.check_customer_existence(customers=reservation_info[room_id]['users'])
+        if not is_valid:
+            err_msg = 'This time is not available for this room. Please choose another time period!'
+        elif not is_customer_existed:
+            err_msg = 'At least 1 customer existed in the system!'
+        else:
             session['reservation_info'] = utils.calculate_total_reservation_price(reservation_info=reservation_info,
                                                                                   room_id=room_id)
             return redirect(url_for('pay_for_reservation', room_id=room_id))
-        else:
-            err_msg = 'This time is not available for this room. Please choose another time period!'
 
     return render_template('booking.html',
                            room=room,
@@ -330,6 +334,7 @@ def api_of_reservation_pay():
                                     checkin_time=checkin_time,
                                     checkout_time=checkout_time,
                                     total_price=total_price)
+        session['reservation_info'] = None
         if not is_paid:
             code = 400
     except Exception as ex:
@@ -376,20 +381,21 @@ def room_renting():
 
     booked_rooms, room_rentals = None, None
     role_cus = dao.get_customer_role()
+    name = request.args.get('name')
+    customers = utils.get_customers_by_name(name=name)
 
     room_types = dao.get_room_types()
     rooms_info = dao.get_rooms_info()
     if request.method.__eq__('POST'):
 
         # for check in page
+
         identification = request.form.get('identification')
         booked_rooms = utils.get_booked_rooms_by_identification(identification=identification)
-
         # for rent page
         room_id = request.form.get('room_id', room_id)
         data = request.form.to_dict()
         try:
-
             room_rental_info = {room_id: {
                 'users': {},
                 'total_price': 0.0,
@@ -411,22 +417,35 @@ def room_renting():
             checkout_time = datetime.strptime(str(room_rental_info[room_id]['checkout_time']), "%Y-%m-%dT%H:%M")
             room_rental_info = utils.calculate_total_reservation_price(reservation_info=room_rental_info,
                                                                        room_id=room_id)
-            if utils.check_reservation(checkout_time=checkout_time, room_id=room_id, is_renting=True):
-                temp = dao.receptionist_room_rental(room_rental_info=room_rental_info, checkout_time=checkout_time,
-                                                    room_id=room_id)
-            else:
+            # print(room_rental_info[room_id]['users'])
+            is_valid = utils.check_reservation(checkout_time=checkout_time, room_id=room_id, is_renting=True)
+            is_customer_existed = utils.check_customer_existence(customers=room_rental_info[room_id]['users'])
+            # print(is_customer_existed)
+            if not is_valid:
                 err_msg = 'This time is not available for this room. Please choose another time period!'
+            elif not is_customer_existed:
+                err_msg = 'At least 1 customer existed in the system!'
+            else:
+                session['room_rental_info'] = room_rental_info
+                # return redirect('/payment')
+                is_succeed = dao.receptionist_room_rental(room_rental_info=room_rental_info,
+                                                          checkout_time=checkout_time,
+                                                          room_id=room_id)
+                if is_succeed:
+                    err_msg = 'renting room successfully!'
         except Exception as ex:
             print(str(ex))
         # for check out page
         check_out_identification = request.form.get('checkOutIdentification')
         room_rentals = utils.get_rented_rooms_by_identification(identification=check_out_identification)
+        print(room_rentals)
 
     return render_template('renting.html',
                            booked_rooms=booked_rooms,
                            room_rentals=room_rentals,
                            rooms_info=rooms_info,
                            room=room,
+                           customers=customers,
                            room_types=room_types,
                            role_cus=role_cus,
                            is_renting=True,
@@ -465,10 +484,10 @@ def handle_room_checking_out():
     err_msg = 200
     data = request.json
     try:
-        room_rental_id = data.get('roomRentalId')
-        room_id = data.get('roomId')
+        room_rental_id = int(data.get('roomRentalId'))
+        room_id = int(data.get('roomId'))
         dao.create_receipt(room_rental_id=room_rental_id, room_id=room_id)
-        print(room_rental_id)
+        flash('Create receipt successfully!')
     except Exception as ex:
         err_msg = 400
         print(str(ex))
@@ -477,48 +496,53 @@ def handle_room_checking_out():
     })
 
 
-@app.context_processor
-def common_response():
-    return {
-        'reservation_info': session.get('reservation_info')
-    }
-
-
 @app.route('/payment', methods=['GET', 'POST'])
 def payment():
-    if request.method == 'POST':
-        order_desc = request.form.get('order_desc')
-        rental_room_id = request.form.get('rental_room_id')
-        # order_type = request.form.get('order_type')
-        amount = int(request.form.get('amount')) * 100
+    # if request.method == 'POST':
+    order_desc = request.form.get('order_desc')
+    detail_id, amount = None, None
+    if session.get('reservation_info'):
+        detail_id = next(iter(session.get('reservation_info')))
+        # session['room_rental_info'][room.id | string]['total_price']
+        amount = int(request.form.get('amount').split('.')[0])
 
-        vnp = vnpay()
-        # Xây dựng hàm cần thiết cho vnpay
-        vnp.requestData['vnp_Version'] = '2.1.0'
-        vnp.requestData['vnp_Command'] = 'pay'
-        vnp.requestData['vnp_TmnCode'] = 'PMAKVMOW'
-        vnp.requestData['vnp_Amount'] = amount
-        vnp.requestData['vnp_CurrCode'] = 'VND'
-        vnp.requestData['vnp_TxnRef'] = str(rental_room_id) + '-' + datetime.now().strftime('%Y%m%d%H%M%S')
-        vnp.requestData['vnp_OrderInfo'] = order_desc  # Nội dung thanh toán
-        vnp.requestData['vnp_OrderType'] = 'order_type'
+    if session.get('room_rental_info'):
+        detail_id = next(iter(session.get('room_rental_info')))
+        room_id = next(iter(session.get('room_rental_info')))
+        amount = int(str(session['room_rental_info'][room_id]['total_price']).split('.')[0])
 
-        vnp.requestData['vnp_Locale'] = 'vn'
+    if session.get('receipt'):
+        detail_id = session.get('receipt')['room_rental_id']
+        amount = int(session.get('receipt')['total_price'])
 
-        vnp.requestData['vnp_CreateDate'] = datetime.now().strftime('%Y%m%d%H%M%S')
-        vnp.requestData['vnp_IpAddr'] = "127.0.0.1"
-        vnp.requestData['vnp_ReturnUrl'] = url_for('vnpay_return', _external=True)
+    vnp = vnpay()
+    # Xây dựng hàm cần thiết cho vnpay
+    vnp.requestData['vnp_Version'] = '2.1.0'
+    vnp.requestData['vnp_Command'] = 'pay'
+    vnp.requestData['vnp_TmnCode'] = 'PMAKVMOW'
+    vnp.requestData['vnp_Amount'] = amount
+    vnp.requestData['vnp_CurrCode'] = 'VND'
+    vnp.requestData['vnp_TxnRef'] = str(detail_id) + '-' + datetime.now().strftime('%Y%m%d%H%M%S')
+    vnp.requestData['vnp_OrderInfo'] = order_desc  # Nội dung thanh toán
+    vnp.requestData['vnp_OrderType'] = 'order_type'
 
-        # Lưu thông tin cần thiết vào session
-        session['rental_room_id'] = rental_room_id
-        session['amount'] = amount
+    vnp.requestData['vnp_Locale'] = 'vn'
 
-        vnp_payment_url = vnp.get_payment_url('https://sandbox.vnpayment.vn/paymentv2/vpcpay.html',
-                                              'USYEHCIUSVVCFQYKBQBZSUASXUXRSTCS')
+    vnp.requestData['vnp_CreateDate'] = datetime.now().strftime('%Y%m%d%H%M%S')
+    vnp.requestData['vnp_IpAddr'] = "127.0.0.1"
+    vnp.requestData['vnp_ReturnUrl'] = url_for('vnpay_return', _external=True)
 
-        return redirect(vnp_payment_url)
+    # Lưu thông tin cần thiết vào session
+    session['rental_room_id'] = detail_id
+    session['amount'] = amount
 
-    return render_template('payment.html')
+    vnp_payment_url = vnp.get_payment_url('https://sandbox.vnpayment.vn/paymentv2/vpcpay.html',
+                                          'USYEHCIUSVVCFQYKBQBZSUASXUXRSTCS')
+
+    return redirect(vnp_payment_url)
+
+
+# return render_template('payment.html')
 
 
 @app.route('/vnpay_return', methods=['GET'])
@@ -529,13 +553,34 @@ def vnpay_return():
     vnp_ResponseCode = request.args.get('vnp_ResponseCode')
 
     if vnp_ResponseCode == '00':
-        rental_room_id = session.get('rental_room_id')
-        amount = session.get('amount')
+        print('success')
+        if session.get('reservation_info'):
+            room_id = next(iter(session.get('reservation_info')))
+            session['reservation_info'][room_id]['is_paid'] = 'done'
+            session['reservation_info'] = session['reservation_info']
 
-        rc = Receipt(rental_room_id=rental_room_id, total_price=amount, created_date=datetime.now())
-        db.session.add(rc)
-        db.session.commit()
+            return redirect(url_for('pay_for_reservation', room_id=room_id))
+        if session.get('room_rental_info'):
+            try:
+                room_id = next(iter(session.get('room_rental_info')))
+                room_rental_info = session.get('room_rental_info')
+                checkout_time = session.get('room_rental_info')[room_id]['checkout_time']
+                checkout_time = datetime.strptime(checkout_time, "%Y-%m-%dT%H:%M")
+                check = dao.receptionist_room_rental(room_rental_info=room_rental_info, checkout_time=checkout_time,
+                                                     room_id=room_id)
+                if check.__eq__(True):
+                    return redirect('/')
+            except Exception as ex:
+                print(str(ex))
 
+        if session.get('receipt'):
+            try:
+                room_rental_id = session.get('receipt')['room_rental_id']
+                room_id = session.get('receipt')['room_id']
+                dao.create_receipt(room_rental_id=room_rental_id, room_id=room_id)
+                return redirect('/')
+            except Exception as ex:
+                print(str(ex))
         flash('Thanh toán thành công!')
     else:
         flash('Lỗi thanh toán. Vui lòng thử lại!')
@@ -546,6 +591,13 @@ def vnpay_return():
     session.pop('amount', None)
 
     return redirect(url_for('user_signin'))
+
+
+@app.context_processor
+def common_response():
+    return {
+        'reservation_info': session.get('reservation_info')
+    }
 
 
 if __name__ == "__main__":

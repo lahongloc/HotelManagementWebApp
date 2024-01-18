@@ -89,7 +89,6 @@ class Reservation(BaseModel):
     room_id = Column(Integer, ForeignKey(Room.id), nullable=False)
     checkin_date = Column(DateTime, nullable=False)
     checkout_date = Column(DateTime, nullable=False)
-    # total_price = Column(Float, nullable=False)
     is_checkin = Column(Boolean, default=False)
     deposit = Column(Float, nullable=False)
     reservation_details = Relationship('ReservationDetail', backref='reservation', lazy=True)
@@ -120,6 +119,7 @@ class RoomRentalDetail(BaseModel):
 
 
 class Receipt(BaseModel):
+    receptionist_id = Column(Integer, ForeignKey(Receptionist.id), nullable=False)
     rental_room_id = Column(Integer, ForeignKey(RoomRental.id), nullable=False)
     room_rental = Relationship('RoomRental', back_populates='receipt')
     total_price = Column(Float, nullable=False)
@@ -133,7 +133,7 @@ class Comment(BaseModel):
     created_date = Column(DateTime, default=datetime.now())
 
 
-class RoomRegulation(db.Model):
+class RoomRegulation(BaseModel):
     room_type_id = Column(Integer, ForeignKey(RoomType.id), nullable=False, primary_key=True)
     admin_id = Column(Integer, ForeignKey(Administrator.id), nullable=False)
     room_quantity = Column(Integer, default=10)
@@ -147,7 +147,7 @@ class RoomRegulation(db.Model):
 class CustomerTypeRegulation(BaseModel):
     rate = Column(Float, default=1.0, nullable=False)
     admin_id = Column(Integer, ForeignKey(Administrator.id), nullable=False)
-    customer_type_id = Column(Integer, ForeignKey(CustomerType.id), nullable=False)
+    customer_type_id = Column(Integer, ForeignKey(CustomerType.id), nullable=False, primary_key=True)
 
 
 if __name__ == "__main__":

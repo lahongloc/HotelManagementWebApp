@@ -99,6 +99,7 @@ const payForReservation = (room_id, reservationInfo) => {
         })
             .then(res => res.json())
             .then(data => {
+                window.location.href = '/';
                 console.log(data)
             })
             .catch(err => console.error(err))
@@ -144,8 +145,27 @@ const checkout = (roomRentalId, roomName, roomId) => {
             .then(data => {
                 if(data.code === 200) {
                     location.reload()
+//                     window.location.href = 'http://127.0.0.1:5000/payment';
                 }
             })
             .catch(err => console.error(err))
     }
 }
+
+const createRoomRental = (identification) => {
+    fetch('/api/create-room-rental', {
+        method: 'POST',
+        body: JSON.stringify({
+            identification
+        }),
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+        .then(res => res.json())
+        .then(data => {
+            console.log(data)
+        })
+        .catch(err => console.error(err))
+}
+

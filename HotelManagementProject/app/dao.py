@@ -73,7 +73,7 @@ def get_rooms():
         return rooms
 
 
-def get_rooms_info(room_id=None, kw=None, checkin=None, checkout=None, room_type=None, page=1):
+def get_rooms_info(room_id=None, kw=None, checkin=None, checkout=None, room_type=None, page=1, is_paginated=None):
     with app.app_context():
         rooms_info = db.session.query(Room.name, Room.id, Room.image, RoomType.name.label('room_type'),
                                       RoomRegulation.price,
@@ -108,8 +108,10 @@ def get_rooms_info(room_id=None, kw=None, checkin=None, checkout=None, room_type
 
         start = page * app.config['PAGE_SIZE'] - app.config['PAGE_SIZE']
         end = start + app.config['PAGE_SIZE']
+        if is_paginated:
+            return rooms_info.slice(start, end).all(), Room.query.count()
 
-        return rooms_info.slice(start, end).all(), Room.query.count()
+        return rooms_info.all()
 
 
 def get_comment(room_id=None):
@@ -263,6 +265,16 @@ def add_customers(customers=None, room_id=None, checkin_time=None, checkout_time
                 rd = ReservationDetail(customer_id=i, reservation_id=added_reservation_id)
                 db.session.add(rd)
                 db.session.commit()
+            content = """
+Dear {0},
+
+Congratulations! Your booking at Elite Hotel is confirmed. We look forward to hosting you and providing a memorable stay.
+
+Best regards,
+
+Elite Hotel
+            """.format(current_user.username)
+            send_gmail(current_user.email, 'Your request to book room has been processed successfully!', content)
 
 
 def create_room_rental(reservation_id=None):
@@ -279,19 +291,21 @@ def create_room_rental(reservation_id=None):
             print(str(ex))
 
 
-def create_receipt(room_rental_id=None, room_id=None):
+def create_receipt(room_rental_id=None, room_id=None, is_calculate=None):
     if room_rental_id and room_id:
         with app.app_context():
-            deposit_rate = RoomRegulation.query.get(Room.query.get(room_id).room_type_id).deposit_rate
+            deposit_rate = RoomRegulation.query.filter(
+                RoomRegulation.room_type_id.__eq__(Room.query.get(room_id).room_type_id)).first().deposit_rate
             room_rental = RoomRental.query.get(room_rental_id)
             # calculate the total price from the room rental 's deposit and the deposit rate
-            total_price = room_rental.deposit / deposit_rate - deposit_rate
-
-            rc = Receipt(rental_room_id=room_rental.id, total_price=total_price)
-            room_rental.is_paid = True
-            db.session.add(rc)
-            db.session.commit()
-
+            total_price = (room_rental.deposit / deposit_rate) - room_rental.deposit
+            if is_calculate:
+                return total_price
+            else:
+                rc = Receipt(rental_room_id=room_rental.id, total_price=total_price, receptionist_id=current_user.id)
+                room_rental.is_paid = True
+                db.session.add(rc)
+                db.session.commit()
 
 
 def receptionist_room_rental(room_rental_info=None, checkout_time=None, room_id=None):
@@ -301,6 +315,7 @@ def receptionist_room_rental(room_rental_info=None, checkout_time=None, room_id=
         # print(room_rental_info[str(room_id)]['users'])
         # add customers
         try:
+            # print(room_rental_info[room_id])
             for i in range(1, len(room_rental_info[room_id]['users']) + 1):
                 cus_identification = room_rental_info[room_id]['users'][i]['customerIdNum']
                 customer_id = find_customer_by_identification(identification=cus_identification)
@@ -316,6 +331,7 @@ def receptionist_room_rental(room_rental_info=None, checkout_time=None, room_id=
                     added_customers_ids.append(c.customer_id)
         except Exception as ex:
             print(str(ex))
+            print('hehe')
             return False
 
         #     add room rental
@@ -328,6 +344,7 @@ def receptionist_room_rental(room_rental_info=None, checkout_time=None, room_id=
                 added_room_rental = rr.id
         except Exception as ex:
             print(str(ex))
+            print('haah')
             return False
 
         #     add room rental detail
@@ -338,6 +355,7 @@ def receptionist_room_rental(room_rental_info=None, checkout_time=None, room_id=
                     db.session.add(rrd)
                     db.session.commit()
         except Exception as ex:
+            print('hoho')
             print(str(ex))
             return False
     return True

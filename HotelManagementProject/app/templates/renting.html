@@ -2,10 +2,7 @@
 {% block title %} Renting room - Elite-Hotel {% endblock %}
 {% block link %}
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
-<<<<<<< HEAD
 <link href='https://fonts.googleapis.com/css?family=Allerta Stencil' rel='stylesheet'>
-=======
->>>>>>> 9afb8238cccfe16ecb5d163a4d6b741c806b9bc0
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
 {% endblock %}
@@ -16,11 +13,12 @@
     <h4>{{ err_msg }}</h4>
 </div>
 {% endif %}
-<h1>ROOM RENTING PAGE!</h1>
+<h1>RECEPTIONIST ADMINISTRATIVE VIEW!</h1>
 <ul class="nav nav-tabs">
     <li class="{% if ('room_id' in request.args and 'roomType' in request.args and 'price' in request.args) or (not request.args and not request.form) or ('customerName1' in request.form) %}active{% endif %}">
         <a data-toggle="tab" href="#rent">Rent</a></li>
-    <li class="{% if 'identification' in request.form %}active{% endif %}"><a data-toggle="tab" href="#checkinPage">Check
+    <li class="{% if 'name' in request.args or 'identification' in request.form %}active{% endif %}"><a
+            data-toggle="tab" href="#checkinPage">Check
         in</a></li>
     <li class="{% if 'checkOutIdentification' in request.form %}active{% endif %}"><a data-toggle="tab"
                                                                                       href="#checkoutPage">Check out</a>
@@ -66,19 +64,21 @@
         </div>
         {% endif %}
     </div>
-    <div id="checkinPage" class="tab-pane fade {% if 'identification' in request.form %}in active{% endif %}">
+    <div id="checkinPage"
+         class="tab-pane fade {% if 'name' in request.args or 'identification' in request.form %}in active{% endif %}">
         <h3>CHECK IN PAGE</h3>
         <div>
-            <form action="{{ url_for('room_renting') }}" method="POST">
+            <form action="{{ url_for('room_renting') }}">
                 <div class="mb-3 mt-3">
-                    <label for="Identification" class="form-label">Identification:</label>
-                    <input required type="number" class="form-control" id="identification"
-                           placeholder="Enter identification"
-                           name="identification">
+                    <label for="name" class="form-label">Customer name:</label>
+                    <input type="text" class="form-control" id="name"
+                           placeholder="Enter name"
+                           name="name">
                 </div>
                 <button type="submit" class="btn btn-primary">Check</button>
             </form>
         </div>
+
         <div class="booked-rooms mt-5">
             {% if booked_rooms %}
             {% for br in booked_rooms %}
@@ -121,6 +121,27 @@
             </div>
             {% endfor %}
             {% endif %}
+        </div>
+        <div>
+            {% for c in customers %}
+            <div class="cus-info"
+                 style="box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px; border-radius: 15px; width: 500px; padding: 1rem; margin: 15px 0; display: flex; align-items: center; justify-content: space-between">
+                <form method="POST" class="form-group" style="display: flex; align-items: center; margin: 0 auto;">
+                    <div class="info" style="display: flex; align-items: center;">
+                        <img style="width: 70px; height: 70px"
+                             src="{% if c.avatar %}{{ c.avatar }}{% else %}https://cdn-icons-png.flaticon.com/512/3607/3607444.png{% endif %}"
+                             alt="{{ c.name }}">
+                        <div class="text" style="display: inline-block; margin-left: 2rem;">
+                            <h4>{{ c.name }}</h4>
+                            <p>{{ c.type }}</p>
+                            <input name="identification" style="border: none; background-color: #fff;" type="text"
+                                   readonly value="{{ c.identification }}">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-custom">Create room rental</button>
+                </form>
+            </div>
+            {% endfor %}
         </div>
     </div>
     <div id="checkoutPage" class="tab-pane fade {% if 'checkOutIdentification' in request.form %}in active{% endif %}">
