@@ -453,7 +453,9 @@ def get_booked_rooms():
             .outerjoin(Receipt, Receipt.rental_room_id == RoomRental.id)
             .filter(
                 (RoomRental.checkout_date >= current_date) &
-                (Receipt.rental_room_id.is_(None))
+                (RoomRental.room_id.notin_(
+                    db.session.query(RoomRental.room_id).join(Receipt).filter(Receipt.rental_room_id.isnot(None))
+                ))
             )
             .all()
         )
@@ -479,7 +481,8 @@ def get_booked_rooms():
 
 
 def create_receipt(customer_id, rental_room_id, total_price):
-    receipt = Receipt(customer_id=customer_id, rental_room_id=rental_room_id, total_price=total_price, created_date=datetime.now())
+    receipt = Receipt(customer_id=customer_id, rental_room_id=rental_room_id, total_price=total_price,
+                      created_date=datetime.now())
     db.session.add(receipt)
     db.session.commit()
     return receipt.id
@@ -529,24 +532,22 @@ def get_rental_room_customers(room_rental_id):
 def get_customer_by_username(username):
     user = User.query.filter_by(username=username).first()
 
+    user_id = user.id
+
     if user and user.role == UserRole.CUSTOMER:
-        customer = Customer.query.filter_by(id=user.id).first()
+        if user_id > 1:
+            user_id -= 1
+        customer = Customer.query.filter_by(id=user_id).first()
         return customer
     else:
         return None
 
 
-# def get_receipt_info_by_id(receipt_id):
-#     with app.app_context():
-#         receipt_info = db.session.query(Receipt, RoomRental).join(RoomRental)\
-#             .filter(Receipt.id == receipt_id).first()
-#
-#         receipt = receipt_info[0]
-#         room_rental = receipt_info[1]
-#
-#         return {
-#             'total_price': receipt.total_price,
-#             'checkin_date': room_rental.checkin_date,
-#             'checkout_date': room_rental.checkout_date,
-#             'room_id': room_rental.room_id,
-#         }
+def get_receipt_by_id(receipt_id):
+    with app.app_context():
+        return Receipt.query.get(receipt_id)
+
+
+def get_customer_by_id(customer_id):
+    with app.app_context():
+        return Customer.query.get(customer_id)

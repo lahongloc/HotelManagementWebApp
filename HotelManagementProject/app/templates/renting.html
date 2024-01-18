@@ -234,10 +234,8 @@
         const table = document.querySelector('.tableRooms');
         const tbody = table.querySelector('tbody');
 
-        // Xóa dữ liệu hiện tại
         tbody.innerHTML = '';
 
-        // Render lại bảng với dữ liệu mới
         data.forEach(room => {
             const row = document.createElement('tr');
             row.classList.add('tableRow');

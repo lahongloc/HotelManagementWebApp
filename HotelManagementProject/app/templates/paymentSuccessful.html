@@ -12,10 +12,23 @@
     <h4>{{ err_msg }}</h4>
 </div>
 {% endif %}
-<h1>ROOM RENTING PAGE!</h1>
-
-
 <div id="payment" class="">
     <h1>Payment Successful</h1>
+    <p>Thank you for your payment!</p>
+
+    <h2>Receipt Information</h2>
+    <p style="font-size: 16px">Customer name: {{ customer.name }}</p>
+    <p style="font-size: 16px">Room name: {{ room.name }}</p>
+    <p style="font-size: 16px">Checkin date: {{ rental_room.checkin_date }}</p>
+    <p style="font-size: 16px">Checkout date: {{ rental_room.checkout_date }}</p>
+    <p style="font-size: 16px">Total: {{ receipt.total_price }} VND</p>
+
+    <button onclick="handleBack()" style="margin-top: 20px" class="btn btn-primary">Back to Manage page</button>
 </div>
-{% endblock %}
+ <script>
+    const handleBack = () => {
+        const url = `/renting-room`
+        window.location.href = url;
+    }
+ </script>
+    {% endblock %}

@@ -530,10 +530,42 @@ def renting_room(rental_room_id):
     if request.method == 'POST':
         username = request.form.get('customer_pay')
         customer_pay = dao.get_customer_by_username(username)
-        if customer_pay:
+        pay_method = request.form.get('payment_method')
+
+        if pay_method == 'cash':
+            if customer_pay:
+                receipt_id = dao.create_receipt(customer_pay.id, rental_room_id, total)
+
+                return redirect(url_for('payment_success', receipt_id=receipt_id))
+        elif pay_method == 'vnpay':
+            vnp = vnpay()
+
+            vnp.requestData['vnp_Version'] = '2.1.0'
+            vnp.requestData['vnp_Command'] = 'pay'
+            vnp.requestData['vnp_TmnCode'] = 'PMAKVMOW'
+            vnp.requestData['vnp_Amount'] = total
+            vnp.requestData['vnp_CurrCode'] = 'VND'
+            vnp.requestData['vnp_TxnRef'] = f'{rental_room_id}-{datetime.now().strftime("%Y%m%d%H%M%S")}'
+            vnp.requestData['vnp_OrderInfo'] = 'Payment for rental room'
+            vnp.requestData['vnp_OrderType'] = 'order_type'
+
+            vnp.requestData['vnp_Locale'] = 'vn'
+
+            vnp.requestData['vnp_CreateDate'] = datetime.now().strftime('%Y%m%d%H%M%S')
+            vnp.requestData['vnp_IpAddr'] = "127.0.0.1"
+            vnp.requestData['vnp_ReturnUrl'] = url_for('renting_room_vnpay_return', _external=True)
+
+            session['vnp_payment_info'] = {
+                'rental_room_id': rental_room_id,
+                'amount': total,
+            }
+
             dao.create_receipt(customer_pay.id, rental_room_id, total)
 
-            return redirect(url_for('payment_success'))
+            vnp_payment_url = vnp.get_payment_url('https://sandbox.vnpayment.vn/paymentv2/vpcpay.html',
+                                                  'your_query_secure_hash_key')
+
+            return redirect(vnp_payment_url)
 
     return render_template('rctPayment.html', rental_room=rental_room,
                            booked_room=booked_room,
@@ -543,9 +575,36 @@ def renting_room(rental_room_id):
                            total=total)
 
 
-@app.route('/payment_success')
-def payment_success():
-    return render_template('paymentSuccessful.html')
+@app.route('/renting-room/payment/<rental_room_id>/vnpay_return', methods=['GET'])
+def renting_room_vnpay_return(rental_room_id):
+    vnp_TransactionNo = request.args.get('vnp_TransactionNo')
+    vnp_TxnRef = request.args.get('vnp_TxnRef')
+    vnp_Amount = request.args.get('vnp_Amount')
+    vnp_ResponseCode = request.args.get('vnp_ResponseCode')
+
+    if vnp_ResponseCode == '00':
+        payment_info = session.get('vnp_payment_info')
+        rental_room_id = payment_info.get('rental_room_id')
+        amount = payment_info.get('amount')
+
+        flash('Payment successful!')
+    else:
+        flash('Error when try to paying via VNPay!')
+
+    session.pop('vnp_payment_info', None)
+
+    return redirect(url_for('vnpay_return'))
+
+
+@app.route('/payment_success/<receipt_id>')
+def payment_success(receipt_id):
+    receipt = dao.get_receipt_by_id(receipt_id)
+    rental_room = dao.get_rental_room_by_id(receipt.rental_room_id)
+    customer = dao.get_customer_by_id(receipt.customer_id)
+    room = dao.get_room_by_id(rental_room.room_id)
+
+    return render_template('paymentSuccessful.html',
+                           receipt=receipt, rental_room=rental_room, customer=customer, room=room)
 
 
 if __name__ == "__main__":
