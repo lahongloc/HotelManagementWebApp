@@ -47,7 +47,6 @@
                             class="fa-regular fa-circle-user"></i> Log in</a>
                 </li>
                 {% endif %}
-
                 <li class="nav-item dropdown" style="margin: 0">
                     <a class="nav-link dropdown-toggle" href="#" role="button"
                        data-bs-toggle="dropdown">Menu</a>
@@ -57,12 +56,11 @@
                             <a class="dropdown-item" href="/renting-room">Hotel management</a>
                         </li>
                         {% endif %}
+                        {% if current_user.role|string == 'UserRole.ADMIN' %}
                         <li>
-                            <a class="dropdown-item" href="">b</a>
+                            <a class="dropdown-item" href="/admin">Administration view</a>
                         </li>
-                        <li>
-                            <a class="dropdown-item" href="">c</a>
-                        </li>
+                        {% endif %}
                     </ul>
                 </li>
             </ul>

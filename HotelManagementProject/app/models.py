@@ -180,17 +180,52 @@ if __name__ == "__main__":
             avatar='https://cdn.pixabay.com/photo/2020/07/14/13/07/icon-5404125_1280.png',
             email='loc@gmail.com',
             phone='0334454203')
-        user2 = User(username='NhungTran', password=str(hashlib.md5('123'.encode('utf-8')).hexdigest()),
+        user2 = User(
+            role=UserRole.CUSTOMER,
+            username='kiet',
+            password=str(hashlib.md5('kiet'.encode('utf-8')).hexdigest()),
+            avatar='https://cdn.pixabay.com/photo/2020/07/14/13/07/icon-5404125_1280.png',
+            email='2151050219kiet@ou.edu.vn',
+            phone='0869311727')
+        user3 = User(
+            role=UserRole.CUSTOMER,
+            username='duy',
+            password=str(hashlib.md5('duy'.encode('utf-8')).hexdigest()),
+            avatar='https://cdn.pixabay.com/photo/2020/07/14/13/07/icon-5404125_1280.png',
+            email='2151050055@ou.edu.vn',
+            phone='0123456789')
+        user4 = User(
+            role=UserRole.CUSTOMER,
+            username='lan',
+            password=str(hashlib.md5('lan'.encode('utf-8')).hexdigest()),
+            avatar='https://cdn.pixabay.com/photo/2020/07/14/13/07/icon-5404125_1280.png',
+            email='lan@gmail.com',
+            phone='0642138713')
+        user5 = User(
+            role=UserRole.CUSTOMER,
+            username='tuan',
+            password=str(hashlib.md5('tuan'.encode('utf-8')).hexdigest()),
+            avatar='https://cdn.pixabay.com/photo/2020/07/14/13/07/icon-5404125_1280.png',
+            email='tuan@gmail.com',
+            phone='0287112946')
+        user6 = User(
+            role=UserRole.CUSTOMER,
+            username='lau',
+            password=str(hashlib.md5('lau'.encode('utf-8')).hexdigest()),
+            avatar='https://cdn.pixabay.com/photo/2020/07/14/13/07/icon-5404125_1280.png',
+            email='lau@gmail.com',
+            phone='0198247172')
+        user7 = User(username='NhungTran', password=str(hashlib.md5('123'.encode('utf-8')).hexdigest()),
                      role=UserRole.RECEPTIONIST, email='nhung@gmail.com', phone='035588475', gender=False)
         db.session.commit()
-        db.session.add_all([user1, user2])
+        db.session.add_all([user1, user2, user3, user4, user5, user6, user7])
         db.session.commit()
 
         admin1 = Administrator(id=1, name='La Hồng Lộc')
         db.session.add(admin1)
         db.session.commit()
 
-        r1 = Receptionist(name='Tran Thi Nhung', id=2)
+        r1 = Receptionist(name='Tran Thi Nhung', id=7)
         db.session.add(r1)
         db.session.commit()
 
@@ -198,6 +233,15 @@ if __name__ == "__main__":
         ct2 = CustomerType(type='FOREIGN')
         db.session.add_all([ct1, ct2])
         db.session.commit()
+
+        cus1 = Customer(id=2, name='Trần Tuấn Kiệt', identification='0194612374612', customer_type_id=1)
+        cus2 = Customer(id=3, name='Hoàng Nguyễn Quốc Duy', identification='0123491958123', customer_type_id=1)
+        cus3 = Customer(id=4, name='Trần Lê Lân', identification='01235012357', customer_type_id=2)
+        cus4 = Customer(id=5, name='Văn Công Tuấn', identification='09832478143', customer_type_id=2)
+        cus5 = Customer(id=6, name='Ngô Văn Lâu', identification='01283597235', customer_type_id=1)
+        db.session.add_all([cus1, cus2, cus3, cus4, cus5])
+        db.session.commit()
+
         ##################
 
         ctr1 = CustomerTypeRegulation(admin_id=1, customer_type_id=1)
@@ -209,4 +253,198 @@ if __name__ == "__main__":
         rr2 = RoomRegulation(room_type_id=2, admin_id=1, room_quantity=15, capacity=3, price=4000000)
         rr3 = RoomRegulation(room_type_id=3, admin_id=1, room_quantity=17, capacity=3, price=5000000)
         db.session.add_all([rr1, rr2, rr3])
+        db.session.commit()
+
+        cm1 = Comment(customer_id=2, content='Phòng này quá ok <3', room_id=1, created_date=datetime(2024, 1, 9, 17, 1))
+        cm2 = Comment(customer_id=3, content='Cũng tàm tạm, cần nâng cấp dịch vụ phòng!',
+                      created_date=datetime(2024, 1, 9, 17, 1), room_id=1)
+        cm3 = Comment(customer_id=4, content='Sẽ ghé thăm vào lần sau nếu có dịp',
+                      created_date=datetime(2024, 1, 9, 17, 1), room_id=2)
+        cm4 = Comment(customer_id=5, content='Một căn phòng đáng trải nghiệm nhất tại khách sạn, 5 sau nhé',
+                      created_date=datetime(2024, 1, 9, 17, 1), room_id=2)
+        cm5 = Comment(customer_id=6,
+                      content='Mình có một người bạn nước ngoài ở chung, sẽ nhân hệ số 1.5 nhưng đây là quy định chung của khách sạn rùi nên cũng không sao, miễn là dịch vụ OK và phòng thì miễn chê',
+                      created_date=datetime(2024, 1, 9, 17, 1),
+                      room_id=2)
+        cm6 = Comment(customer_id=2,
+                      content='Có dịp ghé qua đây, đang loay hoay tìm phòng thì có dịch vụ đặt phòng trước, đến nơi chỉ cần đưa thông tin phiếu cho nhân viên lễ tân là nhận phòng ở luôn, 10 điểm',
+                      created_date=datetime(2024, 1, 9, 17, 1),
+                      room_id=3)
+        cm7 = Comment(customer_id=3, content='Phòng này 0 điểm ... không có điểm nào để chê ạ =)))',
+                      created_date=datetime(2024, 1, 9, 17, 1), room_id=3)
+        cm8 = Comment(customer_id=4, content='Thật là một nơi đáng để tra nghiệm',
+                      created_date=datetime(2024, 1, 9, 17, 1), room_id=3)
+        cm9 = Comment(customer_id=5, content='Xứng đáng với số tiền bỏ ra', created_date=datetime(2024, 1, 9, 17, 1),
+                      room_id=3)
+        cm10 = Comment(customer_id=6,
+                       content='Mình không biết những nơi khác thế nào, nhưng đối với mình noi đây rất tiện nghi từ dịch vụ cho đến giải quyết sự cố cho khách hàng',
+                       created_date=datetime(2024, 1, 9, 17, 1),
+                       room_id=3)
+        cm11 = Comment(customer_id=2,
+                       content='Mình lỡ làm bể kính phòng tắm nên phải bồi thường, nhưng vẫn hài lòng với những gì khách sạn mang đến',
+                       created_date=datetime(2024, 1, 9, 17, 1),
+                       room_id=4)
+        cm12 = Comment(customer_id=3, content='Cần điều chỉnh số lượng người ở trong phòng nhiều hơn',
+                       created_date=datetime(2024, 1, 9, 17, 1), room_id=4)
+        cm13 = Comment(customer_id=4, content='Nơi này rất thoải mái và tiện nghi, có view đỉnh lắm ạ!',
+                       created_date=datetime(2024, 1, 9, 17, 1), room_id=4)
+        cm14 = Comment(customer_id=5, content='Những gì khách sạn mang đến rất tốt cho trải nghiệm của tôi',
+                       created_date=datetime(2024, 1, 9, 17, 1), room_id=4)
+        cm15 = Comment(customer_id=6, content='Nhân viên dễ thương lắm, tư vấn phòng này và trải nghiệm rất tốt',
+                       created_date=datetime(2024, 1, 9, 17, 1), room_id=4)
+        cm16 = Comment(customer_id=2,
+                       content='Quá tuyt vời mặc dù mình ở 3 người nên có thêm phụ phí 25% nha mng ơi, quy định chung của khách sạn rùi',
+                       created_date=datetime(2024, 1, 9, 17, 1),
+                       room_id=5)
+        cm17 = Comment(customer_id=3,
+                       content='Cần điều chỉnh hệ số lúc thanh toán thì quá oke vì mình là khách nước ngoài',
+                       created_date=datetime(2024, 1, 9, 17, 1),
+                       room_id=5)
+        cm18 = Comment(customer_id=4,
+                       content='9.5 điểm, vì 0.5 điểm còn lại là do mình đi 3 người nên thu 25% và có nhân hệ số 1.5 lúc thanh toán huhuhuhhhhuhu :(',
+                       created_date=datetime(2024, 1, 9, 17, 1),
+                       room_id=5)
+        db.session.add_all([cm1, cm2,
+                            cm3, cm4, cm5, cm6,
+                            cm7, cm8, cm9,
+                            cm10, cm11, cm12, cm13, cm14, cm15,
+                            cm16, cm17, cm18])
+        db.session.commit()
+
+        reservation_data = [
+            {'customer_id': 2, 'receptionist_id': 7, 'room_id': 4, 'checkin_date': datetime(2024, 1, 9, 17, 1),
+             'checkout_date': datetime(2024, 1, 19, 17, 1), 'deposit': 900000},
+            {'customer_id': 1, 'receptionist_id': 7, 'room_id': 2, 'checkin_date': datetime(2024, 3, 25, 17, 11),
+             'checkout_date': datetime(2024, 3, 29, 17, 11), 'deposit': 1500000},
+            {'customer_id': 2, 'receptionist_id': 7, 'room_id': 2, 'checkin_date': datetime(2023, 12, 11, 17, 12),
+             'checkout_date': datetime(2023, 12, 21, 17, 12), 'deposit': 1500000},
+            {'customer_id': 1, 'receptionist_id': 7, 'room_id': 1, 'checkin_date': datetime(2024, 1, 9, 17, 1),
+             'checkout_date': datetime(2024, 2, 9, 17, 1), 'deposit': 1200000},
+            {'customer_id': 4, 'receptionist_id': 7, 'room_id': 1, 'checkin_date': datetime(2024, 1, 9, 17, 1),
+             'checkout_date': datetime(2024, 1, 29, 17, 1), 'deposit': 1200000},
+            {'customer_id': 5, 'receptionist_id': 7, 'room_id': 2, 'checkin_date': datetime(2023, 12, 11, 17, 12),
+             'checkout_date': datetime(2023, 12, 19, 17, 12), 'deposit': 1500000},
+            {'customer_id': 2, 'receptionist_id': 7, 'room_id': 1, 'checkin_date': datetime(2023, 12, 11, 17, 12),
+             'checkout_date': datetime(2023, 12, 17, 17, 12), 'deposit': 1200000},
+        ]
+
+        for data in reservation_data:
+            reservation = Reservation(**data)
+            db.session.add(reservation)
+        db.session.commit()
+
+        # Tạo đối tượng RoomRental và thêm dữ liệu chi tiết
+        room_rental1 = RoomRental(
+            receptionist_id=7,
+            room_id=4,
+            reservation_id=1,
+            checkin_date=datetime(2024, 1, 17, 20, 55, 32),
+            checkout_date=datetime(2024, 1, 29, 20, 55, 32),
+            deposit=None,
+            is_paid=True
+        )
+
+        room_rental2 = RoomRental(
+            receptionist_id=7,
+            room_id=2,
+            reservation_id=2,
+            checkin_date=datetime(2024, 2, 1, 20, 55, 32),
+            checkout_date=datetime(2024, 2, 18, 20, 55, 32),
+            deposit=None,
+            is_paid=True
+        )
+
+        room_rental3 = RoomRental(
+            receptionist_id=7,
+            room_id=3,
+            checkin_date=datetime(2024, 2, 3, 20, 55, 32),
+            checkout_date=datetime(2024, 2, 26, 20, 55, 32),
+            deposit=1500000,
+            is_paid=True
+        )
+
+        room_rental4 = RoomRental(
+            receptionist_id=7,
+            room_id=2,
+            reservation_id=3,
+            checkin_date=datetime(2024, 2, 27, 20, 55, 32),
+            checkout_date=datetime(2024, 3, 5, 20, 55, 32),
+            deposit=None,
+            is_paid=True
+        )
+
+        room_rental5 = RoomRental(
+            receptionist_id=7,
+            room_id=1,
+            reservation_id=4,
+            checkin_date=datetime(2023, 8, 3, 20, 55, 32),
+            checkout_date=datetime(2024, 8, 24, 20, 55, 32),
+            deposit=None,
+            is_paid=True
+        )
+
+        room_rental6 = RoomRental(
+            receptionist_id=7,
+            room_id=1,
+            reservation_id=5,
+            checkin_date=datetime(2024, 1, 20, 20, 55, 32),
+            checkout_date=datetime(2024, 1, 27, 20, 55, 32),
+            deposit=None,
+            is_paid=True
+        )
+
+        room_rental7 = RoomRental(
+            receptionist_id=7,
+            room_id=3,
+            checkin_date=datetime(2023, 4, 12, 20, 55, 32),
+            checkout_date=datetime(2024, 4, 26, 20, 55, 32),
+            deposit=1500000,
+            is_paid=True
+        )
+
+        room_rental8 = RoomRental(
+            receptionist_id=7,
+            room_id=2,
+            reservation_id=6,
+            checkin_date=datetime(2024, 6, 18, 20, 55, 32),
+            checkout_date=datetime(2024, 7, 2, 20, 55, 32),
+            deposit=None,
+            is_paid=True
+        )
+
+        room_rental9 = RoomRental(
+            receptionist_id=7,
+            room_id=1,
+            reservation_id=7,
+            checkin_date=datetime(2024, 3, 3, 20, 55, 32),
+            checkout_date=datetime(2024, 4, 5, 20, 55, 32),
+            deposit=None,
+            is_paid=True
+        )
+
+        # Thêm các đối tượng vào cơ sở dữ liệu
+        with db.session.begin():
+            db.session.add_all(
+                [room_rental1, room_rental2, room_rental3, room_rental4, room_rental5, room_rental6, room_rental7,
+                 room_rental8, room_rental9])
+
+        # Lưu thay đổi vào cơ sở dữ liệu
+        db.session.commit()
+
+        receipt_data = [
+            {'receptionist_id': 7, 'rental_room_id': 1, 'total_price': 3000000, 'created_date': datetime(2023, 1, 19, 17, 1)},
+            {'receptionist_id': 7, 'rental_room_id': 2, 'total_price': 5000000, 'created_date': datetime(2023, 1, 29, 17, 11)},
+            {'receptionist_id': 7, 'rental_room_id': 3, 'total_price': 5000000, 'created_date': datetime(2023, 2, 19, 17, 11)},
+            {'receptionist_id': 7, 'rental_room_id': 4, 'total_price': 5000000, 'created_date': datetime(2023, 4, 29, 17, 11)},
+            {'receptionist_id': 7, 'rental_room_id': 5, 'total_price': 4000000, 'created_date': datetime(2024, 1, 29, 17, 11)},
+            {'receptionist_id': 7, 'rental_room_id': 6, 'total_price': 4000000, 'created_date': datetime(2024, 2, 29, 17, 11)},
+            {'receptionist_id': 7, 'rental_room_id': 7, 'total_price': 5000000, 'created_date': datetime(2024, 2, 29, 17, 11)},
+            {'receptionist_id': 7, 'rental_room_id': 8, 'total_price': 5000000, 'created_date': datetime(2024, 2, 29, 17, 11)},
+            {'receptionist_id': 7, 'rental_room_id': 9, 'total_price': 4000000, 'created_date': datetime(2024, 4, 29, 17, 11)},
+        ]
+
+        for data in receipt_data:
+            receipt = Receipt(**data)
+            db.session.add(receipt)
+
         db.session.commit()

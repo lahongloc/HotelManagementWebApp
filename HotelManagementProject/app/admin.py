@@ -37,6 +37,22 @@ class MyAdminIndexView(AdminIndexView):
                            role_admin=role_admin)
 
 
+class RoomUtilizationReportView(BaseView):
+    @expose('/')
+    def index(self):
+        name = request.args.get('name')
+        month = request.args.get('month')
+        year = request.args.get('year')
+
+        room_utilization_report = dao.room_utilization_report(name=name, month=month, year=year)
+
+        return self.render('admin/RoomUtilizationReport.html',
+                           room_utilization_report=room_utilization_report)
+
+    def is_accessible(self):
+        return current_user.is_authenticated and current_user.role == UserRole.ADMIN
+
+
 class MonthSaleStatisticView(BaseView):
     @expose('/')
     def index(self):
@@ -143,4 +159,5 @@ admin.add_view(MyRoomView(Room, db.session))
 admin.add_view(MyRoomRegulation(RoomRegulation, db.session))
 admin.add_view(MyCustomerTypeRegulation(CustomerTypeRegulation, db.session))
 admin.add_view(MonthSaleStatisticView(name='Month Sale Statistic'))
+admin.add_view(RoomUtilizationReportView(name='Room Utilization Report'))
 admin.add_view(LogoutView(name='Logout'))
