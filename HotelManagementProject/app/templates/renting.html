@@ -15,7 +15,7 @@
 {% endif %}
 <h1>RECEPTIONIST ADMINISTRATIVE VIEW!</h1>
 <ul class="nav nav-tabs">
-    <li class="{% if ('room_id' in request.args and 'roomType' in request.args and 'price' in request.args) or (not request.args and not request.form) or ('customerName1' in request.form) %}active{% endif %}">
+    <li class="{% if ('room_id' in request.args and 'roomType' in request.args and 'price' in request.args and not 'identification' in request.form) or (not request.args and not request.form) or ('customerName1' in request.form) %}active{% endif %}">
         <a data-toggle="tab" href="#rent">Rent</a></li>
     <li class="{% if 'name' in request.args or 'identification' in request.form %}active{% endif %}"><a
             data-toggle="tab" href="#checkinPage">Check
@@ -27,7 +27,7 @@
 
 <div class="tab-content">
     <div id="rent"
-         class="tab-pane fade {% if ('room_id' in request.args and 'roomType' in request.args and 'price' in request.args) or (not request.args and not request.form) or ('customerName1' in request.form) %}in active{% endif %}">
+         class="tab-pane fade {% if ('room_id' in request.args and 'roomType' in request.args and 'price' in request.args and not 'identification' in request.form) or (not request.args and not request.form) or ('customerName1' in request.form) %}in active{% endif %}">
         <h3>RENTING PAGE</h3>
         <div class="col-md-4 col-xs-12">
             <form class="form-group">

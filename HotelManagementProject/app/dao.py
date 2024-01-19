@@ -1,5 +1,6 @@
 import hashlib
 import hmac
+import threading
 import urllib
 from datetime import datetime
 
@@ -306,6 +307,52 @@ def create_receipt(room_rental_id=None, room_id=None, is_calculate=None):
                 room_rental.is_paid = True
                 db.session.add(rc)
                 db.session.commit()
+
+                emails = get_user_emails_by_room_rental_id(room_rental_id=room_rental.id)
+                # Tạo các đối tượng Thread để thực hiện công việc đồng thời
+                twilio_thread = threading.Thread(target=send_message_twilio,
+                                                 args=(
+                                                     "Thanks for using services at Elite-hotel and see you next time!",))
+                content = (f'You have paid {rc.total_price} VND for your room at '
+                           f'Elite-hotel, thanks for all!')
+                gmail_thread = threading.Thread(target=send_gmail,
+                                                args=(
+                                                    emails[0],
+                                                    f"YOU HAVE PAID {total_price} FOR YOUR RECEIPT AT ELITE-HOTEL!",
+                                                    content))
+
+                # Bắt đầu thực hiện các luồng
+                twilio_thread.start()
+                gmail_thread.start()
+
+                # Chờ tất cả các luồng hoàn thành
+                twilio_thread.join()
+                gmail_thread.join()
+
+
+def get_user_emails_by_room_rental_id(room_rental_id=None):
+    if room_rental_id:
+        emails = []
+        with app.app_context():
+            is_from_reservation = RoomRental.query.filter(RoomRental.id.__eq__(room_rental_id)).first().room_id
+            if not is_from_reservation:
+                user = db.session.query(User.email) \
+                    .join(Customer, Customer.id.__eq__(User.id)) \
+                    .join(Reservation, Reservation.customer_id.__eq__(Customer.customer_id)) \
+                    .join(RoomRental, RoomRental.reservation_id.__eq__(Reservation.id)) \
+                    .filter(RoomRental.id.__eq__(room_rental_id)).first()
+                emails.append(user.email)
+            else:
+                customers = db.session.query(User.id, Customer.customer_id, User.email) \
+                    .join(Customer, Customer.id.__eq__(User.id)) \
+                    .join(RoomRentalDetail, RoomRentalDetail.customer_id.__eq__(Customer.customer_id)) \
+                    .join(RoomRental, RoomRental.id.__eq__(RoomRentalDetail.room_rental_id)) \
+                    .filter(RoomRental.id.__eq__(room_rental_id)).all()
+                for c in customers:
+                    emails.append(c.email)
+        return emails
+
+
 
 
 def receptionist_room_rental(room_rental_info=None, checkout_time=None, room_id=None):
