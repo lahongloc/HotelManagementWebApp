@@ -275,7 +275,16 @@ Best regards,
 
 Elite Hotel
             """.format(current_user.username)
-            send_gmail(current_user.email, 'Your request to book room has been processed successfully!', content)
+            if current_user.role == UserRole.CUSTOMER:
+                send_gmail(current_user.email, 'Your request to book room has been processed successfully!', content)
+            if current_user.role == UserRole.RECEPTIONIST:
+                emails = db.session.query(User.email) \
+                        .join(Customer, Customer.id.__eq__(User.id)) \
+                        .join(ReservationDetail, ReservationDetail.customer_id.__eq__(Customer.customer_id)) \
+                        .filter(ReservationDetail.reservation_id.__eq__(added_reservation_id)).all()
+                for e in emails:
+                    send_gmail(e.email, 'Your request to book room has been processed successfully!', content)
+                    break
 
 
 def create_room_rental(reservation_id=None):
@@ -351,8 +360,6 @@ def get_user_emails_by_room_rental_id(room_rental_id=None):
                 for c in customers:
                     emails.append(c.email)
         return emails
-
-
 
 
 def receptionist_room_rental(room_rental_info=None, checkout_time=None, room_id=None):
