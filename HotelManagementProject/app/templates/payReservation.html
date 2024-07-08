@@ -1,0 +1,58 @@
+{% extends 'layouts/base.html' %}
+{% block title %}Paying for reservation{% endblock %}
+{% block content %}
+
+<h3 style="border: 1px solid black;" class="text-center">RESERVATION CHECK</h3>
+<table class="table reservation-check-table">
+    <thead>
+    <th style="width: 50%;">Booking: {{ session.get('reservation_info')[room_id].users['1'].customerName }}</th>
+    <th>Room: {{ room_info.name }}</th>
+    </thead>
+    <thead>
+    <th>Checkin time: {{ session.get('reservation_info')[room_id].checkin_time }}</th>
+    <th>{{ session.get('reservation_info')[room_id].checkout_time }}</th>
+    </thead>
+</table>
+<table class="table reservation-check-table">
+
+    <thead>
+    <th>Order</th>
+    <th style="width: 25%;">Customer</th>
+    <th style="width: 25%;">Customer type</th>
+    <th style="width: 25%;">Identification number</th>
+    <th style="width: 25%;">Address</th>
+    </thead>
+
+    <tbody>
+    {% for i in session.get('reservation_info')[room_id].users %}
+    <tr>
+        <td>{{ i }}</td>
+        <td>{{ session.get('reservation_info')[room_id].users[i].customerName }}</td>
+        <td>{{ session.get('reservation_info')[room_id].users[i].customerType }}</td>
+        <td>{{ session.get('reservation_info')[room_id].users[i].customerIdNum }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+
+
+</table>
+<form action="/payment" method="POST" class="form-group">
+    <div>
+        <h4 class="mt-2" style="font-size: larger; color: red;">
+            <b>DEPOSIT:</b>
+            <i class="fa-solid fa-dong-sign"></i>
+            <input name="amount" style="color: red; border: none; outline: 0; font-weight: 700;" type="text" value="{{ session.get('reservation_info')[room_id].total_price }}" readonly>
+        </h4>
+    </div>
+    {% if session['reservation_info'][room_id]['is_paid'] != 'done' and  current_user.role|string == 'UserRole.CUSTOMER' %}
+    <input type="submit" class="btn btn-custom mt-3" value="Pay now">
+    {% endif %}
+</form>
+{% if session['reservation_info'][room_id]['is_paid'] == 'done' or current_user.role|string == 'UserRole.RECEPTIONIST' %}
+<input onclick="payForReservation('{{ room_id }}', {{ session.get('reservation_info') }})"
+       type="button" class="btn btn-custom mt-3" value="Confirm reservation">
+{% endif %}
+
+
+
+{% endblock %}

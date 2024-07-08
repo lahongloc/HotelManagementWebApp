@@ -1,0 +1,234 @@
+{% extends 'layouts/base.html' %}
+{% block title %} Renting room - Elite-Hotel {% endblock %}
+{% block link %}
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+<link href='https://fonts.googleapis.com/css?family=Allerta Stencil' rel='stylesheet'>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+{% endblock %}
+
+{% block content %}
+{% if err_msg %}
+<div class="alert alert-danger">
+    <h4>{{ err_msg }}</h4>
+</div>
+{% endif %}
+<h1>RECEPTIONIST ADMINISTRATIVE VIEW!</h1>
+<ul class="nav nav-tabs">
+    <li class="{% if ('room_id' in request.args and 'roomType' in request.args and 'price' in request.args and not 'identification' in request.form) or (not request.args and not request.form) or ('customerName1' in request.form) %}active{% endif %}">
+        <a data-toggle="tab" href="#rent">Rent</a></li>
+    <li class="{% if 'name' in request.args or 'identification' in request.form %}active{% endif %}"><a
+            data-toggle="tab" href="#checkinPage">Check
+        in</a></li>
+    <li class="{% if 'checkOutIdentification' in request.form %}active{% endif %}"><a data-toggle="tab"
+                                                                                      href="#checkoutPage">Check out</a>
+    </li>
+</ul>
+
+<div class="tab-content">
+    <div id="rent"
+         class="tab-pane fade {% if ('room_id' in request.args and 'roomType' in request.args and 'price' in request.args and not 'identification' in request.form) or (not request.args and not request.form) or ('customerName1' in request.form) %}in active{% endif %}">
+        <h3>RENTING PAGE</h3>
+        <div class="col-md-4 col-xs-12">
+            <form class="form-group">
+                <div class="mb-3 mt-3">
+                    <label for="room_id" class="form-label">Choose room:</label>
+                    <select onchange="takeRoomInfo(this)" class="form-control mt-2" name="room_id" id="room_id">
+                        {% for r in rooms_info %}
+                        <option value="{{ r.id }}">{{ r.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3 mt-3">
+                    <label for="roomType" class="form-label">Room type:</label>
+                    <input readonly type="text" class="form-control" id="roomType" name="roomType">
+                </div>
+                <div class="mb-3">
+                    <label for="price" class="form-label">Price:</label>
+                    <input readonly type="text" class="form-control" id="price" name="price">
+                </div>
+                <input type="submit" class="btn btn-custom" value="CHOOSE">
+            </form>
+        </div>
+        {% if room %}
+        <div style="margin-left: 16rem;" class="col-md-5 col-xs-12">
+            <div class="room-info">
+                <img style="margin: 0 auto; border-radius: 12px;" width="95%"
+                     src="{{ url_for('static', filename=room.image) }}" alt="">
+                <h3><strong>ROOM RENTAL INFORMATION</strong></h3>
+                <h4>{{ room.name }} - {{ room.room_type }}</h4>
+                <p style="color: red; font-size: larger"><strong>{{ "{:,.1f}".format(room.price) }} VND/2
+                    persons</strong></p>
+            </div>
+            {% include 'layouts/bookRoom.html' %}
+        </div>
+        {% endif %}
+    </div>
+    <div id="checkinPage"
+         class="tab-pane fade {% if 'name' in request.args or 'identification' in request.form %}in active{% endif %}">
+        <h3>CHECK IN PAGE</h3>
+        <div>
+            <form action="{{ url_for('room_renting') }}">
+                <div class="mb-3 mt-3">
+                    <label for="name" class="form-label">Customer name:</label>
+                    <input type="text" class="form-control" id="name"
+                           placeholder="Enter name"
+                           name="name">
+                </div>
+                <button type="submit" class="btn btn-primary">Check</button>
+            </form>
+        </div>
+
+        <div class="booked-rooms mt-5">
+            {% if booked_rooms %}
+            {% for br in booked_rooms %}
+            <div class="plan">
+                <div class="inner">
+                    <span class="pricing">
+                        <span>
+                            {{ "{:,.1f}".format(booked_rooms[br]['total_price']) }} <i
+                                class="fa-solid fa-dong-sign"></i><small></small>
+                        </span>
+                    </span>
+                    <h1 style="padding: 15px 0; font-family: Allerta Stencil;" class="title"> {{
+                        booked_rooms[br]['room'] }} ROOM RESERVATION</h1>
+                    <p class="info"><strong>Checkin date:</strong> {{ booked_rooms[br]['checkin_date'] }}</p>
+                    <p class="info"><strong>Checkout date:</strong> {{ booked_rooms[br]['checkout_date'] }}</p>
+                    <p class="members"><strong>Members:</strong></p>
+                    <ul class="features">
+                        {% for m in booked_rooms[br]['room_users'][0] %}
+                        <li>
+                            <span>
+                                <i class="fa-solid fa-user-check"></i>
+                            </span>
+                            <span>{{ m.name }}</span>
+                        </li>
+                        {% endfor %}
+                        <li>
+                            <span>
+                                <i class="fa-solid fa-circle-check"></i>
+                            </span>
+                            <span>Deposit has been paid</span>
+                        </li>
+                    </ul>
+                    <div class="action">
+                        <button onclick="checkin('{{ booked_rooms[br]['reservation_id'] }}', '{{ booked_rooms[br]['room'] }}')"
+                                class="button">
+                            CHECK IN
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            {% endif %}
+        </div>
+        <div>
+            {% for c in customers %}
+            <div class="cus-info"
+                 style="box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px; border-radius: 15px; width: 500px; padding: 1rem; margin: 15px 0; display: flex; align-items: center; justify-content: space-between">
+                <form method="POST" class="form-group" style="display: flex; align-items: center; margin: 0 auto;">
+                    <div class="info" style="display: flex; align-items: center;">
+                        <img style="width: 70px; height: 70px"
+                             src="{% if c.avatar %}{{ c.avatar }}{% else %}https://cdn-icons-png.flaticon.com/512/3607/3607444.png{% endif %}"
+                             alt="{{ c.name }}">
+                        <div class="text" style="display: inline-block; margin-left: 2rem;">
+                            <h4>{{ c.name }}</h4>
+                            <p>{{ c.type }}</p>
+                            <input name="identification" style="border: none; background-color: #fff;" type="text"
+                                   readonly value="{{ c.identification }}">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-custom">Create room rental</button>
+                </form>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    <div id="checkoutPage" class="tab-pane fade {% if 'checkOutIdentification' in request.form %}in active{% endif %}">
+        <h3>CHECK OUT PAGE</h3>
+        <div>
+            <form action="{{ url_for('room_renting') }}" method="POST">
+                <div class="mb-3 mt-3">
+                    <label for="checkOutIdentification" class="form-label">Identification:</label>
+                    <input required type="number" class="form-control" id="checkOutIdentification"
+                           placeholder="Enter identification"
+                           name="checkOutIdentification">
+                </div>
+                <button type="submit" class="btn btn-primary">Check</button>
+            </form>
+        </div>
+        <div class="booked-rooms mt-5">
+
+            {% if room_rentals %}
+            {% for rr in room_rentals %}
+            <div class="plan">
+                <div class="inner">
+                    <span class="pricing">
+                        <span>
+                            {{ "{:,.1f}".format(room_rentals[rr]['total_price']) }}
+                             <i class="fa-solid fa-dong-sign"></i><small></small>
+                        </span>
+                    </span>
+                    <h1 style="padding: 15px 0; font-family: Allerta Stencil;" class="title"> {{
+                        room_rentals[rr]['room'] }} ROOM RENTAL</h1>
+                    <p class="info"><strong>Checkin date:</strong> {{ room_rentals[rr]['checkin_date'] }}</p>
+                    <p class="info"><strong>Checkout date:</strong> {{ room_rentals[rr]['checkout_date'] }}</p>
+                    <p class="members"><strong>Members:</strong></p>
+                    <ul class="features">
+                        {% for m in room_rentals[rr]['room_users'] %}
+                        <li>
+                            <span>
+                                <i class="fa-solid fa-user-check"></i>
+                            </span>
+                            <span>{{ m.name }}</span>
+                        </li>
+                        {% endfor %}
+                        <li>
+                            <span>
+                                <i class="fa-solid fa-circle-check"></i>
+                            </span>
+                            <span>Deposit has been paid</span>
+                        </li>
+                    </ul>
+                    <div class="action">
+                        <button onclick="checkout({{ room_rentals[rr]['room_rental_id'] }}, '{{ room_rentals[rr]['room'] }}', {{ room_rentals[rr]['room_id'] }})"
+                                class="button">
+                            CHECK OUT
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+<script>
+    const takeRoomInfo = () => {
+        var roomId = document.getElementById('room_id').value
+        fetch('/api/take-room-info', {
+            method: 'POST',
+            body: JSON.stringify({
+               roomId
+            }),
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(res => res.json())
+            .then(data => {
+                console.log(data)
+                document.getElementById('roomType').value = data.roomType
+                document.getElementById('price').value = `${data.price.toLocaleString('en-US', { style: 'currency', currency: 'VND' })}`
+
+
+            })
+            .catch(err => console.error(err))
+    }
+    takeRoomInfo()
+
+    const assign = (obj) => {
+        console.log(obj)
+    }
+</script>
+{% endblock %}

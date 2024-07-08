@@ -1,0 +1,29 @@
+{% extends 'layouts/base.html' %}
+
+{% block content %}
+
+<h2 class="text-center text-info">Please check your bill payment information!</h2>
+<p>{{ session }}</p>
+
+<form style="width: 50%; margin: 0 auto; margin-top: 3rem;" method="post" action="{{ url_for('payment') }}">
+    <div class="form-group" style="padding-bottom: 6px;">
+        <label for="order_desc"><i class="fa-solid fa-lock"></i> Banking Description:</label>
+        <input type="text" name="order_desc" class="form-control" placeholder="Input Password" id="order_desc" required>
+    </div>
+
+    <div class="form-group" style="padding-bottom: 6px;">
+        <label for="rental_room_id"><i class="fa-solid fa-lock"></i> Rental Room ID:</label>
+        <input type="text" name="rental_room_id" class="form-control" placeholder="Input Password" id="rental_room_id" required>
+    </div>
+
+    <div class="form-group" style="padding-bottom: 6px;">
+        <label for="amount"><i class="fa-solid fa-lock"></i> Total Price:</label>
+        <input type="text" name="amount" class="form-control" placeholder="Input Amount" id="amount" required>
+    </div>
+
+    <button class="btn btn-primary mt-2" type="submit">
+        <i class="fa-solid fa-check"></i> Sumbit
+    </button>
+</form>
+
+{% endblock %}

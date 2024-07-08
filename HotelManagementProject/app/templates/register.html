@@ -1,0 +1,78 @@
+{% extends 'layouts/base.html' %}
+{% block title %}User Register{% endblock %}
+
+{% block content %}
+<h1 style="text-align: center; color: red; font-weight: bold;">REGISTER</h1>
+{% if err_msg %}
+<div class="alert alert-danger">
+    <h4>{{ err_msg }}</h4>
+</div>
+{% endif %}
+
+<form style="width: 50%; margin: 0 auto; margin-top: 3rem;" action="{{ url_for('user_register') }}" method="POST" enctype="multipart/form-data">
+    <div class="form-group">
+        <label><b>Choose Customer Type:</b></label>
+        <br>
+        {% for rc in role_cus %}
+        <input style="margin: 5px;" class="cus_type" type="radio" name="customer_type" value="{{ rc }}"
+               {% if loop.first %}checked{% endif %}>
+            {% if loop.first %}
+            <span style="color: #DD0000;"><i class="fas fa-flag"></i> {{ rc }}</span>
+            {% else %}
+            <span style="color: #808000;"><i class="fas fa-globe-americas"></i> {{ rc }}</span>
+            {% endif %}
+        {% endfor %}
+    </div>
+
+    <div class="form-group">
+        <label for="name">Name</label>
+        <input type="text" name="name" class="form-control" placeholder="Input Name" id="name" required>
+    </div>
+
+    <div class="form-group">
+        <label for="idNum">Identification number</label>
+        <input type="number" name="idNum" class="form-control" placeholder="Input Username" id="idNum" required>
+    </div>
+
+    <div>
+        <label><b>Choose Gender</b></label>
+        <br>
+        <input style="margin: 5px; accent-color: #1E90FF;" type="radio" name="gender" value="Man" checked/> <span style="color: #1E90FF;"><i class="fa-solid fa-person"></i> Male</span>
+        <input style="margin-left: 10px; accent-color: #FF1493;" type="radio" name="gender" value="Woman"/> <span style="color: #FF1493;"><i class="fa-solid fa-person-dress"></i> Female</span>
+    </div>
+
+    <div class="form-group">
+        <label for="username">Username</label>
+        <input type="text" name="username" class="form-control" placeholder="Input Username" id="username" required>
+    </div>
+
+    <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" name="password" class="form-control" placeholder="Input Password" id="password" required>
+    </div>
+
+    <div class="form-group">
+        <label for="confirm">Confirm Password</label>
+        <input type="password" name="confirm" class="form-control" placeholder="Input Confirm Password" id="confirm"
+               required>
+    </div>
+
+    <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" name="email" class="form-control" placeholder="Input Email" id="email" required>
+    </div>
+
+    <div class="form-group">
+        <label for="phone">Phone</label>
+        <input type="number" name="phone" class="form-control" placeholder="Input Phone Number" id="phone" required>
+    </div>
+
+    <div class="form-group">
+        <label for="avatar">Avatar</label>
+        <input type="file" name="avatar" class="form-control" placeholder="Choose Avatar" id="avatar">
+    </div>
+
+    <input type="submit" class="form-control btn btn-primary mt-2" value="Register">
+</form>
+
+{% endblock %}

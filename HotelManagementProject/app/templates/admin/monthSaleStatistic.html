@@ -1,0 +1,121 @@
+{% extends 'admin/master.html' %}
+
+{% block body %}
+
+<h1 class="text-center text-info">BÁO CÁO DOANH THU THEO THÁNG</h1>
+<br>
+
+<div style="justify-content: center;" class="row">
+    <div class="col-md-8 col-xs-12">
+        <table class="table text-center">
+            <form>
+                <div style="display: flex; align-items: center; justify-content: space-between; margin: 0 auto; margin-bottom: 1rem;"
+                     class="col-md-10 col-xs-12 form-group">
+                    <input style="display: inline-block;" type="number" min="1" max="12" class="form-control"
+                           name="month"
+                           placeholder="Input MONTH {{ month }}">
+                    <input style="display: inline-block; margin-left: 15px;" type="number" min="2000" class="form-control"
+                           name="year"
+                           placeholder="Input YEAR {{ year }}">
+                    <input style="margin-left: 15px; display: inline-block;" type="submit" value="Submit MONTH"
+                           class="btn btn-info">
+                </div>
+            </form>
+            <tr>
+                <th>STT</th>
+                <th>Loại Phòng</th>
+                <th>Doanh Thu</th>
+                <th>Số Lượt Thuê</th>
+                <th>Tỷ Lệ</th>
+            </tr>
+
+            {% for m in monthSaleStatistic%}
+
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ m[0] }}</td>
+                <td>{{ "{:,.0f}".format(m[1]) }} VND</td>
+                <td>{{ m[2] }}</td>
+                <td>{{ m[3] }} %</td>
+            </tr>
+            {% endfor %}
+
+            <tr class="text-info" style="color: #C16E70 !important;">
+                <th> Tổng Doanh Thu:</th>
+                <th></th>
+                <th>{{ "{:,.0f}".format(total_revenue) }} VND</th>
+                <th></th>
+                <th></th>
+            </tr>
+
+        </table>
+        <form style="width: 70%; margin: 0 auto;">
+        <h4 class="text-center text-info">BÁO CÁO DOANH THU (FILTER)</h4>
+        <div class="form-group">
+            <input type="text" class="form-control" name="kw" placeholder="Input room type name ...">
+        </div>
+        <div class="form-group">
+            <input type="date" class="form-control" name="from_date">
+        </div>
+        <div class="form-group">
+            <input type="date" class="form-control" name="to_date">
+        </div>
+        <input style="margin-top: 5px;" type="submit" value="Statistical" class="btn btn-info">
+            <canvas id="myChart"></canvas>
+    </form>
+
+    </div>
+</div>
+<div style="margin: 0 auto;" class="col-md-5 col-xs-12">
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    window.onload = function() {
+      const ctx = document.getElementById('myChart').getContext('2d');
+
+      let data = [];
+      let labels = [];
+      let data2 = [];
+      let labels2 = [];
+
+      let colors = [];
+      let borderColors = [];
+      let r, g, b;
+
+      {% for m in monthSaleStatistic %}
+      labels.push('{{m[0]}}')
+      data.push({{m[3]}});
+
+      r = parseInt(Math.random() * 255)
+      g = parseInt(Math.random() * 255)
+      b = parseInt(Math.random() * 255)
+      colors.push(`rgba(${r}, ${g}, ${b}, 0.2)`)
+      borderColors.push(`rgba(${r}, ${g}, ${b}, 1)`)
+      {% endfor %}
+
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Tỷ lệ thuê Loại Phòng (%)',
+            data: data,
+            backgroundColor: colors,
+            borderColor: borderColors,
+            borderWidth: 1
+          }]
+        },
+        options: {
+          scales: {
+            y: {
+              beginAtZero: true
+            }
+          }
+        }
+      });
+    }
+</script>
+
+{% endblock %}

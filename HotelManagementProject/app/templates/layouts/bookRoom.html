@@ -1,0 +1,268 @@
+{% if current_user.is_authenticated %}
+
+<form method="POST" class="form-group booking-info">
+    <div class="first-customer customer" id="firstCus">
+        <label><b>CUSTOMER 1</b></label>
+        {% if current_user.role|string == 'UserRole.CUSTOMER' %}
+        <label class="switch">
+            <input type="checkbox" class="checkbox">
+            <span style="margin-right: 0.5rem;">Use your profile</span>
+            <div onclick="autoFill('{{ customer_info.name }}', '{{ customer_info.identification }}', '{{ customer_info.type }}' )"
+                 style="display: inline-block;" class="slider"></div>
+        </label>
+        {% endif %}
+
+        <label style="display: block" class="mt-1" for="cus1">Name</label>
+        <input
+                name="customerName1"
+                id="cus1"
+                type="text"
+                class="form-control mt-2 name"
+                required
+        />
+
+        <label style="display: block" class="mt-1" for="idNum1"
+        >Identification number</label
+        >
+        <input
+                name="customerIdNum1"
+                id="idNum1"
+                type="number"
+                class="form-control mt-2"
+                onblur="checkCusType(this)"
+        />
+
+        <label style="display: block" class="mt-2" for="cus1-type"
+        >Customer Type</label
+        >
+        <select class="form-control mt-2 customer-type" name="customerType1" id="cus1-type">
+            {% for r in role_cus %}
+            <option>{{ r }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="rest-customer">
+
+    </div>
+    {% if room and room.capacity > 1 %}
+    <input
+            style="margin-left: 67.5%;"
+            onclick="addCustomer({{ room.capacity }}, {{ role_cus }})"
+            type="button"
+            class="addCustomer-btn btn btn-custom mt-3"
+            value="+ Add customer"
+    />
+    {% endif %}
+
+    {% if is_booking %}
+    <label style="display: block" class="mt-3" for="checkin"
+    ><b><i>Choose checkin time</i></b></label
+    >
+    <input
+            id="checkin"
+            type="datetime-local"
+            name="checkin"
+            class="form-control"
+            required
+            onblur="validateDateTime()"
+    />
+    <label class="mt-2" for="checkout"
+    ><b><i>Choose checkout time</i></b></label
+    >
+    <input
+            id="checkout"
+            type="datetime-local"
+            name="checkout"
+            class="form-control"
+            required
+            onblur="validateDateTime()"
+    />
+    <input
+            style="margin-bottom: 3rem; margin-left: 83%;"
+            type="submit"
+            class="form-group mt-3 btn btn-custom"
+            value="Check"
+    />
+    {% endif %}
+    {% if is_renting %}
+    <input
+            id="checkout"
+            type="datetime-local"
+            name="checkout"
+            class="form-control mt-5"
+            required
+            onblur="validateDateTime()"
+    />
+    <input style="margin-bottom: 3rem; margin-left: 83%;" type="submit" class="form-group mt-3 btn btn-custom"
+           value="Rent">
+    {% endif %}
+</form>
+{% else %}
+<p class="text-danger">
+    <b><i>PLEASE LOGIN TO BOOK ROOM!</i></b>
+</p>
+{% endif %}`
+
+<script>
+    count = 1;
+
+    const deleteCustomer = (obj) => {
+      count--;
+      document.querySelector('.addCustomer-btn').style.display = 'block'
+      const divParent = obj.parentNode.parentNode.id;
+
+      for (
+        var i = 0;
+        i < document.querySelectorAll("div.rest-customer > div").length;
+        i++
+      ) {
+        if (
+          document.querySelectorAll("div.rest-customer > div")[i].id === divParent
+        ) {
+          document.querySelectorAll("div.rest-customer > div")[i].remove();
+        }
+      }
+      render_index();
+    };
+
+    const addCustomer = (capacity, roleCus) => {
+      if (count < capacity) {
+        count++;
+
+        var addedCustomer = document.createElement("div");
+        addedCustomer.id = `nth${count}-customer`;
+        addedCustomer.innerHTML = `<div class='customer' id="cusInfo${count}"">
+                                <div onclick='deleteCustomer(this)' class='remove'><i style='font-size: 24px; color: red;' class="fa-solid fa-xmark"></i></div>
+
+                                <label style="display: block" class="mt-3"><b>CUSTOMER <span class='index'>${count}</span></b></label>
+
+                                <label style="display: block;" class="mt-1" for="cus${count}">Name</label>
+
+                                <input name="customerName${count}" id="cus${count}" type="text" class="form-control mt-2 name" required>
+
+                                <label style="display: block" class="mt-1" for="idNum${count}">Identification number</label>
+                                <input
+                                        name="customerIdNum${count}"
+                                        id="idNum${count}"
+                                        type="number"
+                                        class="form-control mt-2 idNum"
+                                        onblur="checkCusType(this)"
+                                />
+
+                                <label style="display: block;" class="mt-2" for="cus${count}-type">Customer Type</label>
+
+                                <select class="form-control mt-2 customer-type" name="customerType${count}" id="cus${count}-type">
+
+                                    {% for r in role_cus %}
+                                    <option>{{ r }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>`;
+
+        document.querySelector("div.rest-customer").appendChild(addedCustomer);
+      }
+      if(count === capacity) {
+        document.querySelector('.addCustomer-btn').style.display = 'none'
+      }
+
+    };
+
+    const render_index = () => {
+      addedCustomer = document.querySelectorAll("div.rest-customer > div");
+
+      for (var i = 2; i <= addedCustomer.length + 1; i++) {
+        document.querySelectorAll('div.rest-customer > div .idNum')[i-2].name = `customerIdNum${i}`
+
+        document.querySelectorAll("div.rest-customer > div .index")[i-2].innerText = `${i}`;
+
+
+
+        document.querySelectorAll("div.rest-customer > div .name")[i-2].name = `customerName${i}`;
+        document.querySelectorAll("div.rest-customer > div .customer-type")[i-2].name = `customerType${i}`;
+
+      }
+      console.log(addedCustomer)
+    };
+
+    const autoFill = (name, id, type) => {
+    nameInput = document.getElementById('cus1')
+    idInput = document.getElementById('idNum1')
+    typeInput = document.getElementById('cus1-type')
+
+    if(!document.querySelector('.checkbox').checked) {
+        if(nameInput.value !== name || idInput.value !== idInput || typeInput.value !== type) {
+            nameInput.value = name
+            idInput.value = id
+            typeInput.value = type
+
+            nameInput.readOnly = true
+            idInput.readOnly = true
+            typeInput.innerHTML = `<option>${type}</option>`
+        }
+    }
+     else {
+            nameInput.value = ''
+            idInput.value = ''
+            typeInput.value = ''
+
+            nameInput.readOnly = false
+            idInput.readOnly = false
+            typeInput.innerHTML = `{% for r in role_cus %}
+                                    <option>{{ r }}</option>
+                                    {% endfor %}`
+        }
+}
+
+const checkCusType = (obj) => {
+    fetch('/api/check-cus-type', {
+        method: 'POST',
+        body: JSON.stringify({
+          'identification': obj.value
+        }),
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+      .then(res => res.json())
+      .then(data => {
+        if(data.code === 200) {
+            document.querySelector(`#${obj.parentNode.id} > .customer-type`).innerHTML = `<option>${data.cusType}</option>`
+            document.querySelector(`#${obj.parentNode.id} > .name`).value = data.cusName
+            document.querySelector(`#${obj.parentNode.id} > .name`).readOnly = true
+        } else {
+          document.querySelector(`#${obj.parentNode.id} > .customer-type`).innerHTML = `{% for r in role_cus %}
+                                                                                          <option>{{ r }}</option>
+                                                                                        {% endfor %}`
+          document.querySelector(`#${obj.parentNode.id} > .name`).readOnly = false
+        }
+      })
+      .catch(err => console.error(err))
+}
+
+const validateDateTime = () => {
+    var checkinTime = new Date(document.getElementById('checkin').value)
+    const checkoutTime = new Date(document.getElementById('checkout').value)
+
+
+    if(isNaN(checkinTime)) {
+        checkinTime = new Date()
+    }
+    console.log(checkinTime)
+    console.log(checkoutTime)
+
+    var timeDifference = Math.abs(checkoutTime - checkinTime)
+    var days = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
+
+    if(checkoutTime <= checkinTime) {
+        alert("Checkout time must be after checkin time!");
+        document.getElementById('checkin').value = ''
+        document.getElementById('checkout').value = ''
+    }
+    if(days > {{ room.distance }}) {
+        alert(`Check-in date must not exceed {{ room.distance }} days from booking!`);
+        document.getElementById('checkin').value = ''
+        document.getElementById('checkout').value = ''
+    }
+}
+
+</script>

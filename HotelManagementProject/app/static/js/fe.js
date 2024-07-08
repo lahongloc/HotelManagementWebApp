@@ -1,26 +1,27 @@
-let roomTypes = document.querySelectorAll('.room-type-dropdown > li')
-let customerTypes = document.querySelectorAll('.customer-type')
+let roomTypes = document.querySelectorAll(".room-type-dropdown > li");
+let customerTypes = document.querySelectorAll(".customer-type");
 const customerContainer = document.getElementById("customer-box");
 
 roomTypes.forEach((item, index) => {
-    item.addEventListener('click', () => {
-        document.querySelector('.room-type-name').innerText = item.innerText
-//        document.querySelector('.room-type-name').id=
-    })
-})
+	item.addEventListener("click", () => {
+		document.querySelector(".room-type-name").innerText = item.innerText;
+		//        document.querySelector('.room-type-name').id=
+	});
+});
 
-customerTypes.forEach(customerType => {
-    customerType.addEventListener('click', () => {
-        document.querySelector('.customer-type-name').innerText = customerType.innerHTML
-    })
-})
+customerTypes.forEach((customerType) => {
+	customerType.addEventListener("click", () => {
+		document.querySelector(".customer-type-name").innerText =
+			customerType.innerHTML;
+	});
+});
 
 const addNewCustomer = () => {
-    let order = document.querySelectorAll('.customer-info').length + 1
+	let order = document.querySelectorAll(".customer-info").length + 1;
 
-    let newCusInfo = document.createElement('div');
-    newCusInfo.className = 'customer-info d-flex mb-2';
-    newCusInfo.innerHTML = `
+	let newCusInfo = document.createElement("div");
+	newCusInfo.className = "customer-info d-flex mb-2";
+	newCusInfo.innerHTML = `
             <label>
                 <span class="me-4 order">${order}</span>
                 <input placeholder="Tên khách hàng"/>
@@ -45,25 +46,28 @@ const addNewCustomer = () => {
             </span>
     `;
 
-    customerContainer.insertBefore(newCusInfo, customerContainer.lastElementChild);
-}
+	customerContainer.insertBefore(
+		newCusInfo,
+		customerContainer.lastElementChild,
+	);
+};
 
 const removeCustomerInfo = (event) => {
-    let customerInfos = document.querySelectorAll('.customer-info')
-    if (customerInfos.length > 1) {
-        let customerInfo = event.target.closest('.customer-info')
+	let customerInfos = document.querySelectorAll(".customer-info");
+	if (customerInfos.length > 1) {
+		let customerInfo = event.target.closest(".customer-info");
 
-        if (customerInfo) {
-            const orderSpan = customerInfo.querySelector('.order');
-            const order = parseInt(orderSpan.innerText, 10);
+		if (customerInfo) {
+			const orderSpan = customerInfo.querySelector(".order");
+			const order = parseInt(orderSpan.innerText, 10);
 
-            customerInfo.remove();
+			customerInfo.remove();
 
-            customerInfos.forEach((customerInfo, idx) => {
-                if (idx > order - 1)
-                    customerInfo.querySelector('.order').innerText = (idx).toString()
-            })
-        }
-    }
-}
-
+			customerInfos.forEach((customerInfo, idx) => {
+				if (idx > order - 1)
+					customerInfo.querySelector(".order").innerText =
+						idx.toString();
+			});
+		}
+	}
+};

@@ -1,0 +1,82 @@
+{% extends 'admin/master.html' %}
+
+{% block body %}
+
+<h1 class="text-center text-info">BÁO CÁO DOANH THU THEO THÁNG</h1>
+<br>
+
+<div style="justify-content: center;" class="row">
+    <div class="col-md-8 col-xs-12">
+        <table class="table text-center">
+            <tr>
+                <th>STT</th>
+                <th>Phòng</th>
+                <th>Số ngày thuê</th>
+                <th>Tỷ Lệ</th>
+            </tr>
+            {% for r in room_utilization_report %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ r[0] }}</td>
+                <td>{{ r[1] }}</td>
+                <td>{{ r[2] }}</td>
+            </tr>
+            {% endfor %}
+            <form>
+
+                <canvas id="myChart"></canvas>
+            </form>
+        </table>
+    </div>
+</div>
+<div style="margin: 0 auto;" class="col-md-5 col-xs-12">
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    window.onload = function() {
+      const ctx = document.getElementById('myChart').getContext('2d');
+
+      let data = [];
+      let labels = [];
+
+      let colors = [];
+      let borderColors = [];
+      let r, g, b;
+
+      {% for m in room_utilization_report %}
+      labels.push('{{m[0]}}')
+      data.push({{m[2]}});
+
+      r = parseInt(Math.random() * 255)
+      g = parseInt(Math.random() * 255)
+      b = parseInt(Math.random() * 255)
+      colors.push(`rgba(${r}, ${g}, ${b}, 0.2)`)
+      borderColors.push(`rgba(${r}, ${g}, ${b}, 1)`)
+      {% endfor %}
+
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Tỷ lệ thuê Loại Phòng (%)',
+            data: data,
+            backgroundColor: colors,
+            borderColor: borderColors,
+            borderWidth: 1
+          }]
+        },
+        options: {
+          scales: {
+            y: {
+              beginAtZero: true
+            }
+          }
+        }
+      });
+    }
+</script>
+
+{% endblock %}

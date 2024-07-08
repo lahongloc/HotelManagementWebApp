@@ -1,126 +1,239 @@
-{% extends 'layouts/base.html' %}
-{% block title %}Elite-Hotel Booking{% endblock %}
+{% extends 'layouts/base.html' %} {% block title %}Elite-Hotel Booking{%
+endblock %} {% block content %}
 
-{% block content %}
-
-<div class="d-flex justify-content-end fst-italic step-fs" style="padding-top: 26px">
-    <span class="ps-2 pe-2 me-1 step-round">1</span>
-    Đặt - 2 Xem lại - 3 Thanh toán - 4 Gửi phiếu thanh toán
+<div
+	class="d-flex justify-content-end fst-italic step-fs"
+	style="padding-top: 26px"
+>
+	<span class="ps-2 pe-2 me-1 step-round">1</span>
+	Đặt - 2 Xem lại - 3 Thanh toán - 4 Gửi phiếu thanh toán
 </div>
 
 <h5 class="mt-4">Khách hàng</h5>
-<section class="mt-4 navbar-body" style="padding: 12px 20px;">
-    <div id="customer-box">
-        <div class="d-flex mb-2 customer-info">
-            <label>
-                <span class="me-4 order">1</span>
-                <input placeholder="Tên khách hàng"/>
-            </label>
-            <span>
-                <button type="button" class="btn dropdown-toggle customer-type-name" data-bs-toggle="dropdown">
-                    Loại khách
-                </button>
-                <ul class="dropdown-menu">
-                    <li class="dropdown-item customer-type">Nội địa</li>
-                    <li class="dropdown-item customer-type">Nước ngoài</li>
-                </ul>
-            </span>
-            <label>
-                <input type="number" placeholder="CMND/CCCD"/>
-            </label>
-            <label>
-                <input placeholder="Địa chỉ"/>
-            </label>
-            <span onClick="removeCustomerInfo(event)"
-                  style="margin-right: 16px; padding: 4px; color: #f15a5a; cursor:pointer">
-                <i class="fa-solid fa-x"></i>
-            </span>
-        </div>
-        <div class="d-flex justify-content-end mt-2 btn-box">
-            <button onClick="addNewCustomer()" class="btn btn-custom "><b>Thêm khách hàng</b></button>
-        </div>
-    </div>
+<section class="mt-4 navbar-body" style="padding: 12px 20px">
+	<div id="customer-box">
+		<div class="d-flex mb-2 customer-info">
+			<label>
+				<span class="me-4 order">1</span>
+				<input placeholder="Tên khách hàng" />
+			</label>
+			<span>
+				<button
+					type="button"
+					class="btn dropdown-toggle customer-type-name"
+					data-bs-toggle="dropdown"
+				>
+					Loại khách
+				</button>
+				<ul class="dropdown-menu">
+					<li class="dropdown-item customer-type">Nội địa</li>
+					<li class="dropdown-item customer-type">Nước ngoài</li>
+				</ul>
+			</span>
+			<label>
+				<input type="number" placeholder="CMND/CCCD" />
+			</label>
+			<label>
+				<input placeholder="Địa chỉ" />
+			</label>
+			<span
+				onClick="removeCustomerInfo(event)"
+				style="
+					margin-right: 16px;
+					padding: 4px;
+					color: #f15a5a;
+					cursor: pointer;
+				"
+			>
+				<i class="fa-solid fa-x"></i>
+			</span>
+		</div>
+		<div class="d-flex justify-content-end mt-2 btn-box">
+			<button onClick="addNewCustomer()" class="btn btn-custom">
+				<b>Thêm khách hàng</b>
+			</button>
+		</div>
+	</div>
 </section>
 
 <h5 class="mt-5">Đặt phòng khách sạn</h5>
-<section class="mt-4 navbar-body d-flex" style="padding: 12px 20px;">
-    <div class="search-item">
-        <label for="kw">
-            <span> <i class="fa-solid fa-magnifying-glass"></i> Room Name</span>
-            <input id="kw" class=" me-2" type="text" style="width: 180px; outline: none; !important; border: none;"
-                   placeholder="Search">
-        </label>
-    </div>
-    <div class="search-item">
-        <p><i class="fa-regular fa-calendar"></i> Check in</p>
-        <input id="check_in_date" style="border: none; padding: 0; outline: none;" type="date">
-    </div>
-    <div class="search-item">
-        <p><i class="fa-regular fa-calendar"></i> Check out</p>
-        <input id="check_out_date" style="border: none; padding: 0; outline: none;" type="date">
-    </div>
-    <div class="search-item">
-        <div class="dropdown">
-            <button type="button" class="btn dropdown-toggle" data-bs-toggle="dropdown">
-                <i class="fa-solid fa-mattress-pillow"></i> <span class="room-type-name">Guests and Rooms</span>
-            </button>
-            <ul class="dropdown-menu room-type-dropdown">
-                {% for rt in room_types %}
-                <li id="{{ rt.id }}" class="dropdown-item room-type">{{ rt.name }}</li>
-                {% endfor %}
-            </ul>
-        </div>
-    </div>
-    <button onclick="search()" style="border-radius: 8px; width: 7rem;" class="btn btn-custom" type="button">
-        <b>Search</b>
-    </button>
+<section class="mt-4 navbar-body d-flex" style="padding: 12px 20px">
+	<div class="search-item">
+		<label for="kw">
+			<span> <i class="fa-solid fa-magnifying-glass"></i> Room Name</span>
+			<input
+				id="kw"
+				class="me-2"
+				type="text"
+				style="width: 180px; outline: none; !important; border: none;"
+				placeholder="Search"
+			/>
+		</label>
+	</div>
+	<div class="search-item">
+		<p><i class="fa-regular fa-calendar"></i> Check in</p>
+		<input
+			id="check_in_date"
+			style="border: none; padding: 0; outline: none"
+			type="date"
+		/>
+	</div>
+	<div class="search-item">
+		<p><i class="fa-regular fa-calendar"></i> Check out</p>
+		<input
+			id="check_out_date"
+			style="border: none; padding: 0; outline: none"
+			type="date"
+		/>
+	</div>
+	<div class="search-item">
+		<div class="dropdown">
+			<button
+				type="button"
+				class="btn dropdown-toggle"
+				data-bs-toggle="dropdown"
+			>
+				<i class="fa-solid fa-mattress-pillow"></i>
+				<span class="room-type-name">Guests and Rooms</span>
+			</button>
+			<ul class="dropdown-menu room-type-dropdown">
+				{% for rt in room_types %}
+				<li id="{{ rt.id }}" class="dropdown-item room-type">
+					{{ rt.name }}
+				</li>
+				{% endfor %}
+			</ul>
+		</div>
+	</div>
+	<button
+		onclick="search()"
+		style="border-radius: 8px; width: 7rem"
+		class="btn btn-custom"
+		type="button"
+	>
+		<b>Search</b>
+	</button>
 </section>
 
 <h5 class="mt-5">Các phòng đã chọn</h5>
-<section class="mt-4 navbar-body d-flex" style="padding: 12px 20px;">
-    <div class="d-flex">
-        <span>
-            <span style="margin-right: 6px; padding: 4px; color: #47e03dab; cursor:pointer">
-                <i class="fa-solid fa-plus"></i>
-            </span>
-            <span>(x1)</span>
-            <span style="margin-left: 6px; padding: 4px; color: #f15a5a; cursor:pointer">
-                <i class="fa-solid fa-minus"></i>
-            </span>
-        </span>
-        <img alt=""
-             src="https://ik.imagekit.io/tvlk/apr-asset/dgXfoyh24ryQLRcGq00cIdKHRmotrWLNlvG-TxlcLxGkiDwaUSggleJNPRgIHCX6/hotel/asset/10025235-aef700914b1430ff8defadafeebd93d2.jpeg?_src=imagekit&tr=c-at_max,h-456,q-40,w-256"
-             style="width: 60px;
-                    height: 40px;
-                    object-fit: contain"
-        />
-        <p>Phòng 2 Giường Đơn Superior</p>
-        <span>490.018 VND</span>
-    </div>
+<section class="mt-4 navbar-body d-flex" style="padding: 12px 20px">
+	<div class="d-flex">
+		<span>
+			<span
+				style="
+					margin-right: 6px;
+					padding: 4px;
+					color: #47e03dab;
+					cursor: pointer;
+				"
+			>
+				<i class="fa-solid fa-plus"></i>
+			</span>
+			<span>(x1)</span>
+			<span
+				style="
+					margin-left: 6px;
+					padding: 4px;
+					color: #f15a5a;
+					cursor: pointer;
+				"
+			>
+				<i class="fa-solid fa-minus"></i>
+			</span>
+		</span>
+		<img
+			alt=""
+			src="https://ik.imagekit.io/tvlk/apr-asset/dgXfoyh24ryQLRcGq00cIdKHRmotrWLNlvG-TxlcLxGkiDwaUSggleJNPRgIHCX6/hotel/asset/10025235-aef700914b1430ff8defadafeebd93d2.jpeg?_src=imagekit&tr=c-at_max,h-456,q-40,w-256"
+			style="width: 60px; height: 40px; object-fit: contain"
+		/>
+		<p>Phòng 2 Giường Đơn Superior</p>
+		<span>490.018 VND</span>
+	</div>
 
-    <div class="d-flex" style="margin-top: 10px">
-        <span>
-            <span style="margin-right: 6px; padding: 4px; color: #47e03dab; cursor:pointer">
-                <i class="fa-solid fa-plus"></i>
-            </span>
-            <span>(x1)</span>
-            <span style="margin-left: 6px; padding: 4px; color: #f15a5a; cursor:pointer">
-                <i class="fa-solid fa-minus"></i>
-            </span>
-        </span>
-        <img alt=""
-             src="https://ik.imagekit.io/tvlk/apr-asset/dgXfoyh24ryQLRcGq00cIdKHRmotrWLNlvG-TxlcLxGkiDwaUSggleJNPRgIHCX6/hotel/asset/10025235-aef700914b1430ff8defadafeebd93d2.jpeg?_src=imagekit&tr=c-at_max,h-456,q-40,w-256"
-             style="width: 60px;
-                    height: 40px;
-                    object-fit: contain"
-        />
-        <p>Phòng 2 Giường Đơn Superior</p>
-        <span>490.018 VND</span>
-    </div>
+	<div class="d-flex" style="margin-top: 10px">
+		<span>
+			<span
+				style="
+					margin-right: 6px;
+					padding: 4px;
+					color: #47e03dab;
+					cursor: pointer;
+				"
+			>
+				<i class="fa-solid fa-plus"></i>
+			</span>
+			<span>(x1)</span>
+			<span
+				style="
+					margin-left: 6px;
+					padding: 4px;
+					color: #f15a5a;
+					cursor: pointer;
+				"
+			>
+				<i class="fa-solid fa-minus"></i>
+			</span>
+		</span>
+		<img
+			alt=""
+			src="https://ik.imagekit.io/tvlk/apr-asset/dgXfoyh24ryQLRcGq00cIdKHRmotrWLNlvG-TxlcLxGkiDwaUSggleJNPRgIHCX6/hotel/asset/10025235-aef700914b1430ff8defadafeebd93d2.jpeg?_src=imagekit&tr=c-at_max,h-456,q-40,w-256"
+			style="width: 60px; height: 40px; object-fit: contain"
+		/>
+		<p>Phòng 2 Giường Đơn Superior</p>
+		<span>490.018 VND</span>
+	</div>
 </section>
 
 <div class="d-flex justify-content-end mt-4 mb-5 btn-box">
-    <button onClick="addNewCustomer()" class="btn btn-custom "><b>Tiếp tục</b></button>
+	<button onClick="addNewCustomer()" class="btn btn-custom">
+		<b>Tiếp tục</b>
+	</button>
+</div>
+
+{% endblock %} {% extends 'layouts/base.html' %} {% block title %}Booking room -
+Elite-Hotel{% endblock %} {% block content %} {% if err_msg %}
+<div class="alert alert-danger">
+	<h4>{{ err_msg }}</h4>
+</div>
+{% endif %}
+<div class="row">
+	<div class="col-md-6 col-xs-12" style="margin-right: 5.66rem">
+		<div
+			class="img mt-2"
+			style="
+				padding: 0.75rem;
+				border-radius: 12px;
+				box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+			"
+		>
+			<img
+				style=""
+				width="100%"
+				src="{{ url_for('static', filename=room.image) }}"
+				alt=""
+			/>
+		</div>
+		<div class="price">
+			<p class="mt-2" style="font-size: larger; color: red">
+				<i
+					>{{"{:,.1f}".format(room.price) }}
+					<i class="fa-solid fa-dong-sign"></i>/<b>2 persons</b></i
+				>
+			</p>
+			<p style="color: green" class="mt-3">
+				<i>
+					For <b>{{ room.name }}</b>, there is
+					<b>{{ room.room_type }}</b> available. Please ensure you
+					select the appropriate room based on your requirements. We
+					hope you have a wonderful time at Elite-Hotel!
+				</i>
+			</p>
+		</div>
+	</div>
+	<div class="col-md-5 col-xs-12">{% include 'layouts/bookRoom.html' %}</div>
 </div>
 
 {% endblock %}
