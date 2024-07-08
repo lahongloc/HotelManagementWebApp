@@ -139,7 +139,7 @@
   ![image](https://github.com/lahongloc/HotelManagementWebApp/assets/109413731/f6c14b96-9c3b-4fce-9646-89e78f7e8b5f)
 - Direct booking: ![image](https://github.com/lahongloc/HotelManagementWebApp/assets/109413731/41b374d5-f373-46ab-a272-007aa18aa49c)
 - Room checking-in: ![image](https://github.com/lahongloc/HotelManagementWebApp/assets/109413731/940c26e1-c67d-4a09-a1d2-6f073c74136a)
-- Report anf Statistics page: ![image](https://github.com/lahongloc/HotelManagementWebApp/assets/109413731/a04f556f-6b94-4459-8d87-e0a3aeaa1d7e)
+- Report and Statistics page: ![image](https://github.com/lahongloc/HotelManagementWebApp/assets/109413731/a04f556f-6b94-4459-8d87-e0a3aeaa1d7e)
 
 ## 🤝 Contributing
 - Contributions are welcome! Please submit a pull request or open an issue to discuss any changes.
